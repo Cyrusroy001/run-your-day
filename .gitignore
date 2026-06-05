@@ -1,0 +1,16 @@
+# Visual-companion brainstorm scratch (not source)
+.superpowers/
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor / IDE (root level; Flutter app has its own .gitignore)
+.idea/
+.vscode/
+*.iml
+
+# Python cache (icon-generation tooling, if used)
+__pycache__/
+*.pyc

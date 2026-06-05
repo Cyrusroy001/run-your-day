@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Command Center</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,800;9..144,900&family=Spline+Sans:wght@400;500;600;700&display=swap');
+  :root{
+    --bg:#0e1311;--bg2:#141b18;--panel:#19211d;--panel2:#1f2925;--cream:#f2ede1;
+    --terra:#d9663d;--moss:#8fb05a;--amber:#e0a23a;--sky:#6fa8c7;
+    --line:#2c3833;--muted:#8a978f;--dim:#5e6c64;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html{scroll-behavior:smooth}
+  body{font-family:'Spline Sans',system-ui,sans-serif;background:var(--bg);
+    background-image:radial-gradient(circle at 12% 8%,rgba(217,102,61,.08),transparent 40%),radial-gradient(circle at 88% 92%,rgba(143,176,90,.07),transparent 42%);
+    color:var(--cream);line-height:1.55;min-height:100vh;padding-bottom:60px}
+  .wrap{max-width:760px;margin:0 auto;padding:0 16px}
+  header{padding:30px 16px 4px;max-width:760px;margin:0 auto}
+  .kick{font-size:.68rem;text-transform:uppercase;letter-spacing:.3em;color:var(--terra);font-weight:600}
+  h1{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(1.9rem,8vw,2.9rem);line-height:.95;letter-spacing:-.02em;margin-top:8px}
+  .tagline{font-family:'Fraunces',serif;font-style:italic;color:var(--muted);margin-top:6px;font-size:1rem}
+  .clock{margin-top:10px;font-size:.85rem;color:var(--moss);font-weight:500}
+
+  /* NOW banner */
+  .now{background:linear-gradient(135deg,var(--terra),#b8512c);border-radius:18px;padding:18px 20px;margin:18px 0 4px;position:relative;overflow:hidden;box-shadow:0 8px 30px rgba(217,102,61,.25)}
+  .now::after{content:'';position:absolute;right:-30px;top:-30px;width:140px;height:140px;background:rgba(255,255,255,.08);border-radius:50%}
+  .now .nlabel{font-size:.68rem;text-transform:uppercase;letter-spacing:.18em;color:rgba(255,255,255,.75);font-weight:600}
+  .now .ntitle{font-family:'Fraunces',serif;font-weight:800;font-size:1.7rem;color:#fff;margin-top:4px;line-height:1.05}
+  .now .ndesc{font-size:.86rem;color:rgba(255,255,255,.88);margin-top:4px}
+  .now .nnext{font-size:.78rem;color:rgba(255,255,255,.7);margin-top:10px;border-top:1px solid rgba(255,255,255,.18);padding-top:8px}
+  .now.rest{background:linear-gradient(135deg,#46603a,#3a5230);box-shadow:0 8px 30px rgba(143,176,90,.2)}
+  .now.train{background:linear-gradient(135deg,var(--terra),#b8512c)}
+  .now.focus{background:linear-gradient(135deg,#3d6f87,#2f5468);box-shadow:0 8px 30px rgba(111,168,199,.2)}
+  .now.sleep{background:linear-gradient(135deg,#2a3530,#1f2925);box-shadow:none}
+  .now.jump{cursor:pointer}
+  .now .gobtn{display:inline-block;margin-top:10px;font-size:.74rem;background:rgba(255,255,255,.18);color:#fff;padding:6px 13px;border-radius:20px;font-weight:600}
+
+  /* week planner */
+  .planner{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px 16px;margin:16px 0 6px}
+  .planner .ttl{font-size:.74rem;text-transform:uppercase;letter-spacing:.08em;color:var(--sky);font-weight:600;margin-bottom:3px;display:flex;justify-content:space-between;align-items:center}
+  .planner .ttl .cnt{color:var(--muted);font-weight:500;letter-spacing:0;text-transform:none;font-size:.74rem}
+  .planner .hint{font-size:.72rem;color:var(--dim);font-style:italic;margin-bottom:11px}
+  .pgrid{display:flex;gap:6px}
+  .pday{flex:1;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:9px 4px;cursor:pointer;transition:.14s;text-align:center;min-width:0}
+  .pday .pn{font-size:.74rem;font-weight:600;color:var(--cream)}
+  .pday .pt{font-size:.54rem;text-transform:uppercase;letter-spacing:.03em;margin-top:4px;padding:2px 0;border-radius:6px;font-weight:600;line-height:1.2}
+  .pt.t-rest{background:rgba(143,176,90,.15);color:var(--moss)}
+  .pt.t-office{background:rgba(217,102,61,.18);color:var(--terra)}
+  .pt.t-wfh{background:rgba(111,168,199,.2);color:var(--sky)}
+  .pt.t-wend{background:rgba(224,162,58,.18);color:var(--amber)}
+  .pday.is-today{border-color:var(--amber);border-width:2px}
+  .reset-wk{margin-top:11px;font-size:.72rem;color:var(--dim);background:none;border:none;cursor:pointer;text-decoration:underline;font-family:inherit;padding:0}
+
+  .days{display:flex;gap:7px;overflow-x:auto;padding:12px 0 8px;scrollbar-width:none}
+  .days::-webkit-scrollbar{display:none}
+  .day-btn{flex:0 0 auto;background:var(--panel);border:1px solid var(--line);color:var(--muted);
+    font-weight:600;font-size:.82rem;padding:10px 13px;border-radius:11px;cursor:pointer;transition:.16s;white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:58px;font-family:inherit}
+  .day-btn .typ{font-size:.56rem;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:8px;margin-top:1px}
+  .day-btn.active{background:var(--terra);border-color:var(--terra);color:#fff;transform:translateY(-2px)}
+  .day-btn.active .typ{background:rgba(255,255,255,.2);color:#fff}
+  .day-btn.today-mark{border-color:var(--amber);border-width:2px}
+
+  .meta-row{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 14px}
+  .chip{font-size:.72rem;background:var(--panel);border:1px solid var(--line);padding:5px 11px;border-radius:20px;color:var(--muted)}
+  .chip b{color:var(--cream);font-weight:600}
+
+  .block{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:14px;margin:9px 0;padding:14px 16px 14px 18px;display:flex;gap:14px;align-items:flex-start;transition:.16s;overflow:hidden}
+  .block::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--dim)}
+  .block.is-now{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber)}
+  .block.is-now .time{color:var(--amber)}
+  .nowdot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--amber);margin-right:5px;animation:pulse 1.6s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .block .time{flex:0 0 auto;font-family:'Fraunces',serif;font-weight:600;font-size:.92rem;color:var(--cream);min-width:60px;padding-top:1px}
+  .block .body{flex:1;min-width:0}
+  .block .label{font-weight:600;font-size:1rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .block .desc{font-size:.85rem;color:var(--muted);margin-top:2px}
+  .block.focus::before{background:var(--sky)}.block.train::before{background:var(--terra)}
+  .block.meal::before{background:var(--moss)}.block.work::before{background:var(--amber)}
+  .block.chill::before{background:var(--dim)}.block.dsa::before{background:var(--sky)}
+  .block.train{cursor:pointer;background:linear-gradient(135deg,var(--panel2),var(--panel))}
+  .block.train:hover{border-color:var(--terra)}
+  .block.train .label .toggle{font-size:.66rem;color:var(--terra);font-weight:500;margin-left:auto;text-transform:uppercase;letter-spacing:.05em}
+  .drawer{max-height:0;opacity:0;overflow:hidden;transition:max-height .35s ease,opacity .25s}
+  .block.train.open .drawer{max-height:3200px;opacity:1;margin-top:14px}
+  .drawer-inner{border-top:1px dashed var(--line);padding-top:14px}
+  .ex{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);align-items:flex-start}
+  .ex:last-of-type{border-bottom:none}
+  .ex .nm{font-size:.9rem;font-weight:500}.ex .sets{font-size:.78rem;color:var(--muted);white-space:nowrap}
+  .ex .why{font-size:.74rem;color:var(--dim);margin-top:2px;font-style:italic}
+  .why-note{background:rgba(111,168,199,.08);border-left:3px solid var(--sky);border-radius:0 8px 8px 0;padding:9px 12px;margin:12px 0;font-size:.78rem;color:var(--muted)}
+  .why-note b{color:var(--sky);font-style:normal;display:block;margin-bottom:2px;font-size:.8rem}
+  .logger{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:15px;margin-top:14px}
+  .logger h4{font-family:'Fraunces',serif;font-size:1rem;color:var(--amber);margin-bottom:4px}
+  .logger .sub{font-size:.76rem;color:var(--muted);margin-bottom:10px}
+  .lg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+  .lg label{font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;color:var(--dim);display:block;margin-bottom:3px}
+  .logger input,.logger textarea{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--cream);border-radius:8px;padding:8px 10px;font-family:inherit;font-size:.85rem}
+  .logger textarea{min-height:46px;resize:vertical}
+  .logger input:focus,.logger textarea:focus{outline:none;border-color:var(--amber)}
+  .full{grid-column:1/-1}
+  .save-btn{background:var(--amber);color:#1a1305;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:.83rem;cursor:pointer;margin-top:4px;font-family:inherit;transition:transform .12s}
+  .save-btn:hover{transform:translateY(-2px)}
+  .saved-msg{font-size:.76rem;color:var(--moss);font-style:italic;margin-left:10px;opacity:0;transition:.3s}
+  .saved-msg.show{opacity:1}
+  .hist{margin-top:12px}
+  .hist-row{display:flex;gap:10px;font-size:.76rem;padding:6px 0;border-top:1px solid var(--line);color:var(--muted)}
+  .hist-row .d{color:var(--amber);font-weight:600;min-width:54px}
+  .ref{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin:22px 0}
+  .ref h3{font-family:'Fraunces',serif;font-size:1.15rem;margin-bottom:10px}
+  .rule{display:flex;gap:10px;padding:7px 0;font-size:.84rem;border-bottom:1px solid var(--line);align-items:baseline}
+  .rule:last-child{border-bottom:none}
+  .rule .sig{font-size:.62rem;text-transform:uppercase;letter-spacing:.05em;padding:2px 8px;border-radius:11px;font-weight:600;white-space:nowrap;flex:0 0 auto}
+  .s-go{background:rgba(143,176,90,.16);color:var(--moss)}.s-stop{background:rgba(217,102,61,.16);color:var(--terra)}.s-hold{background:rgba(224,162,58,.16);color:var(--amber)}
+  .section-h{font-family:'Fraunces',serif;font-weight:800;font-size:1.4rem;margin:30px 0 4px}
+  .foot{text-align:center;margin-top:36px;font-family:'Fraunces',serif;font-style:italic;color:var(--dim);font-size:.92rem;padding:0 20px}
+  .disc{font-size:.74rem;color:var(--dim);margin-top:20px;border-top:1px solid var(--line);padding-top:14px}
+</style>
+</head>
+<body>
+<header>
+  <div class="kick">Cyrus · Daily Command Center</div>
+  <h1>Run The Day.</h1>
+  <p class="tagline">Lean & defined — not big. Plan it, then run it.</p>
+  <div class="clock" id="clock">—</div>
+</header>
+<div class="wrap">
+
+  <div class="now jump" id="nowBanner"></div>
+
+  <div class="planner">
+    <div class="ttl"><span>Plan your week — tap a day to change it</span><span class="cnt" id="trainCount"></span></div>
+    <div class="hint">Each tap cycles: Rest → Office Train → WFH → Weekend. Aim for ~4 training days.</div>
+    <div class="pgrid" id="pgrid"></div>
+    <button class="reset-wk" id="resetWk">Reset to suggested week</button>
+  </div>
+
+  <div class="days" id="dayTabs"></div>
+  <div class="meta-row" id="dayMeta"></div>
+  <div id="timeline"></div>
+
+  <h2 class="section-h">The Goal, Pinned</h2>
+  <div class="ref" style="border-color:var(--terra)">
+    <p style="font-size:.9rem;color:var(--muted)">Target = a <b style="color:var(--cream)">lean, athletic build</b> (~12–14% body fat, moderate visible muscle). Leanness does most of the visual work, not size.</p>
+    <div class="why-note" style="margin-bottom:0"><b>Why this shapes everything</b>You're not chasing "huge." Drop fat so the muscle shows + build shoulders/chest/arms for shape. Gentle deficit + this training does exactly that.</div>
+  </div>
+
+  <h2 class="section-h">Rep Decisions — Sunday Quick Read</h2>
+  <div class="ref">
+    <h3>Read your own numbers</h3>
+    <div class="rule"><span class="sig s-go">Keep going</span><span>Reps climbing + waist flat/down → change nothing.</span></div>
+    <div class="rule"><span class="sig s-hold">Hold</span><span>Reps stuck ONE week → ignore it, sleep & eat.</span></div>
+    <div class="rule"><span class="sig s-stop">Swap</span><span>Reps stuck TWO weeks → harder variation.</span></div>
+    <div class="rule"><span class="sig s-go">Level up</span><span>Hit TOP of range all sets → harder version / +weight on bench.</span></div>
+    <div class="rule"><span class="sig s-hold">Trim food</span><span>Waist growing → eat a little less.</span></div>
+    <div class="rule"><span class="sig s-stop">Cut back</span><span>Joint pain / reps dropping → easier version + rest day.</span></div>
+  </div>
+
+  <p class="disc">General fitness info, not medical advice. If you feel persistently unwell, dizzy, or have joint pain or any medical condition, check with a doctor. Data saves to this browser only — it won't sync across devices, and clearing browser data wipes it.</p>
+  <div class="foot">Plan the week. Run the day. Read the numbers Sunday.</div>
+</div>
+
+<script>
+/* ---- blocks ---- */
+const WAKE={t:'8:00',cls:'meal',label:'Wake · water · sunlight',desc:'Light breakfast: banana + milk/eggs.'};
+const FOCUS={t:'8:30',cls:'focus',label:'Deep Focus — AI Building',desc:'Sharpest hour. Phone in another room.'};
+const SNACK={t:'9:45',cls:'meal',label:'Break + snack',desc:'Coffee, few nuts. Reset.'};
+const BRUNCH={t:'11:30',cls:'meal',label:'Brunch — big protein meal',desc:'Eggs + dal + curd + soya. Main protein hit, since office lunch is at 3.'};
+const COMMUTE={t:'1:50',cls:'work',label:'Walk to office (10 min)',desc:''};
+const WORK_AM={t:'2:00',cls:'work',label:'Work — 2:00 to 8:00',desc:'Fixed block.'};
+const LUNCH3={t:'3:00',cls:'meal',label:'Lunch at office',desc:'Carry a protein-heavy tiffin — dal-bhat + soya or paneer.'};
+const SNACK5={t:'5:00',cls:'meal',label:'Light snack at office',desc:'Roasted chana, peanuts, or curd — keeps protein topped up.'};
+const DINNER={t:'8:30',cls:'meal',label:'Dinner',desc:'Roti + paneer/chicken + saag.'};
+const CHILL={t:'9:15',cls:'chill',label:'Chill — protected downtime',desc:'Yours. No forced work. This is how the routine survives.'};
+const WIND={t:'10:45',cls:'chill',label:'Wind-down',desc:'Screens dim. Makes the 8am wake actually work.'};
+const SLEEP={t:'11:15',cls:'chill',label:'Sleep target',desc:'Pull bedtime earlier in 15-min steps.'};
+const DSA=(t)=>({t:t,cls:'dsa',label:'DSA Practice (45 min)',desc:'1–2 problems. Keep coding sharp.'});
+
+const WORKOUTS={
+  A:{title:'Full Body A',why:'Hits every major muscle once. Squat + push + pull is the backbone — most shape comes from these.',
+    ex:[['Goblet squat','3–4 × 15–20','Hug one dumbbell, lower slow 3s'],['Push-ups','3–4 × max','Main chest builder'],['Bent-over rows','3–4 × 15–20','Pull to ribs — builds back'],['Romanian deadlift','3–4 × 15–20','Feel the hamstrings'],['Shoulder press','3–4 × 12–15','Shoulders = the V-shape'],['Plank','3 × max','Core']]},
+  B:{title:'Full Body B',why:'Different angles on the same muscles so they keep getting a fresh challenge with light weights.',
+    ex:[['Bulgarian split squat','3–4 × 12–15 ea','Rear foot on couch'],['Floor press','3–4 × 15–20','Press dumbbells up'],['Single-arm row','3–4 × 15 ea','One knee on couch'],['Calf raises','3–4 × 20–25','Rise on toes'],['Curls + triceps','3–4 × 15–20','Arm work'],['Leg raises','3 × 15','Lower abs']]},
+  BENCH:{title:'Bench + Push',why:'The bench machine is your ONE loadable lift — the only place to add real weight weekly. Rehearsal for the gym.',
+    ex:[['Bench press (machine)','3–4 × 10–12','⭐ Add small weight when you hit 12 on all sets'],['Incline push-ups','3 × 12–15','Upper chest'],['Goblet squat','3 × 15–20','Legs'],['Rows','3 × 15–20','Back'],['Core circuit','~10 min','Planks + leg raises']]},
+  CARDIO:{title:'Treadmill + Core',why:'Short bursts burn fat without eating into muscle, and spare a beginner\'s knees vs long runs.',
+    ex:[['Warm-up walk','5 min','Easy'],['Intervals','10–15 rounds','30s brisk/incline, 60s easy'],['Cool-down','5 min','Easy walk'],['Core finish','~8 min','Planks, leg raises, side planks']]}
+};
+
+const NAMES={mon:'Mon',tue:'Tue',wed:'Wed',thu:'Thu',fri:'Fri',sat:'Sat',sun:'Sun'};
+const DOW=['sun','mon','tue','wed','thu','fri','sat'];
+const WEEKORDER=['mon','tue','wed','thu','fri','sat','sun'];
+
+/* day TYPES the user can cycle through */
+const TYPES=['rest','office','wfh','weekend'];
+const TYPE_LABEL={rest:'Study',office:'Office Train',wfh:'WFH Train',weekend:'Wknd Train'};
+const TYPE_TAB={rest:'Study',office:'Train',wfh:'WFH',weekend:'Train'};
+const TYPE_CLS={rest:'t-rest',office:'t-office',wfh:'t-wfh',weekend:'t-wend'};
+
+/* suggested default week */
+function suggestedWeek(){
+  return {mon:'rest',tue:'rest',wed:'wfh',thu:'rest',fri:'office',sat:'weekend',sun:'weekend'};
+}
+/* workout assignment: weekend Sat=BENCH, Sun=CARDIO; wfh=A; office=B; for extra days alternate */
+function workoutFor(day,type,plan){
+  if(type==='weekend'){ if(day==='sat')return 'BENCH'; if(day==='sun')return 'CARDIO';
+    // any other day set to weekend → alternate A/B by position
+    return 'A'; }
+  if(type==='wfh')return 'A';
+  if(type==='office')return 'B';
+  return null;
+}
+
+let plan=loadPlan();
+function loadPlan(){try{const p=JSON.parse(localStorage.getItem('weekPlan'));if(p&&p.mon)return p;}catch(e){}return suggestedWeek();}
+function savePlan(){localStorage.setItem('weekPlan',JSON.stringify(plan));}
+
+const todayKey=DOW[new Date().getDay()];
+let active=todayKey;
+
+/* build a day's timeline based on its type */
+function buildTimeline(day,type){
+  const w=workoutFor(day,type,plan);
+  if(type==='wfh'){
+    return [WAKE,
+      {t:'8:30',cls:'focus',label:'BIG Project Block (2 hrs)',desc:'No commute — push a real AI build. Highest-output window of the week.'},
+      {t:'10:30',cls:'meal',label:'Break + snack',desc:''},
+      {t:'11:00',cls:'train',label:'Train — '+WORKOUTS[w].title,desc:'Midday, relaxed. Tap to open.',isTrain:true,workout:w},
+      {t:'12:00',cls:'meal',label:'Shower + brunch',desc:'Big protein meal'},
+      DSA('1:00'),COMMUTE,WORK_AM,LUNCH3,SNACK5,DINNER,CHILL,WIND,SLEEP];
+  }
+  if(type==='weekend'){
+    const arr=[WAKE,
+      {t:'9:00',cls:'focus',label:'Focus — AI Building',desc:'Weekend: relaxed long session.'},
+      {t:'10:30',cls:'meal',label:'Break + snack',desc:''},
+      {t:'11:00',cls:'train',label:'Train — '+WORKOUTS[w].title,desc:'Weekends are free — train whenever suits. Tap to open.',isTrain:true,workout:w},
+      {t:'12:00',cls:'meal',label:'Shower + big protein meal',desc:''},
+      DSA('1:00'),
+      {t:'2:00',cls:'chill',label:'Free afternoon',desc:'Errands, rest, life.'}];
+    if(day==='sun')arr.push({t:'5:00',cls:'focus',label:'WEEKLY REVIEW (15 min)',desc:'Log tracker · read Sunday rules · plan next week. Don\'t skip.'});
+    arr.push(DINNER,CHILL,WIND,SLEEP);
+    return arr;
+  }
+  if(type==='office'){
+    return [WAKE,FOCUS,SNACK,
+      {t:'10:00',cls:'train',label:'Train — '+WORKOUTS[w].title,desc:'Before work. Tap to open.',isTrain:true,workout:w},
+      {t:'11:00',cls:'meal',label:'Shower + brunch',desc:'Big protein meal — office lunch is at 3.'},
+      DSA('11:30'),COMMUTE,WORK_AM,LUNCH3,SNACK5,DINNER,CHILL,WIND,SLEEP];
+  }
+  // rest / study day
+  const isWeekendDay=(day==='sat'||day==='sun');
+  if(isWeekendDay){
+    return [WAKE,{t:'9:00',cls:'focus',label:'Focus — AI Building',desc:'Relaxed weekend study.'},
+      {t:'10:30',cls:'meal',label:'Break + snack',desc:''},
+      {t:'11:00',cls:'dsa',label:'DSA / project block',desc:'No training today — extra learning.'},
+      {t:'12:00',cls:'meal',label:'Big protein meal',desc:''},
+      {t:'2:00',cls:'chill',label:'Free afternoon',desc:'Rest, life.'},DINNER,CHILL,WIND,SLEEP];
+  }
+  return [WAKE,FOCUS,SNACK,
+    {t:'10:00',cls:'dsa',label:'Extra Study Block',desc:'No training → this becomes learning. Bigger AI push or extra DSA.'},
+    DSA('11:30'),BRUNCH,COMMUTE,WORK_AM,LUNCH3,SNACK5,DINNER,CHILL,WIND,SLEEP];
+}
+
+/* ---- time helpers for NOW banner ----
+   Times in a day run strictly increasing. Resolve each label to 24h by
+   walking the day forward, never moving backward in time. */
+function buildTimes(blocks){
+  let prev=0;
+  return blocks.map(b=>{
+    let[h,m]=b.t.split(':').map(Number);
+    let cands = h===12 ? [12] : [h, h+12];
+    let val=null;
+    cands.map(c=>c+m/60).sort((a,b)=>a-b).forEach(c=>{if(val===null&&c>=prev-0.001)val=c;});
+    if(val===null)val=cands[cands.length-1]+m/60;
+    prev=val;
+    return val;
+  });
+}
+function nowDecimal(){const n=new Date();return n.getHours()+n.getMinutes()/60;}
+
+const nowBanner=document.getElementById('nowBanner');
+const pgrid=document.getElementById('pgrid');
+const trainCount=document.getElementById('trainCount');
+const tabs=document.getElementById('dayTabs');
+const timeline=document.getElementById('timeline');
+const meta=document.getElementById('dayMeta');
+
+function renderPlanner(){
+  pgrid.innerHTML='';
+  WEEKORDER.forEach(d=>{
+    const type=plan[d];
+    const el=document.createElement('div');
+    el.className='pday'+(d===todayKey?' is-today':'');
+    el.innerHTML=`<div class="pn">${NAMES[d]}</div><div class="pt ${TYPE_CLS[type]}">${TYPE_TAB[type]}</div>`;
+    el.onclick=()=>{
+      const i=TYPES.indexOf(plan[d]);
+      plan[d]=TYPES[(i+1)%TYPES.length];
+      savePlan();renderAll();
+    };
+    pgrid.appendChild(el);
+  });
+  const n=WEEKORDER.filter(d=>plan[d]!=='rest').length;
+  trainCount.textContent=n+' training '+(n===1?'day':'days');
+  trainCount.style.color = (n>=3&&n<=5)?'var(--moss)':'var(--amber)';
+}
+
+function renderNow(){
+  // only meaningful for today
+  const type=plan[todayKey];
+  const blocks=buildTimeline(todayKey,type);
+  const times=buildTimes(blocks);
+  const now=nowDecimal();
+  let cur=null,next=null;
+  for(let i=0;i<blocks.length;i++){
+    const start=times[i];
+    const end=i<blocks.length-1?times[i+1]:24.5;
+    if(now>=start&&now<end){cur=blocks[i];next=blocks[i+1]||null;break;}
+    if(now<start){next=blocks[i];break;}
+  }
+  let cls='train',label,desc,nextLine='';
+  if(now<times[0]){
+    cls='sleep';label='Still resting';desc='Day kicks off at 8:00 with wake + sunlight.';
+    next=blocks[0];
+  } else if(!cur){
+    cls='sleep';label='Wind down';desc='Day\'s done — sleep is the priority now.';
+  } else {
+    cls=cur.cls==='dsa'?'focus':cur.cls;
+    if(cur.cls==='train')cls='train';
+    if(cur.cls==='chill')cls='sleep';
+    if(cur.cls==='meal')cls='rest';
+    label=cur.label;desc=cur.desc||'';
+  }
+  if(next)nextLine=`Next · ${next.t} — ${next.label}`;
+  const jump=cur&&cur.isTrain;
+  nowBanner.className='now '+cls+(jump?' jump':'');
+  nowBanner.innerHTML=`<div class="nlabel">Right now · ${NAMES[todayKey]}</div>
+    <div class="ntitle">${label}</div>
+    ${desc?`<div class="ndesc">${desc}</div>`:''}
+    ${nextLine?`<div class="nnext">${nextLine}</div>`:''}
+    ${jump?`<span class="gobtn">Open today's workout ↓</span>`:''}`;
+  nowBanner.onclick=()=>{ active=todayKey; renderTabsTimelineMeta(); if(jump){setTimeout(()=>{const t=document.querySelector('.block.train');if(t){t.classList.add('open');t.scrollIntoView({behavior:'smooth',block:'center'});}},60);} else {document.getElementById('timeline').scrollIntoView({behavior:'smooth',block:'start'});}};
+}
+
+function renderTabsTimelineMeta(){
+  // tabs
+  tabs.innerHTML='';
+  WEEKORDER.forEach(d=>{
+    const type=plan[d];
+    const b=document.createElement('button');
+    b.className='day-btn'+(d===active?' active':'')+(d===todayKey?' today-mark':'');
+    b.innerHTML=`<span>${NAMES[d]}</span><span class="typ ${TYPE_CLS[type]}">${TYPE_TAB[type]}</span>`;
+    b.onclick=()=>{active=d;renderTabsTimelineMeta();};
+    tabs.appendChild(b);
+  });
+  // meta
+  let chips=`<span class="chip">Protein <b>130–145g</b></span><span class="chip">Gentle deficit</span><span class="chip">${TYPE_LABEL[plan[active]]}</span>`;
+  if(active===todayKey)chips=`<span class="chip" style="border-color:var(--amber);color:var(--amber)">● TODAY</span>`+chips;
+  meta.innerHTML=chips;
+  // timeline
+  const blocks=buildTimeline(active,plan[active]);
+  const times=buildTimes(blocks);
+  const now=nowDecimal();const isToday=active===todayKey;
+  timeline.innerHTML='';
+  blocks.forEach((bl,i)=>{
+    const el=document.createElement('div');
+    el.className='block '+bl.cls;
+    // mark current block if today
+    if(isToday){const s=times[i];const e=i<blocks.length-1?times[i+1]:24.5;if(now>=s&&now<e)el.classList.add('is-now');}
+    const nowdot=el.classList.contains('is-now')?'<span class="nowdot"></span>':'';
+    if(bl.isTrain){
+      el.classList.add('train');
+      const wk=WORKOUTS[bl.workout];
+      el.innerHTML=`<div class="time">${nowdot}${bl.t}</div><div class="body">
+        <div class="label">${bl.label}<span class="toggle">▸ workout + log</span></div><div class="desc">${bl.desc}</div>
+        <div class="drawer"><div class="drawer-inner">
+          <div class="why-note"><b>Why this session</b>${wk.why}</div>
+          ${wk.ex.map(e=>`<div class="ex"><div><div class="nm">${e[0]}</div><div class="why">${e[2]}</div></div><div class="sets">${e[1]}</div></div>`).join('')}
+          ${loggerHTML(bl.workout)}
+        </div></div></div>`;
+      el.addEventListener('click',ev=>{if(ev.target.closest('.logger'))return;el.classList.toggle('open');const tg=el.querySelector('.toggle');tg.textContent=el.classList.contains('open')?'▾ close':'▸ workout + log';});
+    } else {
+      el.innerHTML=`<div class="time">${nowdot}${bl.t}</div><div class="body"><div class="label">${bl.label}</div>${bl.desc?`<div class="desc">${bl.desc}</div>`:''}</div>`;
+    }
+    timeline.appendChild(el);
+  });
+  attachLoggers();
+}
+
+function renderAll(){renderPlanner();renderNow();renderTabsTimelineMeta();}
+
+document.getElementById('resetWk').onclick=()=>{plan=suggestedWeek();savePlan();renderAll();};
+
+function loggerHTML(wk){
+  return `<div class="logger" data-wk="${wk}">
+    <h4>Log today — ${wk}</h4>
+    <div class="sub">Record your top sets. Reps climbing week to week = it's working.</div>
+    <div class="lg">
+      <div><label>Date</label><input class="f-date" placeholder="e.g. 6 Jun"></div>
+      <div><label>Key lift reps</label><input class="f-reps" placeholder="e.g. 3×14"></div>
+      <div><label>Weight (kg)</label><input class="f-wt" placeholder="optional"></div>
+      <div><label>Waist (cm)</label><input class="f-waist" placeholder="optional"></div>
+      <div class="full"><label>Felt / energy / joints / decision</label><textarea class="f-note" placeholder="e.g. strong, no joint pain, +1 rep next time"></textarea></div>
+    </div>
+    <button class="save-btn">Save entry</button><span class="saved-msg">Saved ✓</span>
+    <div class="hist"></div></div>`;
+}
+function getLog(k){try{return JSON.parse(localStorage.getItem(k))||[]}catch(e){return[]}}
+function attachLoggers(){
+  document.querySelectorAll('.logger').forEach(lg=>{
+    const wk=lg.dataset.wk,key='log_'+wk;
+    renderHist(lg,key);
+    lg.querySelector('.save-btn').addEventListener('click',e=>{
+      e.stopPropagation();
+      const en={date:lg.querySelector('.f-date').value||new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short'}),
+        reps:lg.querySelector('.f-reps').value,wt:lg.querySelector('.f-wt').value,waist:lg.querySelector('.f-waist').value,note:lg.querySelector('.f-note').value};
+      if(!en.reps&&!en.note&&!en.wt)return;
+      let a=getLog(key);a.unshift(en);if(a.length>30)a=a.slice(0,30);localStorage.setItem(key,JSON.stringify(a));
+      const m=lg.querySelector('.saved-msg');m.classList.add('show');setTimeout(()=>m.classList.remove('show'),1600);
+      ['.f-reps','.f-wt','.f-waist','.f-note','.f-date'].forEach(s=>lg.querySelector(s).value='');
+      renderHist(lg,key);
+    });
+    lg.querySelectorAll('input,textarea,button').forEach(el=>el.addEventListener('click',e=>e.stopPropagation()));
+  });
+}
+function renderHist(lg,key){
+  const a=getLog(key),h=lg.querySelector('.hist');
+  if(!a.length){h.innerHTML='<div class="hist-row" style="border:none;color:var(--dim)">No entries yet — history shows here.</div>';return;}
+  h.innerHTML=a.map(e=>`<div class="hist-row"><span class="d">${e.date}</span><span>${[e.reps?'reps '+e.reps:'',e.wt?e.wt+'kg':'',e.waist?'waist '+e.waist:'',e.note].filter(Boolean).join(' · ')}</span></div>`).join('');
+}
+function tick(){const n=new Date();document.getElementById('clock').textContent=n.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})+' · '+n.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});renderNow();}
+tick();setInterval(tick,60000);
+renderAll();
+</script>
+</body>
+</html>
