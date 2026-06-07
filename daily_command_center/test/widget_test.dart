@@ -7,9 +7,10 @@ void main() {
   testWidgets('app launcher title is "Reminders 2"', (tester) async {
     SharedPreferences.setMockInitialValues({});
     await tester.pumpWidget(const DailyCommandCenterApp());
-    await tester.pumpAndSettle(); // let async plan-load finish while mounted
+    // Title is on MaterialApp, available on the first frame — no need to wait
+    // for the async home load (which shows only a spinner at this point).
     final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
     expect(app.title, 'Reminders 2');
-    await tester.pumpWidget(const SizedBox()); // dispose NowCard's periodic timer
+    await tester.pumpWidget(const SizedBox()); // dispose; home's mounted-guard handles late load
   });
 }

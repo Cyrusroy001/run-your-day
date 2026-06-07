@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../data/models.dart';
@@ -13,7 +14,7 @@ const _dayNames = {
 class WeekPlanner extends StatefulWidget {
   final WeekPlan plan;
   final String todayKey;
-  final void Function(WeekPlan newPlan, String? message) onPlanChanged;
+  final void Function(WeekPlan newPlan) onPlanChanged;
 
   const WeekPlanner({
     super.key,
@@ -27,7 +28,38 @@ class WeekPlanner extends StatefulWidget {
 }
 
 class _WeekPlannerState extends State<WeekPlanner> {
+  String? _caption;
+  Timer? _captionTimer;
+
   int get _trainCount => widget.plan.values.where((p) => p.isTraining).length;
+
+  @override
+  void dispose() {
+    _captionTimer?.cancel();
+    super.dispose();
+  }
+
+  void _showCaption(String? msg) {
+    _captionTimer?.cancel();
+    setState(() => _caption = msg);
+    if (msg != null) {
+      _captionTimer = Timer(const Duration(seconds: 4), () {
+        if (mounted) setState(() => _caption = null);
+      });
+    }
+  }
+
+  void _onSchedule(String day) {
+    if (widget.plan[day]!.schedule == DaySchedule.weekend) return;
+    widget.onPlanChanged(PlannerLogic.toggleSchedule(widget.plan, day));
+  }
+
+  void _onTraining(String day) {
+    HapticFeedback.lightImpact();
+    final result = PlannerLogic.toggleTraining(widget.plan, day);
+    _showCaption(result.message);
+    widget.onPlanChanged(result.plan);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,59 +77,34 @@ class _WeekPlannerState extends State<WeekPlanner> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'PLAN YOUR WEEK',
-                style: TextStyle(
-                  fontSize: 11,
-                  letterSpacing: 1.2,
-                  color: AppColors.sky,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              const Text('PLAN YOUR WEEK',
+                  style: TextStyle(fontSize: 11, letterSpacing: 1.2, color: AppColors.sky, fontWeight: FontWeight.w600)),
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 200),
-                child: Text(
-                  '$_trainCount training days',
-                  key: ValueKey(_trainCount),
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: _trainCount == 4 ? AppColors.moss : AppColors.amber,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+                child: Text('$_trainCount training days',
+                    key: ValueKey(_trainCount),
+                    style: TextStyle(fontSize: 11, color: _trainCount == 4 ? AppColors.moss : AppColors.amber, fontWeight: FontWeight.w500)),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: _dayOrder.map((day) => _DayCell(
-              day: day,
-              plan: widget.plan[day]!,
-              isToday: day == widget.todayKey,
-              onScheduleToggle: () {
-                if (widget.plan[day]!.schedule == DaySchedule.weekend) return;
-                final updated = PlannerLogic.toggleSchedule(widget.plan, day);
-                widget.onPlanChanged(updated, null);
-              },
-              onTrainingToggle: () {
-                HapticFeedback.lightImpact();
-                final result = PlannerLogic.toggleTraining(widget.plan, day);
-                widget.onPlanChanged(result.plan, result.message);
-              },
-            )).toList(),
-          ),
-          const SizedBox(height: 12),
-          GestureDetector(
-            onTap: () => widget.onPlanChanged(PlannerLogic.defaultWeek(), null),
-            child: const Text(
-              'Reset to suggested week',
-              style: TextStyle(
-                fontSize: 11.5,
-                color: AppColors.dim,
-                decoration: TextDecoration.underline,
-                decorationColor: AppColors.dim,
-              ),
+          const SizedBox(height: 10),
+          ..._dayOrder.map((day) => _DayRow(
+                day: day,
+                plan: widget.plan[day]!,
+                isToday: day == widget.todayKey,
+                onSchedule: () => _onSchedule(day),
+                onTraining: () => _onTraining(day),
+              )),
+          if (_caption != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: Text(_caption!, style: const TextStyle(fontSize: 12, color: AppColors.sky)),
             ),
+          const SizedBox(height: 10),
+          GestureDetector(
+            onTap: () => widget.onPlanChanged(PlannerLogic.defaultWeek()),
+            child: const Text('Reset to suggested week',
+                style: TextStyle(fontSize: 11.5, color: AppColors.dim, decoration: TextDecoration.underline, decorationColor: AppColors.dim)),
           ),
         ],
       ),
@@ -105,96 +112,77 @@ class _WeekPlannerState extends State<WeekPlanner> {
   }
 }
 
-class _DayCell extends StatelessWidget {
+class _DayRow extends StatelessWidget {
   final String day;
   final DayPlan plan;
   final bool isToday;
-  final VoidCallback onScheduleToggle;
-  final VoidCallback onTrainingToggle;
+  final VoidCallback onSchedule;
+  final VoidCallback onTraining;
 
-  const _DayCell({
+  const _DayRow({
     required this.day,
     required this.plan,
     required this.isToday,
-    required this.onScheduleToggle,
-    required this.onTrainingToggle,
+    required this.onSchedule,
+    required this.onTraining,
   });
 
   @override
   Widget build(BuildContext context) {
     final isWeekend = plan.schedule == DaySchedule.weekend;
-    final scheduleLabel = isWeekend
-        ? 'Wknd'
-        : (plan.schedule == DaySchedule.office ? 'Office' : 'WFH');
-    final scheduleColor = isWeekend
-        ? AppColors.amber
-        : (plan.schedule == DaySchedule.office ? AppColors.terra : AppColors.sky);
+    final schedLabel = isWeekend ? 'Weekend' : (plan.schedule == DaySchedule.office ? 'Office' : 'WFH');
+    final schedColor = isWeekend ? AppColors.amber : (plan.schedule == DaySchedule.office ? AppColors.terra : AppColors.sky);
 
-    return Expanded(
-      child: GestureDetector(
-        onTap: onScheduleToggle,
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 2),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: Stack(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  decoration: BoxDecoration(
-                    color: AppColors.bg2,
-                    border: Border.all(color: AppColors.line),
-                  ),
-                  child: Column(
-                    children: [
-                      Text(
-                        _dayNames[day]!,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.cream,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        scheduleLabel,
-                        style: TextStyle(
-                          fontSize: 9,
-                          color: scheduleColor,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      GestureDetector(
-                        onTap: onTrainingToggle,
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 180),
-                          width: 10,
-                          height: 10,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: plan.isTraining ? AppColors.terra : Colors.transparent,
-                            border: Border.all(
-                              color: plan.isTraining ? AppColors.terra : AppColors.dim,
-                              width: 1.5,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (isToday)
-                  Positioned(
-                    left: 0,
-                    top: 0,
-                    bottom: 0,
-                    child: Container(width: 2, color: AppColors.amber),
-                  ),
-              ],
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 3),
+      decoration: BoxDecoration(
+        border: Border(left: BorderSide(color: isToday ? AppColors.amber : Colors.transparent, width: 3)),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(width: 8),
+          SizedBox(width: 38, child: Text(_dayNames[day]!,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.cream))),
+          const SizedBox(width: 8),
+          GestureDetector(
+            key: Key('sched-$day'),
+            onTap: onSchedule,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+              decoration: BoxDecoration(
+                color: schedColor.withValues(alpha: 0.12),
+                border: Border.all(color: schedColor),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(schedLabel, style: TextStyle(fontSize: 12, color: schedColor, fontWeight: FontWeight.w600)),
             ),
           ),
-        ),
+          const Spacer(),
+          Text(plan.isTraining ? 'Train' : 'Rest',
+              style: TextStyle(fontSize: 11, color: plan.isTraining ? AppColors.moss : AppColors.dim, fontWeight: FontWeight.w600)),
+          const SizedBox(width: 8),
+          GestureDetector(
+            key: Key('train-$day'),
+            onTap: onTraining,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              width: 48,
+              height: 28,
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                color: plan.isTraining ? AppColors.terra : AppColors.line,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: AnimatedAlign(
+                duration: const Duration(milliseconds: 180),
+                alignment: plan.isTraining ? Alignment.centerRight : Alignment.centerLeft,
+                child: Container(width: 22, height: 22,
+                    decoration: const BoxDecoration(color: AppColors.cream, shape: BoxShape.circle)),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
     );
   }

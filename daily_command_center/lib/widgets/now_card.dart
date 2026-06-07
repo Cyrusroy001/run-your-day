@@ -13,13 +13,19 @@ const _dayNames = {
 class NowCard extends StatefulWidget {
   final WeekPlan plan;
   final String todayKey;
-  final VoidCallback onTap;
+  final Set<String> doneToday;
+  final VoidCallback onViewAll;
+  final void Function(String signature) onToggleDone;
+  final double? debugNow; // test seam; defaults to nowDecimal()
 
   const NowCard({
     super.key,
     required this.plan,
     required this.todayKey,
-    required this.onTap,
+    required this.doneToday,
+    required this.onViewAll,
+    required this.onToggleDone,
+    this.debugNow,
   });
 
   @override
@@ -45,17 +51,16 @@ class _NowCardState extends State<NowCard> {
 
   @override
   Widget build(BuildContext context) {
-    final plan = widget.plan[widget.todayKey];
-    if (plan == null) return const SizedBox.shrink();
+    final dayPlan = widget.plan[widget.todayKey];
+    if (dayPlan == null) return const SizedBox.shrink();
 
-    final blocks = buildTimeline(widget.todayKey, plan);
+    final blocks = buildTimeline(widget.todayKey, dayPlan);
     final times = buildTimes(blocks);
-    final now = nowDecimal();
+    final now = widget.debugNow ?? nowDecimal();
 
     Block? cur;
     Block? next;
     int progressPct = 0;
-
     for (int i = 0; i < blocks.length; i++) {
       final start = times[i];
       final end = i < blocks.length - 1 ? times[i + 1] : 25.0;
@@ -71,10 +76,14 @@ class _NowCardState extends State<NowCard> {
       }
     }
 
+    final trackableCur = (cur != null && cur.isTrackable) ? cur : null;
+    final isDone = trackableCur != null && widget.doneToday.contains(trackableCur.signature);
+    final isWorkout = cur?.isTrain ?? false;
+
     final String title;
     final String desc;
-    final Color gradStart;
-    final Color gradEnd;
+    Color gradStart;
+    Color gradEnd;
 
     if (now < times.first) {
       title = 'Still resting';
@@ -104,120 +113,117 @@ class _NowCardState extends State<NowCard> {
           gradEnd = const Color(0xFF1F2925);
       }
     }
+    if (isDone) {
+      gradStart = const Color(0xFF4F7A3C);
+      gradEnd = const Color(0xFF3C5E2D);
+    }
 
     final nextLine = next != null ? 'Next · ${next.time} — ${next.label}' : '';
-    final isWorkout = cur?.isTrain ?? false;
     final dayName = _dayNames[widget.todayKey] ?? widget.todayKey;
 
-    return GestureDetector(
-      onTap: widget.onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [gradStart, gradEnd],
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [gradStart, gradEnd]),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: gradStart.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 8))],
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            right: -30,
+            top: -30,
+            child: Container(width: 140, height: 140,
+                decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withValues(alpha: 0.07))),
           ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: gradStart.withValues(alpha: 0.3),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              right: -30,
-              top: -30,
-              child: Container(
-                width: 140,
-                height: 140,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.07),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Right now · $dayName',
+                        style: const TextStyle(fontSize: 11, letterSpacing: 2, color: Colors.white70, fontWeight: FontWeight.w600)),
+                    GestureDetector(
+                      onTap: widget.onViewAll,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.16), borderRadius: BorderRadius.circular(14)),
+                        child: const Text('View all ›', style: TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w600)),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Right now · $dayName',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      letterSpacing: 2,
-                      color: Colors.white70,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    title,
-                    style: GoogleFonts.fraunces(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      height: 1.05,
-                    ),
-                  ),
-                  if (desc.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      desc,
-                      style: const TextStyle(fontSize: 13.5, color: Colors.white70),
-                    ),
+                const SizedBox(height: 8),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: Text(title,
+                        style: GoogleFonts.fraunces(fontSize: 26, fontWeight: FontWeight.w800, color: Colors.white, height: 1.05))),
+                    if (isDone)
+                      Container(
+                        margin: const EdgeInsets.only(left: 8, top: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.22), borderRadius: BorderRadius.circular(12)),
+                        child: const Text('✓ done', style: TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w700)),
+                      ),
                   ],
-                  if (nextLine.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    Divider(color: Colors.white.withValues(alpha: 0.2), height: 1),
-                    const SizedBox(height: 8),
-                    Text(
-                      nextLine,
-                      style: const TextStyle(fontSize: 12.5, color: Colors.white60),
-                    ),
-                  ],
-                  if (isWorkout) ...[
-                    const SizedBox(height: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                ),
+                if (desc.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(desc, style: const TextStyle(fontSize: 13.5, color: Colors.white70)),
+                ],
+                if (nextLine.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Divider(color: Colors.white.withValues(alpha: 0.2), height: 1),
+                  const SizedBox(height: 8),
+                  Text(nextLine, style: const TextStyle(fontSize: 12.5, color: Colors.white60)),
+                ],
+                if (isWorkout) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(20)),
+                    child: const Text('View Workout →',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
+                  ),
+                ],
+                if (trackableCur != null) ...[
+                  const SizedBox(height: 12),
+                  GestureDetector(
+                    onTap: () => widget.onToggleDone(trackableCur.signature),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.18),
+                        color: isDone ? AppColors.cream : Colors.white.withValues(alpha: 0.18),
+                        border: isDone ? null : Border.all(color: Colors.white.withValues(alpha: 0.5)),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Text(
-                        'View Workout →',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
+                      child: Text(isDone ? '✓ Done' : '◯ Mark done',
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700,
+                              color: isDone ? const Color(0xFF3C5E2D) : Colors.white)),
                     ),
-                  ],
-                  if (progressPct > 0) ...[
-                    const SizedBox(height: 14),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: progressPct / 100,
-                        backgroundColor: Colors.white.withValues(alpha: 0.15),
-                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                        minHeight: 3,
-                      ),
-                    ),
-                  ],
+                  ),
                 ],
-              ),
+                if (progressPct > 0 && !isDone) ...[
+                  const SizedBox(height: 14),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: progressPct / 100,
+                      backgroundColor: Colors.white.withValues(alpha: 0.15),
+                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                      minHeight: 3,
+                    ),
+                  ),
+                ],
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
