@@ -29,4 +29,22 @@ void main() {
       expect(restored.waist, '82');
     });
   });
+
+  group('Block.isTrackable', () {
+    test('meal/focus/dsa/train are trackable', () {
+      for (final c in ['meal', 'focus', 'dsa', 'train']) {
+        expect(Block(time: '8:00', cls: c, label: 'x').isTrackable, isTrue, reason: c);
+      }
+    });
+    test('work/chill are passive', () {
+      for (final c in ['work', 'chill']) {
+        expect(Block(time: '8:00', cls: c, label: 'x').isTrackable, isFalse, reason: c);
+      }
+    });
+  });
+
+  test('Block.signature combines time and label', () {
+    const b = Block(time: '10:00', cls: 'train', label: 'Train — Workout B');
+    expect(b.signature, '10:00|Train — Workout B');
+  });
 }

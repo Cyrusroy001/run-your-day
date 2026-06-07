@@ -16,6 +16,13 @@ class Block {
     this.isTrain = false,
     this.workout,
   });
+
+  /// Blocks the user actively chooses to do (counted for adherence).
+  /// Passive context — the job, commute, chill, wind-down, sleep — is `work`/`chill`.
+  bool get isTrackable => cls != 'work' && cls != 'chill';
+
+  /// Stable identity within a day.
+  String get signature => '$time|$label';
 }
 
 class DayPlan {
