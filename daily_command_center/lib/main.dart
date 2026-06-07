@@ -13,7 +13,7 @@ class DailyCommandCenterApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Daily Command Center',
+      title: 'Reminders 2',
       theme: _theme(),
       home: const HomeScreen(),
       debugShowCheckedModeBanner: false,
