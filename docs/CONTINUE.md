@@ -1,7 +1,19 @@
 # Continuation Document
-**Last updated:** 2026-06-05 (end of session 2)
+**Last updated:** 2026-06-07 (session 3 — Life JSON v3 design approved)
 
 If you're an AI agent starting fresh on this project, read this first. It tells you exactly where things stand and what to do next without requiring you to re-derive it from the codebase.
+
+---
+
+## ⭐ Current direction (session 3): Life JSON v3 drift engine
+
+The project's north star is now a **reusable, configurable life-execution app**: a new user does an interview → a rich **Life JSON** → an AI synthesizes a personalized routine → the app executes it. **The moat is the schema.** See the approved design: [`docs/superpowers/specs/2026-06-07-life-json-v3-drift-engine-design.md`](superpowers/specs/2026-06-07-life-json-v3-drift-engine-design.md).
+
+**This sub-project (the core)** makes the app fully plan-driven from a **Life JSON v3** and adds a drift-aware engine: dual-time (Est Start + duration budget), micro-compaction (shrink flexible items to protect fixed anchors), and a circuit-breaker (auto-cancel + Android notification + drift log on a `maxDriftMinutes` breach). Anchors for Cyrus: **Work 2–8 PM (hard), Sleep ~11:15 (soft ceiling)**. Time model is **hybrid**: seed clock times that drift only when the user runs late, so day-1 is byte-identical to today (golden test).
+
+**Status:** design approved; **implementation not started.** Next step is the writing-plans skill → a phased plan (A: plan-driven foundation + seed + golden test · B: dual-time + compaction · C: circuit-breaker + notification · D: drift log + Sunday review). See ADR-011…014 in [`DECISIONS.md`](DECISIONS.md). The superseded v1 schema spec and the gemini v3 sketch carry banners pointing here.
+
+Note: the Reminders 2 redesign (rebrand + adherence/done tracking + Today screen) is a separate, already-designed UX pass — its `done_<date>`/`adherence_<date>` keys and `Block.isTrackable`/`signature` are preserved by v3.
 
 ---
 

@@ -110,3 +110,43 @@ Read this before proposing architectural changes.
 - `android:letterSpacing` — not supported in all RemoteViews text contexts
 
 **Status:** Widget still fails even with the stripped layout as of end of session 2. The root cause is not yet confirmed. See CONTINUE.md for next debugging steps.
+
+---
+
+## ADR-011 — Life JSON v3 (drift-aware) supersedes the v1 plan-driven schema
+
+**Decision:** The app becomes fully plan-driven from a **Life JSON v3** schema, expanding the never-implemented v1 plan-driven spec with a drift-aware execution engine. Full design: [`docs/superpowers/specs/2026-06-07-life-json-v3-drift-engine-design.md`](superpowers/specs/2026-06-07-life-json-v3-drift-engine-design.md).
+
+**Why:** The product's moat is the schema, not the UI — a rich, executable Life JSON lets one generic engine run *any* user's plan and lets an AI synthesize crazy-good personalized routines from interview answers (later sub-projects). v3 adds dual-time, micro-compaction, and circuit-breakers so the day adapts to real disruption instead of going stale. v1 (concrete but static) and the gemini v3 sketch (abstract drift) are merged here.
+
+**Do not revert unless:** abandoning the configurable/multi-lifestyle direction and going back to Cyrus-hardcoded Dart.
+
+---
+
+## ADR-012 — Hybrid time model: seed times that drift (not pure computed)
+
+**Decision:** Every flexible routine item carries a **seed/preferred `start` clock time** AND a drift budget (`idealDuration`/`minDuration`/`maxDriftMinutes`). Est Start = the seed time on a zero-drift day, and cascades forward only once the user runs late. Only fixed `anchors` keep immovable clock times.
+
+**Why:** Pure computed-from-durations (the gemini doc's literal model) would change Cyrus's familiar timeline on day one. Hybrid preserves today's exact look (golden test: zero-drift = byte-identical) while layering drift behavior on top. User's explicit choice.
+
+**Key invariant:** With an unmodified seed and no late check-offs, the rendered timeline must equal today's `buildTimeline` output exactly.
+
+---
+
+## ADR-013 — Anchors: Work is a hard wall, Sleep is a soft ceiling
+
+**Decision:** In Cyrus's seed, the **Work block (2:00–8:00)** is a `hard: true` anchor (compaction protects it absolutely) and the **Sleep target (~11:15)** is a `hard: false` soft ceiling (compaction targets it but may overrun as a last resort). Commute and meals stay flexible routine items, not anchors.
+
+**Why:** The job is a real-world immovable boundary; the morning routine must compact to never push past 2 PM. Sleep is protected to preserve hygiene but can't be a hard wall (the day sometimes runs long). Making meals anchors would over-constrain compaction.
+
+**Where this lives:** `dayTemplates[*].anchors` in `seed_plan.json`. Changing which blocks are anchors changes compaction behavior.
+
+---
+
+## ADR-014 — Full circuit-breaker (incl. OS notification) + persisted drift log
+
+**Decision:** On a `maxDriftMinutes` breach for a `kill_and_notify` item, the engine cancels the item, promotes the next, **fires a high-priority Android notification on a dedicated channel**, and **appends a `DriftEvent` to a persisted, rolling `driftLog`** surfaced in the Sunday weekly-review block.
+
+**Why:** The user wanted the full headline behavior, not a soft warning — auto-cancellation protects sleep, and the drift log gives a weekly feedback loop ("training got auto-cancelled twice this week") to tune the plan. Pulling the notification channel into scope is deliberate (coordinate with the widget/notification blocker).
+
+**Trade-off:** Adds the Android notification-channel plumbing currently listed as a blocker. Sequenced as Phase C in the implementation plan so earlier phases ship without it.

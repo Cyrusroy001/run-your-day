@@ -1,5 +1,7 @@
 # Plan-Driven App Core — Design Spec
 
+> ⚠️ **SUPERSEDED (2026-06-07)** by [`2026-06-07-life-json-v3-drift-engine-design.md`](2026-06-07-life-json-v3-drift-engine-design.md). The schema here (v1) was never implemented; v3 expands it with the drift-aware execution engine (dual-time, micro-compaction, circuit-breaker, drift log) and an `anchors` + `routineStack` template shape. Kept for history. Read the v3 spec for the design that ships.
+
 **Date:** 2026-06-05
 **Status:** Approved design (sub-project 1 of 5)
 **Scope:** Make the Flutter app render entirely from a configurable Plan JSON, so it can serve any lifestyle instead of Cyrus's hardcoded one.
