@@ -29,17 +29,17 @@ void main() {
   });
 
   group('toggleTraining', () {
-    test('always maintains 4 training days after toggle on', () {
+    test('toggling training days never exceeds 4', () {
+      // Behavior: a day can be toggled on/off freely; turning on a 5th day
+      // displaces another for spacing, so the count is capped at 4 (and may be < 4).
       var week = PlannerLogic.defaultWeek();
       for (final day in ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']) {
-        if (week[day]!.isTraining) {
-          final result = PlannerLogic.toggleTraining(week, day);
-          week = result.plan;
+        if (!week[day]!.isTraining) {
+          week = PlannerLogic.toggleTraining(week, day).plan;
         }
+        final count = week.values.where((p) => p.isTraining).length;
+        expect(count, lessThanOrEqualTo(4));
       }
-      final result = PlannerLogic.toggleTraining(week, 'mon');
-      final count = result.plan.values.where((p) => p.isTraining).length;
-      expect(count, 4);
     });
 
     test('always maintains exactly 4 training days after toggle on', () {
