@@ -178,3 +178,25 @@ Read this before proposing architectural changes.
 **Why:** The external moat-implementation-67 doc folds live editing into the core so the execution surface is actually usable day-to-day, not just a read-only render. The friendly *structural* Life-JSON editor (full template authoring) remains sub-project 2; Phase E only edits **DailyState**, never the Plan, so it stays consistent with ADR-015.
 
 **Trade-off:** Larger sub-project 1. Sequenced last (Phase E) so the engine + read-only surfaces (Phases A–D) ship and de-risk first.
+
+---
+
+## ADR-018 — "Login" is a local profile picker, not authentication
+
+**Decision:** The login screen is a **local, on-device profile picker** — no passwords, no backend, no network. Typing/picking a name selects a profile; `cyrus` is seeded from today's default data; any new name runs an onboarding *stub* that builds a usable plan. Logout/switch returns to the picker. Full design: [`docs/superpowers/specs/2026-06-07-local-profiles-login-app-shell-design.md`](superpowers/specs/2026-06-07-local-profiles-login-app-shell-design.md).
+
+**Why:** The app is local-only by design (the v3 spec lists multi-user/cloud sync as a non-goal). Real auth needs a server and contradicts that. A profile picker delivers the actual want — multiple isolated identities, a seeded `cyrus`, onboarding for new users — with zero backend, and stays the front door when real accounts are added later. The onboarding stub's only output is "a valid plan," so the future interview tree (sub-project 3) can replace it without touching anything downstream.
+
+**Do not turn into real auth unless:** the project adopts a backend and cross-device sync (a deliberate scope change, not a tweak).
+
+---
+
+## ADR-019 — One JSON file per profile (chosen over key-prefixing)
+
+**Decision:** Each profile is a single JSON file at `‹appDocumentsDir›/profiles/‹id›.json` holding that profile's whole dataset; a tiny `shared_preferences` key `activeProfileId` points to who is logged in. A new `ProfileRepository` owns list/create/load/save/delete/export/import and the in-memory active `ProfileData`. `AppStore`/`AdherenceStore` are refactored to read/write through the active profile instead of flat global keys. First run seeds/migrates legacy flat keys into `cyrus.json`.
+
+**Why:** Clean physical isolation between profiles, trivially correct delete (remove the file) and export/import (copy the JSON), and a natural fit for the project's "everything is JSON" direction. Key-prefixing was the smaller-diff alternative but smears one profile across many keys and makes export/delete enumeration-based and error-prone.
+
+**Compatibility with the v3 engine (ADR-015):** the per-profile file is the container for *all* of that profile's state — the immutable `activePlan` blob **and** the ephemeral `state_<date>` / `driftLog` streams. Whatever keys the DriftEngine introduces become fields inside the profile file rather than new global keys, so dual-JSON state and per-profile storage compose cleanly. Whichever of the two features lands second must namespace its storage per active profile.
+
+**Do not flatten back to global keys unless:** dropping multi-profile support entirely.

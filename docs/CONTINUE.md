@@ -70,7 +70,7 @@ Consistently rejected by Samsung One UI ("couldn't add widget") in the launcher 
 
 1. **Finish + commit the redesign** if anything is incomplete (verify icon art; `flutter test`; commit).
 2. **Implement the local-profiles/login spec.** Plan: `docs/superpowers/plans/2026-06-07-local-profiles-login-app-shell.md`. Scope: login screen (local profile picker, no backend), one-JSON-file-per-profile storage via `ProfileRepository`, app shell + side panel (drawer), onboarding stub, Settings, logout. **Visual polish is a first-class requirement** — use the `frontend-design` skill and the existing palette/fonts.
-3. **Then** the v3 core (drift engine) per its spec, sequenced Phase A→D.
+3. **Then** the v3 core (drift engine) per the written plan `plans/2026-06-07-life-json-v3-drift-engine.md`, sequenced Phase A→E.
 
 ---
 
@@ -128,4 +128,4 @@ Look for errors in the Samsung launcher process (`com.sec.android.app.launcher`)
 - `writeWidgetData` in `store.dart` must stay wrapped in try-catch — `home_widget` platform calls throw when no widget is on the home screen (ADR-009).
 - SharedPreferences keys written by `home_widget` use a `flutter.` prefix automatically. `NowWidgetProvider.kt` must read them WITH that prefix: `prefs.getString("flutter.currentAction", ...)`.
 - Adherence counts **trackable** blocks only (`cls != 'work' && cls != 'chill'`). Block identity is `signature = '$time|$label'`.
-- **When the profiles work lands:** persistence moves to one JSON file per profile under `profiles/<id>.json`, fronted by `ProfileRepository`; the flat keys above become per-profile data. See ADR-015/016 and the profiles spec.
+- **When the profiles work lands:** persistence moves to one JSON file per profile under `profiles/<id>.json`, fronted by `ProfileRepository`; the flat keys above become per-profile data — including whatever the v3 engine writes (`activePlan`, `state_<date>`, `driftLog`). See ADR-018/019 and the profiles spec.
