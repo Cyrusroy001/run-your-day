@@ -150,3 +150,31 @@ Read this before proposing architectural changes.
 **Why:** The user wanted the full headline behavior, not a soft warning — auto-cancellation protects sleep, and the drift log gives a weekly feedback loop ("training got auto-cancelled twice this week") to tune the plan. Pulling the notification channel into scope is deliberate (coordinate with the widget/notification blocker).
 
 **Trade-off:** Adds the Android notification-channel plumbing currently listed as a blocker. Sequenced as Phase C in the implementation plan so earlier phases ship without it.
+
+---
+
+## ADR-015 — Dual-JSON state: immutable Plan + ephemeral DailyState
+
+**Decision:** Split persistence into two independent streams. The **Plan** (Life JSON blueprint) is **read-only during execution** — loaded from `assets/seed_plan.json`, cached under `activePlan`. A separate **DailyState** (`state_<yyyy-MM-dd>`) holds today's mutable reality: `deletedItems`, `dailySequence` (reorder), `dailyOverrides` (per-day priority bumps), and that day's `driftLog`. User interactions (check-off, drag, delete, override) mutate **only** DailyState; the Plan stays pristine. `buildTimeline` deep-merges the two.
+
+**Why:** Keeps the long-term routine clean and AI-regenerable while letting the day flex. DailyState can be wiped without destroying the blueprint. Sets up sub-projects 2–5 (editor, interview, AI gen) cleanly — the AI only ever rewrites the Plan blob. Adopted from the external moat-implementation/improvement-67 docs, chosen over the original v3 plan of mutating `plan.week` in place.
+
+**Supersedes:** the v3-spec note that "week lives inside the plan — toggle edits mutate and re-save the whole plan." Week toggles still edit `plan.week` (a structural change, allowed via the planner), but daily execution state is fully separated.
+
+---
+
+## ADR-016 — Both cutoffTime (absolute) and maxDriftMinutes (relative) drift triggers
+
+**Decision:** The DriftEngine honors **two** circuit-breaker triggers per item: `cutoffTime` (an absolute clock wall, e.g. "no workout after 20:00") and `maxDriftMinutes` (a relative ceiling past the seed `start`). An item may set either or both; whichever trips first fires the breach. Cyrus's seed uses `cutoffTime: "20:00"` on `train` and `maxDriftMinutes` on `focus`/`dsa`.
+
+**Why:** Absolute cutoffs match how people actually reason about late-night activities ("too late to train"); relative ceilings match elastic focus/study blocks. Supporting both costs little and makes the schema more expressive (the moat). The two external docs used `cutoffTime`; the approved v3 spec used `maxDriftMinutes` — both are kept.
+
+---
+
+## ADR-017 — Sub-project 1 scope expanded to include the interactive sandbox
+
+**Decision:** Sub-project 1 now ships the full **DriftEngine** (compaction, **jettison protocol**, **two-way elasticity**, `transitionBufferMinutes`) AND the **interactive sandbox**: drag-drop reorder across anchor walls, swipe-to-delete, per-day priority override, and the **Undo** transaction protocol. Phase E in the plan.
+
+**Why:** The external moat-implementation-67 doc folds live editing into the core so the execution surface is actually usable day-to-day, not just a read-only render. The friendly *structural* Life-JSON editor (full template authoring) remains sub-project 2; Phase E only edits **DailyState**, never the Plan, so it stays consistent with ADR-015.
+
+**Trade-off:** Larger sub-project 1. Sequenced last (Phase E) so the engine + read-only surfaces (Phases A–D) ship and de-risk first.
