@@ -1,68 +1,41 @@
-import 'dart:convert';
 import 'package:home_widget/home_widget.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'models.dart';
-import '../logic/planner.dart';
+import 'profile_repository.dart';
+import '../logic/assembler.dart';
 import '../logic/timeline.dart';
 
+/// Plan + logs access for the active profile. Thin facade over
+/// [ProfileRepository] (file-per-profile). Swap [repo] in tests.
 class AppStore {
-  static const _planKey = 'weekPlan';
-  static const _logPrefix = 'log_';
+  static ProfileRepository repo = ProfileRepository();
 
-  static Future<WeekPlan> loadPlan() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_planKey);
-    if (raw == null) return PlannerLogic.defaultWeek();
-    try {
-      final map = jsonDecode(raw) as Map<String, dynamic>;
-      return map.map((k, v) => MapEntry(k, DayPlan.fromJson(v as Map<String, dynamic>)));
-    } catch (_) {
-      return PlannerLogic.defaultWeek();
-    }
+  static Future<Plan> loadPlan() async => (await repo.loadActive()).plan;
+
+  static Future<void> savePlan(Plan plan) async {
+    final doc = await repo.loadActive();
+    await repo.save(doc.copyWith(plan: plan));
   }
 
-  static Future<void> savePlan(WeekPlan plan) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      _planKey,
-      jsonEncode(plan.map((k, v) => MapEntry(k, v.toJson()))),
-    );
-  }
-
-  static Future<List<WorkoutLog>> loadLogs(String workoutKey) async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString('$_logPrefix$workoutKey');
-    if (raw == null) return [];
-    try {
-      return (jsonDecode(raw) as List)
-          .map((e) => WorkoutLog.fromJson(e as Map<String, dynamic>))
-          .toList();
-    } catch (_) {
-      return [];
-    }
-  }
+  static Future<List<WorkoutLog>> loadLogs(String workoutKey) async =>
+      (await repo.loadActive()).logs[workoutKey] ?? const [];
 
   static Future<void> saveLogs(String workoutKey, List<WorkoutLog> logs) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      '$_logPrefix$workoutKey',
-      jsonEncode(logs.map((e) => e.toJson()).toList()),
-    );
+    final doc = await repo.loadActive();
+    await repo.save(doc.copyWith(logs: {...doc.logs, workoutKey: logs}));
   }
 
-  // Compute now-state from the current plan and write to SharedPreferences
-  // so the Android home screen widget can read it.
-  // Keys are stored with "flutter." prefix by the home_widget package.
-  static Future<void> writeWidgetData(WeekPlan plan, String todayKey) async {
+  // Compute now-state from the Plan and push to the home-screen widget.
+  static Future<void> writeWidgetData(Plan plan, String todayKey) async {
     const dayNames = {
       'mon': 'Monday', 'tue': 'Tuesday', 'wed': 'Wednesday',
       'thu': 'Thursday', 'fri': 'Friday', 'sat': 'Saturday', 'sun': 'Sunday',
     };
-
-    final dayPlan = plan[todayKey];
-    if (dayPlan == null) return;
-
-    final blocks = buildTimeline(todayKey, dayPlan);
+    final entry = plan.week[todayKey];
+    if (entry == null) return;
+    final blocks = TimelineAssembler.assembleDay(
+      plan, entry.templateId, todayKey, training: entry.training,
+    );
+    if (blocks.isEmpty) return;
     final times = buildTimes(blocks);
     final now = nowDecimal();
 
@@ -100,8 +73,7 @@ class AppStore {
   }
 
   // Load the plan, work out today's key, and push now-state to the widget.
-  // Shared by the foreground screens and the background WorkManager task so
-  // the day-key logic lives in one place.
+  // Shared by the foreground screens and the background WorkManager task.
   static Future<void> refreshWidgetData() async {
     const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
     final plan = await loadPlan();
