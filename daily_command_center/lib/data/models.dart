@@ -1,5 +1,3 @@
-enum DaySchedule { office, wfh, weekend }
-
 enum BlockStatus { pending, done, dropped }
 
 /// Converts a 24h "HH:mm" seed time to the app's 12h display string
@@ -67,29 +65,6 @@ class Block {
       );
 }
 
-class DayPlan {
-  final DaySchedule schedule;
-  final bool isTraining;
-
-  const DayPlan({required this.schedule, required this.isTraining});
-
-  Map<String, dynamic> toJson() => {
-    'schedule': schedule.name,
-    'isTraining': isTraining,
-  };
-
-  factory DayPlan.fromJson(Map<String, dynamic> json) => DayPlan(
-    schedule: DaySchedule.values.firstWhere((e) => e.name == json['schedule']),
-    isTraining: json['isTraining'] as bool,
-  );
-
-  DayPlan copyWith({DaySchedule? schedule, bool? isTraining}) => DayPlan(
-    schedule: schedule ?? this.schedule,
-    isTraining: isTraining ?? this.isTraining,
-  );
-}
-
-typedef WeekPlan = Map<String, DayPlan>;
 
 class WorkoutLog {
   final String date;

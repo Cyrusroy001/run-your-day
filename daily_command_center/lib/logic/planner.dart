@@ -3,25 +3,13 @@ import '../data/models.dart';
 
 class PlannerLogic {
   static const _days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-  static const _weekendDays = {'sat', 'sun'};
 
-  static WeekPlan defaultWeek() {
-    final base = <String, DayPlan>{
-      'mon': const DayPlan(schedule: DaySchedule.office,  isTraining: false),
-      'tue': const DayPlan(schedule: DaySchedule.office,  isTraining: false),
-      'wed': const DayPlan(schedule: DaySchedule.wfh,     isTraining: false),
-      'thu': const DayPlan(schedule: DaySchedule.office,  isTraining: false),
-      'fri': const DayPlan(schedule: DaySchedule.office,  isTraining: false),
-      'sat': const DayPlan(schedule: DaySchedule.weekend, isTraining: false),
-      'sun': const DayPlan(schedule: DaySchedule.weekend, isTraining: false),
-    };
-    return _applyBestSpacing(base);
-  }
+  static bool _isWeekend(String templateId) => templateId.startsWith('weekend');
 
+  // Optimal 4 training days with no two consecutive (maximise min gap).
   static List<String> _bestTrainingDays() {
     double bestScore = -1;
     List<int> bestSubset = [0, 2, 4, 6];
-
     for (int a = 0; a < 4; a++) {
       for (int b = a + 1; b < 5; b++) {
         for (int c = b + 1; c < 6; c++) {
@@ -42,13 +30,6 @@ class PlannerLogic {
     return bestSubset.map((i) => _days[i]).toList();
   }
 
-  static WeekPlan _applyBestSpacing(WeekPlan plan) {
-    final training = _bestTrainingDays();
-    return Map.fromEntries(_days.map((d) {
-      return MapEntry(d, plan[d]!.copyWith(isTraining: training.contains(d)));
-    }));
-  }
-
   static double _spacingScore(List<String> trainingDays) {
     if (trainingDays.length < 2) return 0;
     final indices = trainingDays.map((d) => _days.indexOf(d)).toList()..sort();
@@ -61,54 +42,57 @@ class PlannerLogic {
     return minGap + 0.1 * (gaps.reduce((a, b) => a + b) / gaps.length);
   }
 
-  static ({WeekPlan plan, String? message}) toggleTraining(WeekPlan current, String day) {
-    final isOn = current[day]!.isTraining;
+  /// Reapply optimal 4-day spacing to [plan], leaving templateIds unchanged.
+  static Plan applyBestSpacing(Plan plan) {
+    final training = _bestTrainingDays();
+    final newWeek = Map.fromEntries(_days.map((d) {
+      final entry = plan.week[d]!;
+      return MapEntry(d, entry.copyWith(training: training.contains(d)));
+    }));
+    return plan.copyWith(week: newWeek);
+  }
 
-    if (isOn) {
-      final updated = Map<String, DayPlan>.from(current);
-      updated[day] = current[day]!.copyWith(isTraining: false);
-      return (plan: updated, message: null);
+  static ({Plan plan, String? message}) toggleTraining(Plan plan, String day) {
+    final entry = plan.week[day]!;
+
+    if (entry.training) {
+      return (plan: plan.copyWith(week: {...plan.week, day: entry.copyWith(training: false)}), message: null);
     }
 
-    final updated = Map<String, DayPlan>.from(current);
-    updated[day] = current[day]!.copyWith(isTraining: true);
-    final trainingDays = _days.where((d) => updated[d]!.isTraining).toList();
+    final updated = {...plan.week, day: entry.copyWith(training: true)};
+    final trainingDays = _days.where((d) => updated[d]!.training).toList();
 
     if (trainingDays.length <= 4) {
-      return (plan: updated, message: null);
+      return (plan: plan.copyWith(week: updated), message: null);
     }
 
     String? removed;
-    WeekPlan? bestPlan;
+    Map<String, WeekEntry>? bestWeek;
     double bestScore = -2;
 
     for (final candidate in trainingDays) {
       if (candidate == day) continue;
-      final trial = Map<String, DayPlan>.from(updated);
-      trial[candidate] = updated[candidate]!.copyWith(isTraining: false);
-      final score = _spacingScore(_days.where((d) => trial[d]!.isTraining).toList());
+      final trial = {...updated, candidate: updated[candidate]!.copyWith(training: false)};
+      final score = _spacingScore(_days.where((d) => trial[d]!.training).toList());
       if (score > bestScore) {
         bestScore = score;
-        bestPlan = trial;
+        bestWeek = trial;
         removed = candidate;
       }
     }
 
-    final finalPlan = bestPlan ?? updated;
-    final msg = removed != null
-        ? 'Moved training from ${_capitalize(removed)} for better spacing'
-        : null;
-    return (plan: finalPlan, message: msg);
+    final finalWeek = bestWeek ?? updated;
+    return (
+      plan: plan.copyWith(week: finalWeek),
+      message: removed != null ? 'Moved training from ${_capitalize(removed)} for better spacing' : null,
+    );
   }
 
-  static WeekPlan toggleSchedule(WeekPlan current, String day) {
-    assert(!_weekendDays.contains(day), 'Cannot toggle schedule for weekend days');
-    final p = current[day]!;
-    final updated = Map<String, DayPlan>.from(current);
-    updated[day] = p.copyWith(
-      schedule: p.schedule == DaySchedule.office ? DaySchedule.wfh : DaySchedule.office,
-    );
-    return updated;
+  static Plan toggleSchedule(Plan plan, String day) {
+    final entry = plan.week[day]!;
+    if (_isWeekend(entry.templateId)) return plan; // weekend days locked
+    final newTemplateId = entry.templateId == 'office' ? 'wfh' : 'office';
+    return plan.copyWith(week: {...plan.week, day: entry.copyWith(templateId: newTemplateId)});
   }
 
   static String _capitalize(String s) => s[0].toUpperCase() + s.substring(1);

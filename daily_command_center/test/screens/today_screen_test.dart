@@ -1,28 +1,46 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:daily_command_center/logic/planner.dart';
+import 'package:daily_command_center/data/models.dart';
+import 'package:daily_command_center/data/store.dart';
+import 'package:daily_command_center/data/profile_repository.dart';
 import 'package:daily_command_center/screens/today_screen.dart';
+
+late Plan _plan;
+late Directory _tmp;
 
 Widget _host({required void Function(String) onToggle, Set<String> done = const {}}) =>
     MaterialApp(home: TodayScreen(
-      plan: PlannerLogic.defaultWeek(),
-      todayKey: 'mon', // office + training in the default week
+      plan: _plan,
+      todayKey: 'mon', // office + training in the seed week
       doneToday: done,
       onToggle: onToggle,
       debugNow: 10.5, // 10:30 → inside the 10:00 training block
     ));
 
 void main() {
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUpAll(() async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    final raw = await rootBundle.loadString('assets/seed_plan.json');
+    _plan = Plan.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+  });
+
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    _tmp = Directory.systemTemp.createTempSync('today_screen_test');
+    AppStore.repo = ProfileRepository(baseDir: _tmp);
+  });
+  tearDown(() => _tmp.deleteSync(recursive: true));
 
   Future<void> settle(WidgetTester t) async {
-    // Tall surface so the ListView builds every row (lazy lists skip off-screen rows).
     t.view.physicalSize = const Size(1200, 3000);
     t.view.devicePixelRatio = 1.0;
     addTearDown(t.view.reset);
     await t.pump();
-    await t.pump(const Duration(milliseconds: 50)); // resolve last7 future
+    await t.pump(const Duration(milliseconds: 50));
   }
 
   testWidgets('renders the week strip header and screen title', (tester) async {

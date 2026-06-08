@@ -1,9 +1,20 @@
+import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:daily_command_center/data/adherence_store.dart';
+import 'package:daily_command_center/data/store.dart';
+import 'package:daily_command_center/data/profile_repository.dart';
 
 void main() {
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  late Directory tmp;
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    tmp = Directory.systemTemp.createTempSync('adherence_test');
+    AppStore.repo = ProfileRepository(baseDir: tmp);
+  });
+  tearDown(() => tmp.deleteSync(recursive: true));
 
   test('done set round-trips', () async {
     final day = DateTime(2026, 6, 5);

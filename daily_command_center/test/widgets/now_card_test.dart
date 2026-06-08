@@ -1,11 +1,17 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:daily_command_center/data/models.dart';
-import 'package:daily_command_center/logic/planner.dart';
-import 'package:daily_command_center/logic/timeline.dart';
+import 'package:daily_command_center/data/store.dart';
+import 'package:daily_command_center/data/profile_repository.dart';
+import 'package:daily_command_center/logic/assembler.dart';
 import 'package:daily_command_center/widgets/now_card.dart';
 
-WeekPlan get _plan => PlannerLogic.defaultWeek(); // mon = office + training
+late Plan _plan;
+late Directory _tmp;
 
 Widget _host({
   required Set<String> done,
@@ -23,6 +29,19 @@ Widget _host({
     )));
 
 void main() {
+  setUpAll(() async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    final raw = await rootBundle.loadString('assets/seed_plan.json');
+    _plan = Plan.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+  });
+
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    _tmp = Directory.systemTemp.createTempSync('now_card_test');
+    AppStore.repo = ProfileRepository(baseDir: _tmp);
+  });
+  tearDown(() => _tmp.deleteSync(recursive: true));
+
   // 10:30 falls inside mon's 10:00 training block (trackable).
   testWidgets('shows Mark done for a trackable current block', (tester) async {
     await tester.pumpWidget(_host(done: const {}, now: 10.5));
@@ -31,7 +50,9 @@ void main() {
   });
 
   testWidgets('done current block shows green Done + badge', (tester) async {
-    final train = buildTimeline('mon', _plan['mon']!).firstWhere((b) => b.isTrain);
+    final entry = _plan.week['mon']!;
+    final train = TimelineAssembler.assembleDay(_plan, entry.templateId, 'mon', training: entry.training)
+        .firstWhere((b) => b.isTrain);
     await tester.pumpWidget(_host(done: {train.signature}, now: 10.5));
     expect(find.text('✓ Done'), findsOneWidget);
     expect(find.text('✓ done'), findsOneWidget);
@@ -39,7 +60,9 @@ void main() {
   });
 
   testWidgets('tapping Mark done reports the current block signature', (tester) async {
-    final train = buildTimeline('mon', _plan['mon']!).firstWhere((b) => b.isTrain);
+    final entry = _plan.week['mon']!;
+    final train = TimelineAssembler.assembleDay(_plan, entry.templateId, 'mon', training: entry.training)
+        .firstWhere((b) => b.isTrain);
     String? toggled;
     await tester.pumpWidget(_host(done: const {}, now: 10.5, onToggle: (s) => toggled = s));
     await tester.tap(find.text('◯ Mark done'));

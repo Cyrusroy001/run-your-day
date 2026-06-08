@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import '../data/models.dart';
 import '../data/store.dart';
 import '../data/adherence_store.dart';
-import '../logic/timeline.dart';
+import '../logic/assembler.dart';
 import '../main.dart';
 import '../widgets/now_card.dart';
 import '../widgets/week_planner.dart';
@@ -18,7 +18,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  WeekPlan? _plan;
+  Plan? _plan;
   Set<String> _doneToday = {};
   static const _days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
   late String _todayKey;
@@ -33,7 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _load() async {
     final plan = await AppStore.loadPlan();
     final done = await AdherenceStore.loadDone(DateTime.now());
-    if (!mounted) return; // widget disposed mid-load (e.g. in tests)
+    if (!mounted) return;
     setState(() {
       _plan = plan;
       _doneToday = done;
@@ -42,22 +42,23 @@ class _HomeScreenState extends State<HomeScreen> {
     _recordAdherence(plan, done);
   }
 
-  ({int done, int total}) _tally(WeekPlan plan, Set<String> done) {
-    final dp = plan[_todayKey];
-    if (dp == null) return (done: 0, total: 0);
-    final trackable = buildTimeline(_todayKey, dp).where((b) => b.isTrackable).toList();
+  ({int done, int total}) _tally(Plan plan, Set<String> done) {
+    final entry = plan.week[_todayKey];
+    if (entry == null) return (done: 0, total: 0);
+    final blocks = TimelineAssembler.assembleDay(plan, entry.templateId, _todayKey, training: entry.training);
+    final trackable = blocks.where((b) => b.isTrackable).toList();
     return (
       done: trackable.where((b) => done.contains(b.signature)).length,
       total: trackable.length,
     );
   }
 
-  void _recordAdherence(WeekPlan plan, Set<String> done) {
+  void _recordAdherence(Plan plan, Set<String> done) {
     final t = _tally(plan, done);
     AdherenceStore.writeAdherence(DateTime.now(), t.done, t.total).ignore();
   }
 
-  Future<void> _updatePlan(WeekPlan newPlan) async {
+  Future<void> _updatePlan(Plan newPlan) async {
     await AppStore.savePlan(newPlan);
     setState(() => _plan = newPlan);
     AppStore.writeWidgetData(newPlan, _todayKey).ignore();

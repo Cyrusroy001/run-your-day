@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../data/models.dart';
+import '../logic/assembler.dart';
 import '../logic/timeline.dart';
 import '../main.dart';
 
@@ -11,7 +12,7 @@ const _dayNames = {
 };
 
 class NowCard extends StatefulWidget {
-  final WeekPlan plan;
+  final Plan plan;
   final String todayKey;
   final Set<String> doneToday;
   final VoidCallback onViewAll;
@@ -51,10 +52,12 @@ class _NowCardState extends State<NowCard> {
 
   @override
   Widget build(BuildContext context) {
-    final dayPlan = widget.plan[widget.todayKey];
-    if (dayPlan == null) return const SizedBox.shrink();
+    final entry = widget.plan.week[widget.todayKey];
+    if (entry == null) return const SizedBox.shrink();
 
-    final blocks = buildTimeline(widget.todayKey, dayPlan);
+    final blocks = TimelineAssembler.assembleDay(
+      widget.plan, entry.templateId, widget.todayKey, training: entry.training,
+    );
     final times = buildTimes(blocks);
     final now = widget.debugNow ?? nowDecimal();
 

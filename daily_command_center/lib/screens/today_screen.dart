@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../data/adherence_store.dart';
 import '../data/models.dart';
+import '../logic/assembler.dart';
 import '../logic/timeline.dart';
 import '../main.dart';
 
@@ -12,7 +13,7 @@ const _dayNames = {
 };
 
 class TodayScreen extends StatefulWidget {
-  final WeekPlan plan;
+  final Plan plan;
   final String todayKey;
   final Set<String> doneToday;
   final void Function(String signature) onToggle;
@@ -51,8 +52,10 @@ class _TodayScreenState extends State<TodayScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final dayPlan = widget.plan[widget.todayKey]!;
-    final blocks = buildTimeline(widget.todayKey, dayPlan);
+    final entry = widget.plan.week[widget.todayKey]!;
+    final blocks = TimelineAssembler.assembleDay(
+      widget.plan, entry.templateId, widget.todayKey, training: entry.training,
+    );
     final times = buildTimes(blocks);
     final now = widget.debugNow ?? nowDecimal();
 

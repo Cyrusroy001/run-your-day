@@ -1,6 +1,5 @@
-import 'dart:convert';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'store.dart';
 
 /// One day's adherence for the 7-day strip. `pct` is null when no record exists.
 class DayAdherence {
@@ -9,53 +8,45 @@ class DayAdherence {
   const DayAdherence(this.day, this.pct);
 }
 
-/// Per-day done-set and adherence summary, persisted in shared_preferences.
-/// Keys: `done_<yyyy-MM-dd>` (list of block signatures),
-///       `adherence_<yyyy-MM-dd>` ({done, total}).
+/// Per-day done-set and adherence summary, stored inside the active [ProfileDoc]
+/// via [AppStore.repo]. Swap [AppStore.repo] in tests for isolation.
 class AdherenceStore {
   static final DateFormat _fmt = DateFormat('yyyy-MM-dd');
-  static String _doneKey(DateTime d) => 'done_${_fmt.format(d)}';
-  static String _adhKey(DateTime d) => 'adherence_${_fmt.format(d)}';
 
   static Future<Set<String>> loadDone(DateTime day) async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_doneKey(day));
-    if (raw == null) return <String>{};
-    try {
-      return (jsonDecode(raw) as List).map((e) => e as String).toSet();
-    } catch (_) {
-      return <String>{};
-    }
+    final key = _fmt.format(day);
+    final doc = await AppStore.repo.loadActive();
+    return (doc.done[key] ?? const []).toSet();
   }
 
   static Future<void> saveDone(DateTime day, Set<String> done) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_doneKey(day), jsonEncode(done.toList()));
+    final key = _fmt.format(day);
+    final doc = await AppStore.repo.loadActive();
+    await AppStore.repo.save(doc.copyWith(done: {...doc.done, key: done.toList()}));
   }
 
   static Future<void> writeAdherence(DateTime day, int done, int total) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_adhKey(day), jsonEncode({'done': done, 'total': total}));
+    final key = _fmt.format(day);
+    final doc = await AppStore.repo.loadActive();
+    await AppStore.repo.save(doc.copyWith(
+      adherence: {...doc.adherence, key: {'done': done, 'total': total}},
+    ));
   }
 
   /// Last 7 days, oldest first, ending today. `pct` null where no record.
   static Future<List<DayAdherence>> last7(DateTime today) async {
-    final prefs = await SharedPreferences.getInstance();
+    final doc = await AppStore.repo.loadActive();
     final base = DateTime(today.year, today.month, today.day);
     final out = <DayAdherence>[];
     for (int i = 6; i >= 0; i--) {
       final day = base.subtract(Duration(days: i));
-      final raw = prefs.getString(_adhKey(day));
+      final key = _fmt.format(day);
+      final entry = doc.adherence[key];
       double? pct;
-      if (raw != null) {
-        try {
-          final m = jsonDecode(raw) as Map<String, dynamic>;
-          final total = (m['total'] as num).toInt();
-          final done = (m['done'] as num).toInt();
-          pct = total > 0 ? done / total * 100 : null;
-        } catch (_) {
-          pct = null;
-        }
+      if (entry != null) {
+        final total = entry['total'] ?? 0;
+        final done = entry['done'] ?? 0;
+        pct = total > 0 ? done / total * 100 : null;
       }
       out.add(DayAdherence(day, pct));
     }

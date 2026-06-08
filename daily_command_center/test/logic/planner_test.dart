@@ -2,60 +2,82 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:daily_command_center/data/models.dart';
 import 'package:daily_command_center/logic/planner.dart';
 
+// Minimal in-memory Plan with all four template ids present.
+Plan _minPlan() => Plan(
+      schemaVersion: 3,
+      meta: const PlanMeta(),
+      dayTemplates: const {
+        'office':      DayTemplate(label: 'Office',      colorKey: 'terra',  anchors: [], routineStack: []),
+        'wfh':         DayTemplate(label: 'WFH',         colorKey: 'sky',    anchors: [], routineStack: []),
+        'weekend':     DayTemplate(label: 'Weekend',     colorKey: 'amber',  anchors: [], routineStack: []),
+        'weekend_sun': DayTemplate(label: 'Weekend Sun', colorKey: 'amber',  anchors: [], routineStack: []),
+      },
+      week: const {
+        'mon': WeekEntry(templateId: 'office',      training: true),
+        'tue': WeekEntry(templateId: 'office',      training: false),
+        'wed': WeekEntry(templateId: 'wfh',         training: true),
+        'thu': WeekEntry(templateId: 'office',      training: false),
+        'fri': WeekEntry(templateId: 'office',      training: true),
+        'sat': WeekEntry(templateId: 'weekend',     training: false),
+        'sun': WeekEntry(templateId: 'weekend_sun', training: true),
+      },
+      weekEditor: const WeekEditorConfig(),
+      training: const TrainingRules(frequencyPerWeek: 4, avoidConsecutive: true, rotation: ['A', 'B']),
+      workouts: const {},
+      nutrition: const NutritionConfig(),
+      goals: const [],
+    );
+
 void main() {
-  group('defaultWeek', () {
+  group('applyBestSpacing', () {
     test('has exactly 4 training days', () {
-      final week = PlannerLogic.defaultWeek();
-      final count = week.values.where((p) => p.isTraining).length;
+      final plan = PlannerLogic.applyBestSpacing(_minPlan());
+      final count = plan.week.values.where((e) => e.training).length;
       expect(count, 4);
     });
 
     test('has no two consecutive training days', () {
-      final week = PlannerLogic.defaultWeek();
+      final plan = PlannerLogic.applyBestSpacing(_minPlan());
       const order = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
       for (int i = 0; i < order.length - 1; i++) {
-        final a = week[order[i]]!.isTraining;
-        final b = week[order[i + 1]]!.isTraining;
+        final a = plan.week[order[i]]!.training;
+        final b = plan.week[order[i + 1]]!.training;
         expect(a && b, false,
             reason: '${order[i]} and ${order[i + 1]} are both training — consecutive');
       }
     });
 
-    test('weekends have DaySchedule.weekend', () {
-      final week = PlannerLogic.defaultWeek();
-      expect(week['sat']!.schedule, DaySchedule.weekend);
-      expect(week['sun']!.schedule, DaySchedule.weekend);
+    test('weekends keep their weekend template ids', () {
+      final plan = PlannerLogic.applyBestSpacing(_minPlan());
+      expect(plan.week['sat']!.templateId, 'weekend');
+      expect(plan.week['sun']!.templateId, 'weekend_sun');
     });
   });
 
   group('toggleTraining', () {
     test('toggling training days never exceeds 4', () {
-      // Behavior: a day can be toggled on/off freely; turning on a 5th day
-      // displaces another for spacing, so the count is capped at 4 (and may be < 4).
-      var week = PlannerLogic.defaultWeek();
+      var plan = PlannerLogic.applyBestSpacing(_minPlan());
       for (final day in ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']) {
-        if (!week[day]!.isTraining) {
-          week = PlannerLogic.toggleTraining(week, day).plan;
+        if (!plan.week[day]!.training) {
+          plan = PlannerLogic.toggleTraining(plan, day).plan;
         }
-        final count = week.values.where((p) => p.isTraining).length;
+        final count = plan.week.values.where((e) => e.training).length;
         expect(count, lessThanOrEqualTo(4));
       }
     });
 
-    test('always maintains exactly 4 training days after toggle on', () {
-      // Note: with 7 days and 4 training, the only no-consecutive subset is [Mon,Wed,Fri,Sun].
-      // Toggling any non-training day must displace another, always keeping count at 4.
-      final week = PlannerLogic.defaultWeek();
-      final result = PlannerLogic.toggleTraining(week, 'tue');
-      final count = result.plan.values.where((p) => p.isTraining).length;
+    test('turning on a fifth day always displaces one, keeping count at 4', () {
+      final plan = PlannerLogic.applyBestSpacing(_minPlan());
+      final result = PlannerLogic.toggleTraining(plan, 'tue');
+      final count = result.plan.week.values.where((e) => e.training).length;
       expect(count, 4);
     });
 
     test('provides a message when a day is moved', () {
-      final week = PlannerLogic.defaultWeek();
+      final plan = PlannerLogic.applyBestSpacing(_minPlan());
       for (final day in ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']) {
-        if (!week[day]!.isTraining) {
-          final result = PlannerLogic.toggleTraining(week, day);
+        if (!plan.week[day]!.training) {
+          final result = PlannerLogic.toggleTraining(plan, day);
           expect(result.message, anyOf(isNull, isA<String>()));
           break;
         }
@@ -65,23 +87,24 @@ void main() {
 
   group('toggleSchedule', () {
     test('flips office to wfh', () {
-      final week = PlannerLogic.defaultWeek();
-      final updated = PlannerLogic.toggleSchedule(week, 'mon');
-      expect(updated['mon']!.schedule, DaySchedule.wfh);
+      final plan = PlannerLogic.applyBestSpacing(_minPlan());
+      final updated = PlannerLogic.toggleSchedule(plan, 'mon');
+      expect(updated.week['mon']!.templateId, 'wfh');
     });
 
     test('flips wfh to office', () {
-      final week = <String, DayPlan>{
-        'mon': const DayPlan(schedule: DaySchedule.wfh, isTraining: false),
-        'tue': const DayPlan(schedule: DaySchedule.office, isTraining: false),
-        'wed': const DayPlan(schedule: DaySchedule.wfh,    isTraining: true),
-        'thu': const DayPlan(schedule: DaySchedule.office, isTraining: false),
-        'fri': const DayPlan(schedule: DaySchedule.office, isTraining: true),
-        'sat': const DayPlan(schedule: DaySchedule.weekend, isTraining: false),
-        'sun': const DayPlan(schedule: DaySchedule.weekend, isTraining: true),
-      };
-      final updated = PlannerLogic.toggleSchedule(week, 'wed');
-      expect(updated['wed']!.schedule, DaySchedule.office);
+      final base = _minPlan().copyWith(week: {
+        ..._minPlan().week,
+        'wed': const WeekEntry(templateId: 'wfh', training: true),
+      });
+      final updated = PlannerLogic.toggleSchedule(base, 'wed');
+      expect(updated.week['wed']!.templateId, 'office');
+    });
+
+    test('weekend template is unchanged by toggleSchedule', () {
+      final plan = _minPlan();
+      final result = PlannerLogic.toggleSchedule(plan, 'sat');
+      expect(result.week['sat']!.templateId, 'weekend');
     });
   });
 }

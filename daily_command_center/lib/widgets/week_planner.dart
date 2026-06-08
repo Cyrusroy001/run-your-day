@@ -12,9 +12,9 @@ const _dayNames = {
 };
 
 class WeekPlanner extends StatefulWidget {
-  final WeekPlan plan;
+  final Plan plan;
   final String todayKey;
-  final void Function(WeekPlan newPlan) onPlanChanged;
+  final void Function(Plan newPlan) onPlanChanged;
 
   const WeekPlanner({
     super.key,
@@ -31,7 +31,7 @@ class _WeekPlannerState extends State<WeekPlanner> {
   String? _caption;
   Timer? _captionTimer;
 
-  int get _trainCount => widget.plan.values.where((p) => p.isTraining).length;
+  int get _trainCount => widget.plan.week.values.where((e) => e.training).length;
 
   @override
   void dispose() {
@@ -50,7 +50,8 @@ class _WeekPlannerState extends State<WeekPlanner> {
   }
 
   void _onSchedule(String day) {
-    if (widget.plan[day]!.schedule == DaySchedule.weekend) return;
+    final entry = widget.plan.week[day]!;
+    if (entry.templateId.startsWith('weekend')) return;
     widget.onPlanChanged(PlannerLogic.toggleSchedule(widget.plan, day));
   }
 
@@ -90,7 +91,7 @@ class _WeekPlannerState extends State<WeekPlanner> {
           const SizedBox(height: 10),
           ..._dayOrder.map((day) => _DayRow(
                 day: day,
-                plan: widget.plan[day]!,
+                entry: widget.plan.week[day]!,
                 isToday: day == widget.todayKey,
                 onSchedule: () => _onSchedule(day),
                 onTraining: () => _onTraining(day),
@@ -102,7 +103,7 @@ class _WeekPlannerState extends State<WeekPlanner> {
             ),
           const SizedBox(height: 10),
           GestureDetector(
-            onTap: () => widget.onPlanChanged(PlannerLogic.defaultWeek()),
+            onTap: () => widget.onPlanChanged(PlannerLogic.applyBestSpacing(widget.plan)),
             child: const Text('Reset to suggested week',
                 style: TextStyle(fontSize: 11.5, color: AppColors.dim, decoration: TextDecoration.underline, decorationColor: AppColors.dim)),
           ),
@@ -114,14 +115,14 @@ class _WeekPlannerState extends State<WeekPlanner> {
 
 class _DayRow extends StatelessWidget {
   final String day;
-  final DayPlan plan;
+  final WeekEntry entry;
   final bool isToday;
   final VoidCallback onSchedule;
   final VoidCallback onTraining;
 
   const _DayRow({
     required this.day,
-    required this.plan,
+    required this.entry,
     required this.isToday,
     required this.onSchedule,
     required this.onTraining,
@@ -129,9 +130,9 @@ class _DayRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isWeekend = plan.schedule == DaySchedule.weekend;
-    final schedLabel = isWeekend ? 'Weekend' : (plan.schedule == DaySchedule.office ? 'Office' : 'WFH');
-    final schedColor = isWeekend ? AppColors.amber : (plan.schedule == DaySchedule.office ? AppColors.terra : AppColors.sky);
+    final isWeekend = entry.templateId.startsWith('weekend');
+    final schedLabel = isWeekend ? 'Weekend' : (entry.templateId == 'office' ? 'Office' : 'WFH');
+    final schedColor = isWeekend ? AppColors.amber : (entry.templateId == 'office' ? AppColors.terra : AppColors.sky);
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 3),
@@ -158,8 +159,8 @@ class _DayRow extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          Text(plan.isTraining ? 'Train' : 'Rest',
-              style: TextStyle(fontSize: 11, color: plan.isTraining ? AppColors.moss : AppColors.dim, fontWeight: FontWeight.w600)),
+          Text(entry.training ? 'Train' : 'Rest',
+              style: TextStyle(fontSize: 11, color: entry.training ? AppColors.moss : AppColors.dim, fontWeight: FontWeight.w600)),
           const SizedBox(width: 8),
           GestureDetector(
             key: Key('train-$day'),
@@ -170,12 +171,12 @@ class _DayRow extends StatelessWidget {
               height: 28,
               padding: const EdgeInsets.all(3),
               decoration: BoxDecoration(
-                color: plan.isTraining ? AppColors.terra : AppColors.line,
+                color: entry.training ? AppColors.terra : AppColors.line,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: AnimatedAlign(
                 duration: const Duration(milliseconds: 180),
-                alignment: plan.isTraining ? Alignment.centerRight : Alignment.centerLeft,
+                alignment: entry.training ? Alignment.centerRight : Alignment.centerLeft,
                 child: Container(width: 22, height: 22,
                     decoration: const BoxDecoration(color: AppColors.cream, shape: BoxShape.circle)),
               ),
