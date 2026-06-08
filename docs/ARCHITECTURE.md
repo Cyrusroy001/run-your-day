@@ -11,10 +11,10 @@ Quick reference for navigating the codebase. Read before asking "where does X li
 │        Flutter App              │  User opens app → reads/writes plan
 │  (lib/ — Dart)                  │  Computes now-state → pushes to SharedPrefs
 └────────────────┬────────────────┘
-                 │ SharedPreferences (key: flutter.*)
+                 │ home_widget → HomeWidgetPreferences (raw keys)
 ┌────────────────▼────────────────┐
 │     Android Home Screen Widget  │  Reads SharedPrefs every 30 min
-│  (android/ — Kotlin)            │  Renders RemoteViews (no Flutter)
+│  (android/ — Kotlin)            │  via HomeWidgetPlugin.getData; ~15 min (WorkManager)
 └─────────────────────────────────┘
 ```
 
@@ -78,8 +78,8 @@ User taps training dot
   → WeekPlanner calls onPlanChanged(newPlan, message?)
   → HomeScreen._updatePlan saves to SharedPreferences
   → HomeScreen calls AppStore.writeWidgetData(plan, todayKey)
-  → home_widget writes flutter.* keys to SharedPreferences
-  → Android widget reads on next 30-min refresh
+  → home_widget writes raw keys into its HomeWidgetPreferences file
+  → Android widget reads on next refresh (~15 min via WorkManager, or app open)
 ```
 
 ## Data flow: app open / now-card refresh
@@ -105,12 +105,12 @@ App opens
 | `log_A`, `log_B`, `log_BENCH`, `log_CARDIO` | String (JSON array) | `AppStore.saveLogs` | `AppStore.loadLogs` |
 | `done_<yyyy-MM-dd>` | String (JSON array of block signatures) | `AdherenceStore.saveDone` | `AdherenceStore.loadDone` |
 | `adherence_<yyyy-MM-dd>` | String (JSON `{done,total}`) | `AdherenceStore.writeAdherence` | `AdherenceStore.last7` |
-| `flutter.currentAction` | String | `AppStore.writeWidgetData` | `NowWidgetProvider.kt` |
-| `flutter.nextAction` | String | `AppStore.writeWidgetData` | `NowWidgetProvider.kt` |
-| `flutter.dayLabel` | String | `AppStore.writeWidgetData` | `NowWidgetProvider.kt` |
-| `flutter.progressPct` | Int | `AppStore.writeWidgetData` | `NowWidgetProvider.kt` (read but unused — widget_progress view removed) |
+| `currentAction` | String | `AppStore.writeWidgetData` | `NowWidgetProvider.kt` |
+| `nextAction` | String | `AppStore.writeWidgetData` | `NowWidgetProvider.kt` |
+| `dayLabel` | String | `AppStore.writeWidgetData` | `NowWidgetProvider.kt` |
+| `progressPct` | Int | `AppStore.writeWidgetData` | `NowWidgetProvider.kt` (read but unused — widget_progress view removed) |
 
-The `flutter.` prefix is automatically added by the `home_widget` package when writing, and must be manually included in the Kotlin `getSharedPreferences` reads.
+⚠️ The four widget keys above live in a **different file** from the rest of this table. `home_widget` writes them as **raw** keys (no `flutter.` prefix) into its own `HomeWidgetPreferences` file, and `NowWidgetProvider.kt` reads them via `HomeWidgetPlugin.getData(context)`. The other keys are the app's normal `shared_preferences` store (which *does* use a `flutter.` prefix internally, in `FlutterSharedPreferences`). The widget is refreshed ~every 15 min by a WorkManager periodic task (`main.dart`), plus on app open.
 
 ---
 
