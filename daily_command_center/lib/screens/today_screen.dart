@@ -3,8 +3,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../data/adherence_store.dart';
 import '../data/models.dart';
+import '../data/state_store.dart';
 import '../logic/assembler.dart';
 import '../logic/timeline.dart';
+import '../logic/weekly_review.dart';
 import '../main.dart';
 
 const _dayNames = {
@@ -17,7 +19,8 @@ class TodayScreen extends StatefulWidget {
   final String todayKey;
   final Set<String> doneToday;
   final void Function(String signature) onToggle;
-  final double? debugNow; // test seam; defaults to nowDecimal()
+  final double? debugNow;       // test seam; defaults to nowDecimal()
+  final WeeklySummary? debugSummary; // test seam; skips async StateStore load
 
   const TodayScreen({
     super.key,
@@ -26,6 +29,7 @@ class TodayScreen extends StatefulWidget {
     required this.doneToday,
     required this.onToggle,
     this.debugNow,
+    this.debugSummary,
   });
 
   @override
@@ -35,6 +39,7 @@ class TodayScreen extends StatefulWidget {
 class _TodayScreenState extends State<TodayScreen> {
   late Set<String> _done;
   List<DayAdherence>? _week;
+  WeeklySummary? _summary;
 
   @override
   void initState() {
@@ -43,6 +48,13 @@ class _TodayScreenState extends State<TodayScreen> {
     AdherenceStore.last7(DateTime.now()).then((w) {
       if (mounted) setState(() => _week = w);
     });
+    if (widget.debugSummary != null) {
+      _summary = widget.debugSummary;
+    } else {
+      StateStore.recentDriftEvents(DateTime.now(), days: 7).then((events) {
+        if (mounted) setState(() => _summary = WeeklyReview.summarize(events));
+      });
+    }
   }
 
   void _toggle(String sig) {
@@ -86,7 +98,9 @@ class _TodayScreenState extends State<TodayScreen> {
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
         children: [
           _weekStrip(),
-          const SizedBox(height: 18),
+          const SizedBox(height: 12),
+          _driftCard(),
+          const SizedBox(height: 6),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -110,6 +124,26 @@ class _TodayScreenState extends State<TodayScreen> {
           ...List.generate(blocks.length, (i) => _row(blocks[i], i == curIdx)),
         ],
       ),
+    );
+  }
+
+  Widget _driftCard() {
+    final s = _summary;
+    if (s == null) return const SizedBox.shrink();
+    final isSunday = widget.todayKey == 'sun';
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.panel,
+        border: Border.all(color: isSunday ? AppColors.amber : AppColors.line),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(isSunday ? 'WEEKLY REVIEW' : 'THIS WEEK',
+            style: const TextStyle(fontSize: 11, letterSpacing: 1, color: AppColors.sky, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 6),
+        Text(s.sentence, style: const TextStyle(fontSize: 13, color: AppColors.cream, height: 1.3)),
+      ]),
     );
   }
 

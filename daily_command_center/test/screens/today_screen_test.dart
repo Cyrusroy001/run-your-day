@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:daily_command_center/data/models.dart';
 import 'package:daily_command_center/data/store.dart';
 import 'package:daily_command_center/data/profile_repository.dart';
+import 'package:daily_command_center/logic/weekly_review.dart';
 import 'package:daily_command_center/screens/today_screen.dart';
 
 late Plan _plan;
@@ -72,5 +73,21 @@ void main() {
     await tester.pumpWidget(_host(onToggle: (_) {}));
     await settle(tester);
     expect(find.text('NOW'), findsOneWidget);
+  });
+
+  testWidgets('shows weekly drift summary card with a kill event', (tester) async {
+    const summary = WeeklySummary(
+      killCount: 1, compactCount: 0, jettisonCount: 0,
+      sentence: 'This week — Train auto-cancelled 1×.',
+    );
+    await tester.pumpWidget(MaterialApp(
+      home: TodayScreen(
+        plan: _plan, todayKey: 'mon',
+        doneToday: const {}, onToggle: (_) {},
+        debugSummary: summary,
+      ),
+    ));
+    await settle(tester);
+    expect(find.textContaining('Train auto-cancelled'), findsOneWidget);
   });
 }
