@@ -65,4 +65,18 @@ void main() {
     final events = await StateStore.recentDriftEvents(DateTime(2026, 6, 8));
     expect(events, isEmpty);
   });
+
+  test('driftLog is capped at 50 entries per day, keeping newest', () async {
+    final day = DateTime(2026, 6, 8);
+    for (int i = 0; i < 60; i++) {
+      await StateStore.appendDriftEvent(
+        day,
+        DriftEvent(date: '2026-06-08', itemId: 'x$i', label: 'x', event: 'compacted'),
+      );
+    }
+    final s = await StateStore.loadState(day);
+    expect(s.driftLog.length, 50);
+    expect(s.driftLog.last.itemId, 'x59');
+    expect(s.driftLog.first.itemId, 'x10');
+  });
 }

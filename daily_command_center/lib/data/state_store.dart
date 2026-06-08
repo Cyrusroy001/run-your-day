@@ -20,12 +20,16 @@ class StateStore {
     ));
   }
 
-  /// Append a single drift event to the day's log without overwriting anything.
+  static const int _maxPerDay = 50;
+
+  /// Append a single drift event to the day's log, capped at [_maxPerDay].
   static Future<void> appendDriftEvent(DateTime day, DriftEvent event) async {
     final key = _fmt.format(day);
     final doc = await AppStore.repo.loadActive();
     final existing = doc.states[key] ?? DailyState(date: key);
-    final updated = existing.copyWith(driftLog: [...existing.driftLog, event]);
+    var log = [...existing.driftLog, event];
+    if (log.length > _maxPerDay) log = log.sublist(log.length - _maxPerDay);
+    final updated = existing.copyWith(driftLog: log);
     await AppStore.repo.save(doc.copyWith(
       states: {...doc.states, key: updated},
     ));
