@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reminders 2 — UX Mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,400&family=Spline+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ---------- DARK (default) ---------- */
+  :root {
+    --bg:      #17120e;   /* warm near-black, brown-tinted */
+    --panel:   #221a13;
+    --panel2:  #2c2218;
+    --cream:   #f4e9dc;   /* primary text */
+    --muted:   #c9b8a6;
+    --dim:     #8c7b6b;
+    --line:    rgba(244,233,220,.10);
+    --terra:   #c8633a;   /* anchors, primary accent */
+    --terra-d: rgba(200,91,52,.16);
+    --moss:    #8fb36a;   /* done / on-track / good */
+    --moss-d:  rgba(143,179,106,.16);
+    --sky:     #7ba6c9;   /* quiet labels / info */
+    --amber:   #e3a948;   /* attention / compacted (loudest we go) */
+    --amber-d: rgba(227,169,72,.14);
+    --shadow:  rgba(0,0,0,.35);
+  }
+  /* ---------- LIGHT (warm paper) ---------- */
+  body.light {
+    --bg:      #f3ebde;
+    --panel:   #fffaf2;
+    --panel2:  #f6ecdd;
+    --cream:   #2a2018;   /* ink */
+    --muted:   #6b5d4f;
+    --dim:     #9b8b7a;
+    --line:    rgba(42,32,24,.12);
+    --terra:   #b24e2a;
+    --terra-d: rgba(178,78,42,.10);
+    --moss:    #5d8741;
+    --moss-d:  rgba(93,135,65,.12);
+    --sky:     #4f7fa3;
+    --amber:   #b9842a;
+    --amber-d: rgba(185,132,42,.12);
+    --shadow:  rgba(120,90,60,.16);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--cream);
+    font-family: 'Spline Sans', sans-serif;
+    padding: 32px 24px 80px;
+    transition: background .3s, color .3s;
+  }
+  .serif { font-family: 'Fraunces', serif; }
+
+  /* ===== page header ===== */
+  .masthead { max-width: 1180px; margin: 0 auto 28px; }
+  .masthead .kicker { font-size: 11px; letter-spacing: 3px; color: var(--terra); font-weight: 600; }
+  .masthead h1 { font-family: 'Fraunces', serif; font-weight: 900; font-size: 40px; letter-spacing: -.5px; margin: 8px 0 6px; }
+  .masthead p { color: var(--muted); font-size: 15px; max-width: 720px; line-height: 1.5; }
+  .masthead .philo { font-family:'Fraunces',serif; font-style:italic; color: var(--cream); font-size: 17px; margin-top:10px; }
+  .controls { margin-top: 18px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn {
+    font-family: 'Spline Sans'; font-size: 13px; font-weight: 600; color: var(--cream);
+    background: var(--panel); border: 1px solid var(--line); border-radius: 999px;
+    padding: 9px 16px; cursor: pointer; transition: all .2s;
+  }
+  .btn:hover { border-color: var(--terra); }
+
+  /* ===== design tokens strip ===== */
+  .tokens { max-width: 1180px; margin: 0 auto 36px; display: flex; gap: 26px; flex-wrap: wrap;
+            padding: 18px 20px; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; }
+  .swatches { display: flex; gap: 10px; flex-wrap: wrap; }
+  .sw { width: 46px; text-align: center; font-size: 9px; color: var(--dim); }
+  .sw i { display: block; height: 30px; border-radius: 8px; margin-bottom: 5px; border: 1px solid var(--line); }
+  .typo b { font-family:'Fraunces',serif; font-weight:900; font-size: 22px; display:block; }
+  .typo span { font-size: 12px; color: var(--muted); }
+
+  /* ===== phone grid ===== */
+  .grid { max-width: 1180px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 30px; justify-content: center; }
+  .frame { width: 320px; }
+  .frame > .cap { font-size: 12px; color: var(--sky); font-weight: 600; margin: 0 0 8px 4px; letter-spacing: .3px; }
+  .frame > .cap b { color: var(--cream); }
+  .phone {
+    background: var(--bg); border: 1px solid var(--line); border-radius: 30px;
+    box-shadow: 0 20px 50px var(--shadow); overflow: hidden; position: relative;
+    height: 660px; display: flex; flex-direction: column;
+  }
+  body.light .phone { box-shadow: 0 16px 40px var(--shadow); }
+  .statusbar { height: 26px; display: flex; align-items: center; justify-content: space-between;
+               padding: 0 18px; font-size: 11px; color: var(--dim); flex: none; }
+  .screen { flex: 1; overflow-y: auto; padding: 6px 16px 22px; }
+  .screen::-webkit-scrollbar { width: 0; }
+
+  /* ---- shared bits ---- */
+  .hdr-row { display: flex; align-items: flex-start; justify-content: space-between; padding: 8px 2px 4px; }
+  .hdr-row .k { font-size: 9px; letter-spacing: 2.5px; color: var(--terra); font-weight: 600; }
+  .hdr-row h2 { font-family:'Fraunces',serif; font-weight: 900; font-size: 30px; line-height: .95; letter-spacing: -.5px; margin-top: 6px; }
+  .hdr-row .sub { font-family:'Fraunces',serif; font-style: italic; color: var(--muted); font-size: 13px; margin-top: 5px; }
+  .avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--terra-d); border: 1px solid var(--terra);
+            color: var(--terra); display: grid; place-items: center; font-weight: 700; font-size: 15px; flex: none; cursor: pointer; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 16px; margin-top: 14px; }
+  .label-s { font-size: 10px; letter-spacing: 1.5px; color: var(--sky); font-weight: 600; }
+
+  /* now (hero) card */
+  .now { background: linear-gradient(160deg, var(--panel2), var(--panel)); border-radius: 20px; padding: 18px; margin-top: 14px;
+         border: 1px solid var(--line); position: relative; }
+  .now .top { display:flex; justify-content: space-between; align-items:center; }
+  .now .nowtag { font-size: 9px; letter-spacing: 2px; color: var(--moss); font-weight: 700; }
+  .ring { width: 46px; height: 46px; border-radius: 50%;
+          background: conic-gradient(var(--moss) calc(var(--p)*1%), var(--line) 0);
+          display: grid; place-items: center; }
+  .ring i { width: 36px; height: 36px; border-radius: 50%; background: var(--panel); display:grid; place-items:center;
+            font-size: 10px; color: var(--moss); font-weight: 700; font-style: normal; }
+  .now h3 { font-family:'Fraunces',serif; font-weight: 600; font-size: 21px; margin: 10px 0 2px; }
+  .now .next { color: var(--muted); font-size: 12.5px; margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--line); }
+  .now .next b { color: var(--cream); font-weight: 600; }
+  .whisper { margin-top: 10px; font-size: 12px; color: var(--amber); display: flex; gap: 7px; align-items: baseline; }
+  .whisper::before { content:''; width:6px; height:6px; border-radius:50%; background: var(--amber); flex:none; transform: translateY(-1px); }
+
+  .mini { display: flex; gap: 8px; margin-top: 10px; }
+  .mini .pill { flex: 1; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+  .mini .pill .n { font-family:'Fraunces',serif; font-weight: 900; font-size: 18px; }
+  .mini .pill .t { font-size: 10.5px; color: var(--dim); margin-top: 2px; }
+
+  /* week strip */
+  .week { display: flex; gap: 5px; margin-top: 12px; }
+  .week .d { flex: 1; text-align: center; padding: 8px 0; border-radius: 10px; border: 1px solid var(--line); font-size: 11px; }
+  .week .d.train { background: var(--terra-d); border-color: var(--terra); color: var(--terra); font-weight: 600; }
+  .week .d.today { outline: 2px solid var(--amber); outline-offset: -1px; }
+  .week .d small { display: block; font-size: 8px; color: var(--dim); margin-top: 3px; }
+
+  /* ===== LIVE timeline ===== */
+  .drift-summary { font-size: 12.5px; line-height: 1.45; padding: 11px 13px; border-radius: 12px; margin: 10px 0 4px;
+                   background: var(--amber-d); border: 1px solid var(--amber); color: var(--cream); }
+  .drift-summary.ok { background: var(--moss-d); border-color: var(--moss); color: var(--muted); }
+  .drift-summary b { color: var(--cream); }
+
+  .tl { margin-top: 6px; }
+  .row { display: flex; gap: 11px; padding: 9px 2px; align-items: flex-start; position: relative; }
+  .row .t { width: 42px; flex: none; font-size: 11px; color: var(--dim); padding-top: 2px; }
+  .row .body { flex: 1; }
+  .row .ttl { font-size: 13.5px; font-weight: 500; }
+  .bar { height: 7px; background: var(--line); border-radius: 6px; margin-top: 7px; overflow: hidden; display:flex; }
+  .bar > i { display:block; height: 100%; border-radius: 6px; }
+  .bar .ideal { background: var(--moss); }
+  .bar .spent { background: var(--moss); opacity:.45; }
+  .bar .left  { background: var(--moss); }
+  .meta { font-size: 10.5px; color: var(--dim); margin-top: 5px; }
+  .meta .tag { color: var(--amber); font-weight: 600; }
+
+  .row.done .ttl { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--dim); }
+  .row.done .t { color: var(--dim); }
+  .row.done { opacity: .62; padding-top: 6px; padding-bottom: 6px; }
+  .chk { width: 19px; height: 19px; border-radius: 6px; border: 2px solid var(--dim); flex: none; margin-top: 1px; display:grid; place-items:center; }
+  .chk.on { background: var(--moss); border-color: var(--moss); color: var(--bg); font-size: 12px; font-weight: 800; }
+  .chk.cur { border-color: var(--terra); }
+
+  .row.active { background: var(--panel); border: 1px solid var(--terra); border-radius: 14px; padding: 13px; box-shadow: 0 6px 18px var(--shadow); }
+  .row.active .ttl { font-weight: 600; font-size: 14.5px; }
+  .row.active .budget { font-size: 11.5px; color: var(--terra); font-weight: 600; margin-top: 6px; }
+  .nowline { display:flex; align-items:center; gap: 8px; margin: 6px 0; }
+  .nowline i { height:1px; background: var(--terra); flex:1; opacity:.5; }
+  .nowline b { font-size: 9px; letter-spacing: 2px; color: var(--terra); font-weight: 700; }
+
+  .row.compact .ttl { color: var(--cream); }
+  .row.compact { border-left: 2px solid var(--amber); padding-left: 9px; margin-left: -2px; }
+
+  .row.dropped { opacity: .5; padding: 5px 2px; }
+  .row.dropped .ttl { font-size: 12px; color: var(--dim); text-decoration: line-through; }
+  .row.dropped .why { font-size: 10px; color: var(--dim); }
+
+  /* anchor wall */
+  .anchor { margin: 11px 0; padding: 11px 13px; border-radius: 10px; background: var(--terra-d);
+            border: 1px solid var(--terra); display: flex; align-items: center; gap: 10px; }
+  .anchor .lk { font-size: 10px; letter-spacing: 1.5px; color: var(--terra); font-weight: 700; }
+  .anchor .nm { font-size: 12.5px; color: var(--cream); font-weight: 500; }
+  .anchor.soft { background: transparent; border-style: dashed; border-color: var(--dim); }
+  .anchor.soft .lk { color: var(--dim); }
+  .anchor.soft .nm { color: var(--muted); }
+
+  .adjust-bar { position: sticky; bottom: 0; }
+  .cta { display: block; width: 100%; text-align: center; margin-top: 14px; padding: 12px;
+         background: var(--terra); color: #fff; border: none; border-radius: 14px; font-weight: 600; font-size: 13.5px;
+         font-family:'Spline Sans'; cursor: pointer; }
+  body.light .cta { color: #fff; }
+  .cta.ghost { background: transparent; color: var(--terra); border: 1px solid var(--terra); }
+
+  /* teaching card */
+  .teach { position: absolute; left: 14px; right: 14px; bottom: 16px; background: var(--panel2);
+           border: 1px solid var(--terra); border-radius: 16px; padding: 15px; box-shadow: 0 14px 40px var(--shadow); }
+  .teach .spark { font-size: 11px; color: var(--terra); font-weight: 700; letter-spacing: .5px; }
+  .teach p { font-size: 13px; line-height: 1.45; margin: 7px 0 12px; color: var(--cream); }
+  .teach .acts { display: flex; gap: 8px; justify-content: flex-end; }
+  .teach .acts a { font-size: 12px; font-weight: 600; padding: 7px 14px; border-radius: 10px; cursor: pointer; }
+  .teach .acts .got { background: var(--terra); color: #fff; }
+  .teach .acts .why { color: var(--muted); border: 1px solid var(--line); }
+
+  /* adjust mode rows */
+  .arow { display: flex; align-items: center; gap: 10px; padding: 11px; margin-top: 9px;
+          background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+  .arow .grip { color: var(--dim); font-size: 16px; cursor: grab; }
+  .arow .nm { flex: 1; font-size: 13px; }
+  .arow .nm small { display:block; color: var(--dim); font-size: 10px; }
+  .level { font-size: 10.5px; font-weight: 600; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--line); }
+  .level.protect { color: var(--moss); border-color: var(--moss); background: var(--moss-d); }
+  .level.normal  { color: var(--muted); }
+  .level.drop    { color: var(--amber); border-color: var(--amber); background: var(--amber-d); }
+  .arow.frozen { background: var(--terra-d); border-color: var(--terra); }
+  .arow.frozen .nm { color: var(--terra); font-weight: 600; }
+  .removed-tray { margin-top: 14px; padding: 11px 13px; border: 1px dashed var(--line); border-radius: 12px;
+                  font-size: 12px; color: var(--muted); display:flex; justify-content: space-between; }
+  .snack { position: absolute; left: 14px; right: 14px; bottom: 16px; background: var(--cream); color: var(--bg);
+           border-radius: 12px; padding: 12px 14px; display:flex; justify-content: space-between; align-items:center;
+           font-size: 12.5px; font-weight: 500; box-shadow: 0 12px 30px var(--shadow); }
+  .snack b { color: var(--terra); font-weight: 700; letter-spacing: .5px; cursor: pointer; }
+
+  /* weekly review */
+  .bars { display:flex; align-items:flex-end; gap: 6px; height: 64px; margin-top: 12px; }
+  .bars .b { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; }
+  .bars .b i { width: 100%; border-radius: 5px; }
+  .bars .b small { font-size: 8px; color: var(--dim); margin-top: 4px; }
+  .nudge { margin-top: 14px; padding: 14px; border-radius: 14px; background: var(--terra-d); border: 1px solid var(--terra); }
+  .nudge .q { font-family:'Fraunces',serif; font-size: 15px; line-height: 1.35; }
+  .nudge .acts { margin-top: 10px; display:flex; gap: 8px; }
+  .nudge .acts span { font-size: 11.5px; font-weight: 600; padding: 7px 12px; border-radius: 10px; border: 1px solid var(--terra); color: var(--terra); }
+
+  /* avatar sheet */
+  .sheet { margin-top: 120px; background: var(--panel2); border-radius: 22px 22px 0 0; border: 1px solid var(--line); border-bottom: none;
+           padding: 18px 16px 26px; }
+  .sheet .grab { width: 40px; height: 4px; border-radius: 4px; background: var(--line); margin: 0 auto 16px; }
+  .sheet .me { display:flex; align-items:center; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+  .sheet .me .av { width: 44px; height:44px; border-radius:50%; background: var(--terra); color:#fff; display:grid; place-items:center; font-weight:700; }
+  .sheet .me b { font-family:'Fraunces',serif; font-size: 18px; }
+  .sheet .me small { display:block; color: var(--dim); font-size: 11px; }
+  .sheet .item { display:flex; align-items:center; gap: 12px; padding: 13px 4px; font-size: 14px; border-bottom: 1px solid var(--line); }
+  .sheet .item .ic { width: 22px; color: var(--sky); }
+
+  .peek { position:absolute; left: 60px; right: 26px; top: 250px; background: var(--cream); color: var(--bg);
+          border-radius: 12px; padding: 11px 13px; font-size: 11.5px; line-height: 1.5; box-shadow: 0 12px 30px var(--shadow); }
+  .peek b { color: var(--terra); }
+
+  .note { max-width: 1180px; margin: 40px auto 0; padding: 22px 24px; background: var(--panel); border: 1px solid var(--line);
+          border-radius: 16px; font-size: 13.5px; line-height: 1.7; color: var(--muted); }
+  .note h4 { font-family:'Fraunces',serif; color: var(--cream); font-size: 18px; margin-bottom: 8px; }
+  .note b { color: var(--cream); }
+  .note .legend span { display:inline-block; margin-right: 16px; }
+  .dot { display:inline-block; width:10px; height:10px; border-radius:3px; vertical-align:middle; margin-right:5px; }
+</style>
+</head>
+<body class="dark">
+
+<div class="masthead">
+  <div class="kicker">REMINDERS 2 · UX MOCKUPS</div>
+  <h1 class="serif">A human day, not a hustle.</h1>
+  <p>The same screens render any life from its Life&nbsp;JSON. A rich drift engine quietly absorbs real-world chaos — trimming, reflowing, protecting what matters — so the surface stays calm and you feel <b style="color:var(--cream)">in good hands</b>, never behind.</p>
+  <p class="philo">“Rest is part of the plan. The app bends so your day doesn’t break.”</p>
+  <div class="controls">
+    <button class="btn" onclick="document.body.classList.toggle('light')">◐ Toggle light / dark</button>
+    <span class="btn" style="cursor:default; color:var(--dim)">No red anywhere — amber is the loudest tone (alarm = hustle).</span>
+  </div>
+</div>
+
+<div class="tokens">
+  <div>
+    <div class="label-s" style="margin-bottom:8px">PALETTE</div>
+    <div class="swatches">
+      <div class="sw"><i style="background:#c8633a"></i>terra<br>anchor</div>
+      <div class="sw"><i style="background:#8fb36a"></i>moss<br>on-track</div>
+      <div class="sw"><i style="background:#e3a948"></i>amber<br>trimmed</div>
+      <div class="sw"><i style="background:#7ba6c9"></i>sky<br>labels</div>
+      <div class="sw"><i style="background:#c9b8a6"></i>muted<br>past</div>
+      <div class="sw"><i style="background:#17120e; border-color:#444"></i>bg<br>warm</div>
+    </div>
+  </div>
+  <div class="typo">
+    <div class="label-s" style="margin-bottom:8px">TYPE</div>
+    <b class="serif">Fraunces</b><span>display · warm, editorial, human</span>
+    <div style="margin-top:6px;font-weight:600">Spline Sans</div><span>body · clean, legible</span>
+  </div>
+  <div style="max-width:300px">
+    <div class="label-s" style="margin-bottom:8px">SIGNATURE ELEMENTS</div>
+    <span style="font-size:12px;color:var(--muted);line-height:1.6">
+      Elastic <b style="color:var(--cream)">budget bars</b> · the <b style="color:var(--cream)">drift whisper</b> ·
+      🔒 <b style="color:var(--cream)">anchor walls</b> · just-in-time <b style="color:var(--cream)">teaching cards</b> ·
+      humanized <b style="color:var(--cream)">Protect / Normal / Drop-first</b>.
+    </span>
+  </div>
+</div>
+
+<div class="grid">
+
+  <!-- 1. HOME on-track -->
+  <div class="frame">
+    <div class="cap"><b>1 · Home</b> — on track (calm default)</div>
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span>📶 100%</span></div>
+      <div class="screen">
+        <div class="hdr-row">
+          <div>
+            <div class="k">SATURDAY · 7 JUNE</div>
+            <h2 class="serif">Run the day.</h2>
+            <div class="sub">Lean &amp; defined — plan it, then run it.</div>
+          </div>
+          <div class="avatar">C</div>
+        </div>
+        <div class="now" style="--p:55">
+          <div class="top">
+            <div class="nowtag">▶ RIGHT NOW</div>
+            <div class="ring"><i>41′</i></div>
+          </div>
+          <h3 class="serif">Deep Focus — AI Building</h3>
+          <div style="font-size:11.5px;color:var(--muted)">41m left of 75m budget</div>
+          <div class="next">Next · <b>11:00 Shower + brunch</b></div>
+        </div>
+        <div class="mini">
+          <div class="pill"><div class="n">3<span style="font-size:12px;color:var(--dim)"> / 9</span></div><div class="t">done today</div></div>
+          <div class="pill"><div class="n serif" style="font-size:15px">On track</div><div class="t">no drift</div></div>
+        </div>
+        <div class="card" style="margin-top:14px">
+          <div class="label-s">PLAN YOUR WEEK · 4 training days</div>
+          <div class="week">
+            <div class="d train today">M<small>B</small></div>
+            <div class="d">T<small>·</small></div>
+            <div class="d train">W<small>A</small></div>
+            <div class="d">T<small>·</small></div>
+            <div class="d train">F<small>B</small></div>
+            <div class="d">S<small>·</small></div>
+            <div class="d train">S<small>Cd</small></div>
+          </div>
+        </div>
+        <button class="cta ghost">Open today’s timeline →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. HOME drifting -->
+  <div class="frame">
+    <div class="cap"><b>2 · Home</b> — drifting (the whisper)</div>
+    <div class="phone">
+      <div class="statusbar"><span>10:31</span><span>📶 100%</span></div>
+      <div class="screen">
+        <div class="hdr-row">
+          <div>
+            <div class="k">SATURDAY · 7 JUNE</div>
+            <h2 class="serif">Run the day.</h2>
+            <div class="sub">Lean &amp; defined — plan it, then run it.</div>
+          </div>
+          <div class="avatar">C</div>
+        </div>
+        <div class="now" style="--p:30">
+          <div class="top">
+            <div class="nowtag">▶ RIGHT NOW</div>
+            <div class="ring"><i>22′</i></div>
+          </div>
+          <h3 class="serif">Shower + brunch</h3>
+          <div style="font-size:11.5px;color:var(--muted)">22m left of 30m budget</div>
+          <div class="whisper">Running ~25m behind · trimmed Brunch &amp; DSA to hold Work.</div>
+          <div class="next">Next · <b>1:50 Walk to office</b></div>
+        </div>
+        <div class="mini">
+          <div class="pill"><div class="n">4<span style="font-size:12px;color:var(--dim)"> / 9</span></div><div class="t">done today</div></div>
+          <div class="pill"><div class="n serif" style="font-size:15px;color:var(--amber)">Reflowed</div><div class="t">work still 2:00</div></div>
+        </div>
+        <button class="cta ghost">See what changed →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. LIVE on-track -->
+  <div class="frame">
+    <div class="cap"><b>3 · Live</b> — calm timeline (budget bars)</div>
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span>📶 100%</span></div>
+      <div class="screen">
+        <div class="hdr-row" style="padding-bottom:0">
+          <div><div class="k">TODAY · MON</div><h2 class="serif" style="font-size:24px">Live</h2></div>
+          <div class="avatar" style="width:30px;height:30px;font-size:13px">C</div>
+        </div>
+        <div class="drift-summary ok">On track. The plan’s holding.</div>
+        <div class="tl">
+          <div class="row done"><div class="chk on">✓</div><div class="t">8:00</div><div class="body"><div class="ttl">Wake · water · sunlight</div></div></div>
+          <div class="nowline"><b>NOW · 9:41</b><i></i></div>
+          <div class="row active">
+            <div style="display:flex;gap:10px;width:100%">
+              <div class="chk cur"></div>
+              <div class="body">
+                <div class="ttl">Deep Focus — AI Building</div>
+                <div class="bar"><i class="spent" style="width:45%"></i><i class="left" style="width:10%"></i></div>
+                <div class="budget">41m left of 75m budget</div>
+              </div>
+            </div>
+          </div>
+          <div class="row"><div class="chk"></div><div class="t">11:00</div><div class="body"><div class="ttl">Shower + brunch</div><div class="bar"><i class="ideal" style="width:60%"></i></div><div class="meta">45m budget</div></div></div>
+          <div class="row"><div class="chk"></div><div class="t">11:30</div><div class="body"><div class="ttl">DSA Practice</div><div class="bar"><i class="ideal" style="width:55%"></i></div><div class="meta">45m budget</div></div></div>
+          <div class="anchor"><span class="lk">🔒 ANCHOR</span><span class="nm">Work · 2:00–8:00 · fixed</span></div>
+          <div class="row"><div class="chk"></div><div class="t">8:30</div><div class="body"><div class="ttl">Dinner</div><div class="bar"><i class="ideal" style="width:50%"></i></div><div class="meta">45m budget</div></div></div>
+          <div class="anchor soft"><span class="lk">⌛ AIM</span><span class="nm">Sleep by 11:15</span></div>
+        </div>
+        <button class="cta">✎ Adjust today</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. LIVE drifting + teaching -->
+  <div class="frame">
+    <div class="cap"><b>4 · Live</b> — drifting + teaching card</div>
+    <div class="phone">
+      <div class="statusbar"><span>4:55</span><span>📶 88%</span></div>
+      <div class="screen">
+        <div class="hdr-row" style="padding-bottom:0">
+          <div><div class="k">TODAY · MON</div><h2 class="serif" style="font-size:24px">Live</h2></div>
+          <div class="avatar" style="width:30px;height:30px;font-size:13px">C</div>
+        </div>
+        <div class="drift-summary">Running ~50m behind. Trimmed <b>Brunch</b> &amp; <b>DSA</b> to hold <b>Work</b>. <b>Train</b> is at risk if it slips past 8:00.</div>
+        <div class="tl">
+          <div class="row done" style="opacity:.5"><div class="chk on">✓</div><div class="t">8:00</div><div class="body"><div class="ttl">Wake</div></div></div>
+          <div class="row done" style="opacity:.5"><div class="chk on">✓</div><div class="t">9:05</div><div class="body"><div class="ttl">Deep Focus</div></div></div>
+          <div class="row compact"><div class="chk"></div><div class="t">11:10</div><div class="body"><div class="ttl">Shower + brunch</div><div class="bar"><i class="ideal" style="width:40%"></i></div><div class="meta"><span class="tag">⚠ −15m</span> · 30m (saved to hold Work)</div></div></div>
+          <div class="anchor"><span class="lk">🔒 ANCHOR</span><span class="nm">Work · 2:00–8:00 · fixed</span></div>
+          <div class="nowline"><b>NOW · 4:55</b><i></i></div>
+          <div class="row active"><div style="display:flex;gap:10px;width:100%"><div class="chk cur"></div><div class="body"><div class="ttl">Light snack at office</div><div class="bar"><i class="spent" style="width:30%"></i><i class="left" style="width:20%"></i></div><div class="budget">9m left of 15m budget</div></div></div></div>
+          <div class="row dropped"><div style="width:19px"></div><div class="t">—</div><div class="body"><div class="ttl">Train — Full Body B</div><div class="why">dropped to protect tonight · too tight after Work</div></div></div>
+          <div class="anchor soft"><span class="lk">⌛ AIM</span><span class="nm">Sleep by 11:15</span></div>
+        </div>
+      </div>
+      <div class="teach">
+        <div class="spark">✦ New thing just happened</div>
+        <p>I trimmed <b style="color:var(--cream)">Brunch</b> by 15m so your <b style="color:var(--cream)">2:00 Work</b> still starts on time. Budgets flex; anchors don’t.</p>
+        <div class="acts"><a class="why">Why?</a><a class="got">Got it</a></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. ADJUST mode -->
+  <div class="frame">
+    <div class="cap"><b>5 · Adjust today</b> — reshape (today only)</div>
+    <div class="phone">
+      <div class="statusbar"><span>9:42</span><span>📶 100%</span></div>
+      <div class="screen">
+        <div class="hdr-row" style="padding-bottom:0">
+          <div><div class="k" style="color:var(--amber)">ADJUST · TODAY ONLY</div><h2 class="serif" style="font-size:24px">Reshape</h2></div>
+          <button class="btn" style="padding:6px 14px">Done</button>
+        </div>
+        <div style="font-size:11.5px;color:var(--dim);margin:8px 2px">Drag to reorder · swipe to remove · drag across walls. Your master plan stays untouched.</div>
+        <div class="arow"><span class="grip">⠿</span><div class="nm">Deep Focus<small>8:30 · 75m</small></div><span class="level protect">Protect</span></div>
+        <div class="arow"><span class="grip">⠿</span><div class="nm">Shower + brunch<small>11:00 · 45m</small></div><span class="level normal">Normal ▾</span></div>
+        <div class="arow"><span class="grip">⠿</span><div class="nm">DSA Practice<small>11:30 · 45m</small></div><span class="level drop">Drop first</span></div>
+        <div class="arow frozen"><span class="grip" style="opacity:.3">🔒</span><div class="nm">Work · 2:00–8:00<small style="color:var(--terra)">anchor · can’t move</small></div></div>
+        <div class="arow"><span class="grip">⠿</span><div class="nm">Train — Full Body B<small>10:00 · 60m</small></div><span class="level normal">Normal ▾</span></div>
+        <div class="removed-tray"><span>↺ Removed today (1) — Break + snack</span><span style="color:var(--terra);font-weight:600">Restore</span></div>
+      </div>
+      <div class="snack">DSA dropped to make room <b>UNDO</b></div>
+    </div>
+  </div>
+
+  <!-- 6. WEEKLY REVIEW -->
+  <div class="frame">
+    <div class="cap"><b>6 · Weekly review</b> — gentle feedback loop</div>
+    <div class="phone">
+      <div class="statusbar"><span>5:00</span><span>📶 90%</span></div>
+      <div class="screen">
+        <div class="hdr-row" style="padding-bottom:0">
+          <div><div class="k">SUNDAY · WEEKLY REVIEW</div><h2 class="serif" style="font-size:24px">Your week</h2></div>
+          <div class="avatar" style="width:30px;height:30px;font-size:13px">C</div>
+        </div>
+        <div class="card">
+          <div class="label-s">LAST 7 DAYS · 78% FOLLOWED</div>
+          <div class="bars">
+            <div class="b"><i style="height:60%;background:var(--moss)"></i><small>M</small></div>
+            <div class="b"><i style="height:85%;background:var(--moss)"></i><small>T</small></div>
+            <div class="b"><i style="height:40%;background:var(--amber)"></i><small>W</small></div>
+            <div class="b"><i style="height:90%;background:var(--moss)"></i><small>T</small></div>
+            <div class="b"><i style="height:70%;background:var(--moss)"></i><small>F</small></div>
+            <div class="b"><i style="height:55%;background:var(--amber)"></i><small>S</small></div>
+            <div class="b"><i style="height:80%;background:var(--moss)"></i><small>S</small></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="label-s">WHAT THE ENGINE HANDLED</div>
+          <div style="font-size:13px;line-height:1.55;margin-top:8px;color:var(--cream)">
+            This week: <b style="color:var(--cream)">Train</b> auto-cancelled 2× · <b style="color:var(--cream)">Focus</b> trimmed 4× to protect <b style="color:var(--cream)">Work</b>.
+          </div>
+        </div>
+        <div class="nudge">
+          <div class="q serif">Train keeps getting squeezed out on office days. Move it earlier, or shorten its budget?</div>
+          <div class="acts"><span>Move earlier</span><span>Shorten</span><span>Leave it</span></div>
+        </div>
+        <div style="font-size:11px;color:var(--dim);text-align:center;margin-top:14px">No streaks. No scores. Just what happened, and a gentle next step.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. AVATAR sheet -->
+  <div class="frame">
+    <div class="cap"><b>7 · Avatar menu</b> — identity + rare actions (no drawer)</div>
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span>📶 100%</span></div>
+      <div class="screen" style="padding:0;background:rgba(0,0,0,.25)">
+        <div class="sheet">
+          <div class="grab"></div>
+          <div class="me">
+            <div class="av">C</div>
+            <div><b class="serif">Cyrus</b><small>cyrus_recomp · fitness · focus · sleep</small></div>
+          </div>
+          <div class="item"><span class="ic">⇄</span> Switch profile</div>
+          <div class="item"><span class="ic">⚙</span> Settings &amp; appearance</div>
+          <div class="item"><span class="ic">？</span> How Reminders works</div>
+          <div class="item" style="border:none"><span class="ic">⏻</span> Log out</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. NURSE generality -->
+  <div class="frame">
+    <div class="cap"><b>8 · Same app, another life</b> — Maya, ER nurse</div>
+    <div class="phone">
+      <div class="statusbar"><span>6:50</span><span>📶 94%</span></div>
+      <div class="screen">
+        <div class="hdr-row" style="padding-bottom:0">
+          <div><div class="k">TODAY · TUE</div><h2 class="serif" style="font-size:24px">Live</h2></div>
+          <div class="avatar" style="width:30px;height:30px;font-size:13px;background:var(--moss-d);border-color:var(--moss);color:var(--moss)">M</div>
+        </div>
+        <div class="drift-summary">Running ~20m behind. Trimmed <b>Breakfast</b>; <b>Gym</b> dropped to protect <b>Shift</b>.</div>
+        <div class="tl">
+          <div class="row done" style="opacity:.5"><div class="chk on">✓</div><div class="t">5:30</div><div class="body"><div class="ttl">Wake · coffee</div></div></div>
+          <div class="nowline"><b>NOW · 6:50</b><i></i></div>
+          <div class="row active"><div style="display:flex;gap:10px;width:100%"><div class="chk cur"></div><div class="body"><div class="ttl">Breakfast + prep</div><div class="bar"><i class="spent" style="width:40%"></i><i class="left" style="width:8%"></i></div><div class="budget">8m left of 25m budget</div></div></div></div>
+          <div class="row dropped"><div style="width:19px"></div><div class="t">—</div><div class="body"><div class="ttl">Gym — 45m</div><div class="why">dropped to protect Shift · no room before 7:00</div></div></div>
+          <div class="anchor"><span class="lk">🔒 ANCHOR</span><span class="nm">Shift · 7:00–19:00 · fixed</span></div>
+          <div class="anchor soft"><span class="lk">⌛ AIM</span><span class="nm">Kids in bed by 8:30</span></div>
+        </div>
+        <div style="font-size:11px;color:var(--dim);text-align:center;margin-top:6px">Identical code &amp; screens — only her Life JSON differs.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="note">
+  <h4 class="serif">Why this feels like “good hands,” not a hustle tracker</h4>
+  <div class="legend" style="margin-bottom:12px">
+    <span><i class="dot" style="background:#c8633a"></i>Anchor — your real, fixed boundaries (from your JSON)</span>
+    <span><i class="dot" style="background:#8fb36a"></i>On track / done</span>
+    <span><i class="dot" style="background:#e3a948"></i>Trimmed / attention</span>
+    <span><i class="dot" style="background:#8c7b6b"></i>Dropped / past (never red)</span>
+  </div>
+  <b>Calm by default, intelligence on demand.</b> The home is quiet until the day actually drifts — then one plain sentence explains what the engine did and why.
+  <b>The engine is visible as competence, not numbers.</b> No dashboards, no scores, no streaks — just “I trimmed Brunch to hold Work,” which reads as a capable assistant, not a taskmaster.
+  <b>It treats a day as human.</b> Rest blocks are protected, not “optimized”; lateness is absorbed, not punished; nothing is ever deleted forever (only “removed for today”). Red is banned — amber is the loudest the app gets.
+  <b>It’s lifestyle-agnostic.</b> Frames 3, 4 and 8 are the *same components* — a nurse, a parent, a student each see their own anchors and items because the UI renders the Life JSON, never Cyrus.
+</div>
+
+</body>
+</html>
