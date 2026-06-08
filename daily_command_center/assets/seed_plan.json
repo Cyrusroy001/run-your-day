@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 3,
+  "meta": {
+    "title": "Recomp + career switch",
+    "timezone": "Asia/Kolkata",
+    "lifestyleArchetype": "cyrus_recomp",
+    "generatedAt": "2026-06-07T09:00:00+05:30",
+    "improvementAreas": ["fitness", "focus", "nutrition", "sleep"],
+    "equipment": ["2x 5kg dumbbells", "bench machine", "treadmill"]
+  },
+  "dayTemplates": {
+    "office": {
+      "label": "Office day",
+      "colorKey": "terra",
+      "anchors": [
+        { "id": "work",  "kind": "work",  "label": "Work — 2:00 to 8:00", "desc": "Fixed block.", "start": "14:00", "end": "20:00", "hard": true },
+        { "id": "sleep", "kind": "chill", "label": "Sleep target", "desc": "Pull bedtime earlier in 15-min steps.", "start": "23:15", "hard": false }
+      ],
+      "routineStack": [
+        { "id": "wake",     "kind": "meal",  "label": "Wake · water · sunlight", "desc": "Light breakfast: banana + milk/eggs.", "start": "08:00", "idealDuration": 30, "minDuration": 20, "priority": 1 },
+        { "id": "focus",    "kind": "focus", "label": "Deep Focus — AI Building", "desc": "Sharpest hour. Phone in another room.", "start": "08:30", "idealDuration": 75, "minDuration": 45, "priority": 2, "maxDriftMinutes": 60, "dropStrategy": "scale_to_min" },
+        { "id": "snack",    "kind": "meal",  "label": "Break + snack", "desc": "Coffee, few nuts. Reset.", "start": "09:45", "idealDuration": 15, "minDuration": 10, "priority": 6 },
+        { "id": "train",    "kind": "train", "label": "Train", "desc": "Tap to open workout.", "start": "10:00", "idealDuration": 60, "minDuration": 40, "priority": 3, "condition": "isTrainingDay", "workoutId": "B", "cutoffTime": "20:00", "dropStrategy": "kill_and_notify" },
+        { "id": "study",    "kind": "goal",  "label": "Extra Study Block", "desc": "No training → bigger AI push or extra DSA.", "goalId": "dsa", "start": "10:00", "idealDuration": 60, "minDuration": 30, "priority": 3, "condition": "isRestDay" },
+        { "id": "dsa",      "kind": "goal",  "label": "DSA Practice (45 min)", "desc": "1–2 problems. Keep coding sharp.", "goalId": "dsa", "start": "11:30", "idealDuration": 45, "minDuration": 25, "priority": 5, "maxDriftMinutes": 45, "dropStrategy": "scale_to_min" },
+        { "id": "brunch",   "kind": "meal",  "label": "Shower + brunch", "desc": "Big protein meal — office lunch at 3.", "start": "11:00", "idealDuration": 45, "minDuration": 30, "priority": 4, "condition": "isTrainingDay" },
+        { "id": "brunch_r", "kind": "meal",  "label": "Brunch — big protein meal", "desc": "Eggs + dal + curd + soya. Main protein hit.", "start": "11:30", "idealDuration": 45, "minDuration": 30, "priority": 4, "condition": "isRestDay" },
+        { "id": "commute",  "kind": "work",  "label": "Walk to office (10 min)", "desc": "", "start": "13:50", "idealDuration": 10, "minDuration": 10, "priority": 1 },
+        { "id": "lunch3",   "kind": "meal",  "label": "Lunch at office", "desc": "Dal-bhat + soya or paneer.", "start": "15:00", "idealDuration": 30, "minDuration": 20, "priority": 4 },
+        { "id": "snack5",   "kind": "meal",  "label": "Light snack at office", "desc": "Roasted chana, peanuts, or curd.", "start": "17:00", "idealDuration": 15, "minDuration": 10, "priority": 6 },
+        { "id": "dinner",   "kind": "meal",  "label": "Dinner", "desc": "Roti + paneer/chicken + saag.", "start": "20:30", "idealDuration": 45, "minDuration": 30, "priority": 4 },
+        { "id": "chill",    "kind": "chill", "label": "Chill — protected downtime", "desc": "Yours. No forced work.", "start": "21:15", "idealDuration": 90, "minDuration": 30, "priority": 7 },
+        { "id": "wind",     "kind": "chill", "label": "Wind-down", "desc": "Screens dim. Makes the 8am wake work.", "start": "22:45", "idealDuration": 30, "minDuration": 20, "priority": 7 }
+      ]
+    },
+    "wfh": {
+      "label": "Work from home",
+      "colorKey": "sky",
+      "anchors": [
+        { "id": "work",  "kind": "work",  "label": "Work — 2:00 to 8:00", "desc": "Fixed block.", "start": "14:00", "end": "20:00", "hard": true },
+        { "id": "sleep", "kind": "chill", "label": "Sleep target", "desc": "Pull bedtime earlier in 15-min steps.", "start": "23:15", "hard": false }
+      ],
+      "routineStack": [
+        { "id": "wake",    "kind": "meal",  "label": "Wake · water · sunlight", "desc": "Light breakfast: banana + milk/eggs.", "start": "08:00", "idealDuration": 30, "minDuration": 20, "priority": 1 },
+        { "id": "bigproj", "kind": "focus", "label": "BIG Project Block (2 hrs)", "desc": "No commute — push a real AI build.", "start": "08:30", "idealDuration": 120, "minDuration": 60, "priority": 2, "maxDriftMinutes": 60, "dropStrategy": "scale_to_min" },
+        { "id": "break",   "kind": "meal",  "label": "Break + snack", "desc": "", "start": "10:30", "idealDuration": 15, "minDuration": 10, "priority": 6 },
+        { "id": "train",   "kind": "train", "label": "Train", "desc": "Tap to open workout.", "start": "11:00", "idealDuration": 60, "minDuration": 40, "priority": 3, "condition": "isTrainingDay", "workoutId": "A", "cutoffTime": "20:00", "dropStrategy": "kill_and_notify" },
+        { "id": "brunch",  "kind": "meal",  "label": "Shower + brunch", "desc": "Big protein meal", "start": "12:00", "idealDuration": 45, "minDuration": 30, "priority": 4 },
+        { "id": "dsa",     "kind": "goal",  "label": "DSA Practice (45 min)", "desc": "1–2 problems. Keep coding sharp.", "goalId": "dsa", "start": "13:00", "idealDuration": 45, "minDuration": 25, "priority": 5, "maxDriftMinutes": 45, "dropStrategy": "scale_to_min" },
+        { "id": "commute", "kind": "work",  "label": "Walk to office (10 min)", "desc": "", "start": "13:50", "idealDuration": 10, "minDuration": 10, "priority": 1 },
+        { "id": "lunch3",  "kind": "meal",  "label": "Lunch at office", "desc": "Dal-bhat + soya or paneer.", "start": "15:00", "idealDuration": 30, "minDuration": 20, "priority": 4 },
+        { "id": "snack5",  "kind": "meal",  "label": "Light snack at office", "desc": "Roasted chana, peanuts, or curd.", "start": "17:00", "idealDuration": 15, "minDuration": 10, "priority": 6 },
+        { "id": "dinner",  "kind": "meal",  "label": "Dinner", "desc": "Roti + paneer/chicken + saag.", "start": "20:30", "idealDuration": 45, "minDuration": 30, "priority": 4 },
+        { "id": "chill",   "kind": "chill", "label": "Chill — protected downtime", "desc": "Yours. No forced work.", "start": "21:15", "idealDuration": 90, "minDuration": 30, "priority": 7 },
+        { "id": "wind",    "kind": "chill", "label": "Wind-down", "desc": "Screens dim. Makes the 8am wake work.", "start": "22:45", "idealDuration": 30, "minDuration": 20, "priority": 7 }
+      ]
+    },
+    "weekend": {
+      "label": "Weekend",
+      "colorKey": "amber",
+      "anchors": [
+        { "id": "sleep", "kind": "chill", "label": "Sleep target", "desc": "Pull bedtime earlier in 15-min steps.", "start": "23:15", "hard": false }
+      ],
+      "routineStack": [
+        { "id": "wake",     "kind": "meal",  "label": "Wake · water · sunlight", "desc": "Light breakfast: banana + milk/eggs.", "start": "08:00", "idealDuration": 30, "minDuration": 20, "priority": 1 },
+        { "id": "focus",    "kind": "focus", "label": "Focus — AI Building", "desc": "Weekend: relaxed long session.", "start": "09:00", "idealDuration": 90, "minDuration": 45, "priority": 2 },
+        { "id": "break",    "kind": "meal",  "label": "Break + snack", "desc": "", "start": "10:30", "idealDuration": 15, "minDuration": 10, "priority": 6 },
+        { "id": "train",    "kind": "train", "label": "Train", "desc": "Tap to open workout.", "start": "11:00", "idealDuration": 60, "minDuration": 40, "priority": 3, "condition": "isTrainingDay", "workoutId": "BENCH", "cutoffTime": "20:00", "dropStrategy": "kill_and_notify" },
+        { "id": "showermeal","kind": "meal", "label": "Shower + big protein meal", "desc": "", "start": "12:00", "idealDuration": 45, "minDuration": 30, "priority": 4, "condition": "isTrainingDay" },
+        { "id": "dsablock", "kind": "goal",  "label": "DSA / project block", "desc": "No training today — extra learning.", "goalId": "dsa", "start": "11:00", "idealDuration": 60, "minDuration": 30, "priority": 3, "condition": "isRestDay" },
+        { "id": "bigmeal",  "kind": "meal",  "label": "Big protein meal", "desc": "", "start": "12:00", "idealDuration": 45, "minDuration": 30, "priority": 4, "condition": "isRestDay" },
+        { "id": "dsa",      "kind": "goal",  "label": "DSA Practice (45 min)", "desc": "1–2 problems. Keep coding sharp.", "goalId": "dsa", "start": "13:00", "idealDuration": 45, "minDuration": 25, "priority": 5 },
+        { "id": "free",     "kind": "chill", "label": "Free afternoon", "desc": "Errands, rest, life.", "start": "14:00", "idealDuration": 240, "minDuration": 60, "priority": 7 },
+        { "id": "dinner",   "kind": "meal",  "label": "Dinner", "desc": "Roti + paneer/chicken + saag.", "start": "20:30", "idealDuration": 45, "minDuration": 30, "priority": 4 },
+        { "id": "chill",    "kind": "chill", "label": "Chill — protected downtime", "desc": "Yours. No forced work.", "start": "21:15", "idealDuration": 90, "minDuration": 30, "priority": 7 },
+        { "id": "wind",     "kind": "chill", "label": "Wind-down", "desc": "Screens dim. Makes the 8am wake work.", "start": "22:45", "idealDuration": 30, "minDuration": 20, "priority": 7 }
+      ]
+    },
+    "weekend_sun": {
+      "label": "Weekend",
+      "colorKey": "amber",
+      "anchors": [
+        { "id": "sleep", "kind": "chill", "label": "Sleep target", "desc": "Pull bedtime earlier in 15-min steps.", "start": "23:15", "hard": false }
+      ],
+      "routineStack": [
+        { "id": "wake",     "kind": "meal",  "label": "Wake · water · sunlight", "desc": "Light breakfast: banana + milk/eggs.", "start": "08:00", "idealDuration": 30, "minDuration": 20, "priority": 1 },
+        { "id": "focus",    "kind": "focus", "label": "Focus — AI Building", "desc": "Weekend: relaxed long session.", "start": "09:00", "idealDuration": 90, "minDuration": 45, "priority": 2 },
+        { "id": "break",    "kind": "meal",  "label": "Break + snack", "desc": "", "start": "10:30", "idealDuration": 15, "minDuration": 10, "priority": 6 },
+        { "id": "train",    "kind": "train", "label": "Train", "desc": "Tap to open workout.", "start": "11:00", "idealDuration": 60, "minDuration": 40, "priority": 3, "condition": "isTrainingDay", "workoutId": "CARDIO", "cutoffTime": "20:00", "dropStrategy": "kill_and_notify" },
+        { "id": "showermeal","kind": "meal", "label": "Shower + big protein meal", "desc": "", "start": "12:00", "idealDuration": 45, "minDuration": 30, "priority": 4, "condition": "isTrainingDay" },
+        { "id": "dsablock", "kind": "goal",  "label": "DSA / project block", "desc": "No training today — extra learning.", "goalId": "dsa", "start": "11:00", "idealDuration": 60, "minDuration": 30, "priority": 3, "condition": "isRestDay" },
+        { "id": "bigmeal",  "kind": "meal",  "label": "Big protein meal", "desc": "", "start": "12:00", "idealDuration": 45, "minDuration": 30, "priority": 4, "condition": "isRestDay" },
+        { "id": "dsa",      "kind": "goal",  "label": "DSA Practice (45 min)", "desc": "1–2 problems. Keep coding sharp.", "goalId": "dsa", "start": "13:00", "idealDuration": 45, "minDuration": 25, "priority": 5 },
+        { "id": "free",     "kind": "chill", "label": "Free afternoon", "desc": "Errands, rest, life.", "start": "14:00", "idealDuration": 180, "minDuration": 60, "priority": 7 },
+        { "id": "review",   "kind": "focus", "label": "WEEKLY REVIEW (15 min)", "desc": "Log tracker · read rules · plan next week.", "start": "17:00", "idealDuration": 15, "minDuration": 15, "priority": 2 },
+        { "id": "dinner",   "kind": "meal",  "label": "Dinner", "desc": "Roti + paneer/chicken + saag.", "start": "20:30", "idealDuration": 45, "minDuration": 30, "priority": 4 },
+        { "id": "chill",    "kind": "chill", "label": "Chill — protected downtime", "desc": "Yours. No forced work.", "start": "21:15", "idealDuration": 90, "minDuration": 30, "priority": 7 },
+        { "id": "wind",     "kind": "chill", "label": "Wind-down", "desc": "Screens dim. Makes the 8am wake work.", "start": "22:45", "idealDuration": 30, "minDuration": 20, "priority": 7 }
+      ]
+    }
+  },
+  "week": {
+    "mon": { "templateId": "office", "training": true },
+    "tue": { "templateId": "office", "training": false },
+    "wed": { "templateId": "wfh", "training": true },
+    "thu": { "templateId": "office", "training": false },
+    "fri": { "templateId": "office", "training": true },
+    "sat": { "templateId": "weekend", "training": false },
+    "sun": { "templateId": "weekend_sun", "training": true }
+  },
+  "weekEditor": { "toggleTemplates": ["office", "wfh"], "lockedDays": ["sat", "sun"] },
+  "training": { "frequencyPerWeek": 4, "avoidConsecutive": true, "rotation": ["A", "B", "BENCH", "CARDIO"] },
+  "workouts": {
+    "A": {
+      "title": "Full Body A",
+      "why": "Hits every major muscle once. Squat + push + pull is the backbone — most shape comes from these.",
+      "exercises": [
+        { "name": "Goblet squat",     "sets": "3–4 × 15–20", "repRange": [15, 20], "cue": "Hug one dumbbell, lower slow 3s", "tempo": "3s eccentric", "loggable": true, "progression": { "method": "double", "addLoad": false, "escalation": ["slow the negative to 4–5s", "add 1.5-rep partials", "harder variation: pause at bottom", "harder variation: single-leg / deficit"] } },
+        { "name": "Push-ups",          "sets": "3–4 × max",   "cue": "Main chest builder", "loggable": true, "progression": { "method": "double", "addLoad": false, "escalation": ["slow the negative", "feet elevated", "archer push-ups"] } },
+        { "name": "Bent-over rows",    "sets": "3–4 × 15–20", "repRange": [15, 20], "cue": "Pull to ribs — builds back", "loggable": true, "progression": { "method": "double", "addLoad": false, "escalation": ["pause at top", "slower negative"] } },
+        { "name": "Romanian deadlift", "sets": "3–4 × 15–20", "repRange": [15, 20], "cue": "Feel the hamstrings", "loggable": true, "progression": { "method": "double", "addLoad": false, "escalation": ["slower negative", "single-leg"] } },
+        { "name": "Shoulder press",    "sets": "3–4 × 12–15", "repRange": [12, 15], "cue": "Shoulders = the V-shape", "loggable": true, "progression": { "method": "double", "addLoad": false, "escalation": ["slower negative", "pause at top"] } },
+        { "name": "Plank",             "sets": "3 × max",     "cue": "Core", "loggable": false }
+      ]
+    },
+    "B": {
+      "title": "Full Body B",
+      "why": "Different angles on the same muscles so they keep getting a fresh challenge with light weights.",
+      "exercises": [
+        { "name": "Bulgarian split squat", "sets": "3–4 × 12–15 ea", "repRange": [12, 15], "cue": "Rear foot on couch", "loggable": true, "progression": { "method": "double", "addLoad": false, "escalation": ["slower negative", "pause at bottom"] } },
+        { "name": "Floor press",           "sets": "3–4 × 15–20",    "repRange": [15, 20], "cue": "Press dumbbells up", "loggable": true, "progression": { "method": "double", "addLoad": false, "escalation": ["slower negative", "pause on floor"] } },
+        { "name": "Single-arm row",        "sets": "3–4 × 15 ea",    "cue": "One knee on couch", "loggable": true, "progression": { "method": "double", "addLoad": false, "escalation": ["pause at top", "slower negative"] } },
+        { "name": "Calf raises",           "sets": "3–4 × 20–25",    "repRange": [20, 25], "cue": "Rise on toes", "loggable": false },
+        { "name": "Curls + triceps",       "sets": "3–4 × 15–20",    "repRange": [15, 20], "cue": "Arm work", "loggable": true, "progression": { "method": "double", "addLoad": false, "escalation": ["slower negative"] } },
+        { "name": "Leg raises",            "sets": "3 × 15",         "cue": "Lower abs", "loggable": false }
+      ]
+    },
+    "BENCH": {
+      "title": "Bench + Push",
+      "why": "The bench machine is your ONE loadable lift — the only place to add real weight weekly.",
+      "exercises": [
+        { "name": "Bench press (machine)", "sets": "3–4 × 10–12", "repRange": [10, 12], "cue": "Add weight when you hit 12 all sets", "loggable": true, "progression": { "method": "double", "addLoad": true, "escalation": ["add the smallest plate jump"] } },
+        { "name": "Incline push-ups",      "sets": "3 × 12–15",   "repRange": [12, 15], "cue": "Upper chest", "loggable": false },
+        { "name": "Goblet squat",          "sets": "3 × 15–20",   "repRange": [15, 20], "cue": "Legs", "loggable": false },
+        { "name": "Rows",                  "sets": "3 × 15–20",   "repRange": [15, 20], "cue": "Back", "loggable": false },
+        { "name": "Core circuit",          "sets": "~10 min",     "cue": "Planks + leg raises", "loggable": false }
+      ]
+    },
+    "CARDIO": {
+      "title": "Treadmill + Core",
+      "why": "Short bursts burn fat without eating into muscle, and spare a beginner's knees vs long runs.",
+      "exercises": [
+        { "name": "Warm-up walk", "sets": "5 min",        "cue": "Easy", "loggable": false },
+        { "name": "Intervals",    "sets": "10–15 rounds", "cue": "30s brisk/incline, 60s easy", "loggable": false },
+        { "name": "Cool-down",    "sets": "5 min",        "cue": "Easy walk", "loggable": false },
+        { "name": "Core finish",  "sets": "~8 min",       "cue": "Planks, leg raises, side planks", "loggable": false }
+      ]
+    }
+  },
+  "nutrition": { "proteinTargetG": 135, "notes": ["Soya capped ~50g dry/day, rotate sources"] },
+  "goals": [ { "id": "dsa", "label": "DSA Practice", "cadence": "daily", "loggable": false } ]
+}
