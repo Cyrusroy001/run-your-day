@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
 import android.widget.RemoteViews
+import es.antonborri.home_widget.HomeWidgetPlugin
 
 class NowWidgetProvider : AppWidgetProvider() {
 
@@ -21,13 +22,14 @@ class NowWidgetProvider : AppWidgetProvider() {
 
     companion object {
         fun updateWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
-            val prefs = context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
-
-            // Keys stored with "flutter." prefix by the home_widget package
-            val currentAction = prefs.getString("flutter.currentAction", "Loading…") ?: "Loading…"
-            val nextAction    = prefs.getString("flutter.nextAction", "") ?: ""
-            val dayLabel      = prefs.getString("flutter.dayLabel", "") ?: ""
-            val progressPct   = prefs.getInt("flutter.progressPct", 0)
+            // home_widget stores data in its own "HomeWidgetPreferences" file with
+            // raw keys (no "flutter." prefix). Use the plugin's accessor so we read
+            // the same file HomeWidget.saveWidgetData() writes to.
+            val prefs = HomeWidgetPlugin.getData(context)
+            val currentAction = prefs.getString("currentAction", "Loading…") ?: "Loading…"
+            val nextAction    = prefs.getString("nextAction", "") ?: ""
+            val dayLabel      = prefs.getString("dayLabel", "") ?: ""
+            val progressPct   = prefs.getInt("progressPct", 0)
 
             val views = RemoteViews(context.packageName, R.layout.now_widget)
             views.setTextViewText(R.id.widget_label, "Right now · $dayLabel")
