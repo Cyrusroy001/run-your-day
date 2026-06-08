@@ -1,5 +1,5 @@
 # Continuation Document
-**Last updated:** 2026-06-08 (session 4)
+**Last updated:** 2026-06-09 (session 5)
 
 If you're an AI agent starting fresh on this project, read this first. It tells you exactly where things stand and what to do next without requiring you to re-derive it from the codebase.
 
@@ -20,8 +20,9 @@ The **product direction** is bigger than Cyrus: a reusable, configurable life-ex
 | [`specs/2026-06-05-widget-app-design.md`](superpowers/specs/2026-06-05-widget-app-design.md) | Original Flutter app design | Phase 1 shipped |
 | [`specs/2026-06-05-reminders-2-redesign-design.md`](superpowers/specs/2026-06-05-reminders-2-redesign-design.md) | Rebrand + adherence + Today screen + week-planner redesign | Shipped |
 | [`specs/2026-06-07-life-json-v3-drift-engine-design.md`](superpowers/specs/2026-06-07-life-json-v3-drift-engine-design.md) | Life JSON v3 + drift-aware engine (the core/moat) | Approved |
-| [`plans/2026-06-07-life-json-v3-drift-engine.md`](superpowers/plans/2026-06-07-life-json-v3-drift-engine.md) | **Implementation plan** for v3 (5 phases A–E, ~30 TDD tasks) | **Phase A complete — Phase B next** |
-| [`specs/2026-06-07-local-profiles-login-app-shell-design.md`](superpowers/specs/2026-06-07-local-profiles-login-app-shell-design.md) | Login (local profile picker), per-profile storage, app shell + side panel, onboarding stub | After v3 core |
+| [`plans/2026-06-07-life-json-v3-drift-engine.md`](superpowers/plans/2026-06-07-life-json-v3-drift-engine.md) | **Engine plan** for v3 (5 phases A–E, ~30 TDD tasks) | **A–D done; E superseded by UX layer** |
+| [`specs/2026-06-08-reminders-2-ux-design.md`](superpowers/specs/2026-06-08-reminders-2-ux-design.md) + [`plans/2026-06-08-reminders-2-ux-layer.md`](superpowers/plans/2026-06-08-reminders-2-ux-layer.md) | **UX-layer plan** (U0–U8): calm Home, rich Live timeline, Adjust mode, teaching, weekly review, avatar menu, light/dark theme. Mockup: [`specs/2026-06-08-reminders-2-ux-mockup.html`](superpowers/specs/2026-06-08-reminders-2-ux-mockup.html) | **Approved — not started; U0 next** |
+| [`specs/2026-06-07-local-profiles-login-app-shell-design.md`](superpowers/specs/2026-06-07-local-profiles-login-app-shell-design.md) | Login (local profile picker), per-profile storage, app shell + side panel, onboarding stub | After v3 core + UX layer |
 | [`DECISIONS.md`](DECISIONS.md) | Architectural decision records (ADR-001…019) | Living |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | File map, data flow, storage key map | Living |
 
@@ -37,11 +38,25 @@ The **local-profiles/login** work pulls a minimal, local-only slice of #3/#5 for
 
 ---
 
-## Current state (session 4)
+## Current state (session 5)
 
 ### Branch: `feat/reminders-2-redesign`
 
-**Phase A is complete (A1–A11 + A8). All 62 tests green.**
+**Engine plan is complete: Phases A, B, C, and D (D1–D3) are committed.** The interim D3 (weekly-summary card on the Today screen, `4da84d7`) ships now; the UX-layer plan's `WeeklyReviewCard` (U3.1) will later supersede it. Phase E is **not built and should not be** — it is superseded by UX U4/U5 (Adjust mode).
+
+The **next body of work is the UX-layer plan (U0–U8)** — none of its files exist yet. Start at U0 (theme foundation).
+
+### Engine plan — phase status
+
+| Phase | Scope | Status |
+|---|---|---|
+| A (A1–A11) | Plan-driven foundation, v3 models, assembler, profile storage | ✅ committed |
+| B (B1–B6) | `DriftEngine` — est-start cascade, compaction, jettison, two-way elasticity | ✅ committed (`8ce03ab`) |
+| C (C1–C4) | Circuit-breaker (cutoff + maxDrift) → `NotificationService` + `DriftRunner` | ✅ committed (`50512db`) |
+| D1 | Drift-log rolling cap (50 events/day) | ✅ committed (`760d494`) |
+| D2 | `WeeklyReview.summarize` aggregation (plain-language sentence) | ✅ committed (`a3b7f6b`) |
+| D3 | Weekly-summary card on Today screen | ✅ committed (`4da84d7`; interim — U3.1 supersedes) |
+| E (E1–E5) | Interactive sandbox (drag/swipe/priority/undo) | ❌ **superseded** by UX U4/U5 — do not build |
 
 ### v3 Phase A — what was built
 
@@ -93,39 +108,32 @@ Runs on the phone (Samsung S21 FE, Android 16 / API 36). Dev loop is wireless AD
 
 ## What to do next
 
-### Immediate: Phase B — DriftEngine
+The engine is built. The remaining work is the **UX-layer plan** — [`plans/2026-06-08-reminders-2-ux-layer.md`](superpowers/plans/2026-06-08-reminders-2-ux-layer.md) (phases U0–U8). None of its files exist yet. Execute it task-by-task with TDD (failing test → run → implement → run → commit), matching the visual target in [`specs/2026-06-08-reminders-2-ux-mockup.html`](superpowers/specs/2026-06-08-reminders-2-ux-mockup.html).
 
-File to create: `lib/logic/drift_engine.dart`
+### Immediate: Phase U0 — theme + prefs foundation
 
-Pure function `DriftEngine.computeDay(Plan plan, DailyState state, double nowDecimal)` → `ResolvedDay`.
+The prerequisite for everything else (low-risk, no behavior change to existing screens, which keep compiling via the old `AppColors`):
 
-`ResolvedDay` is a value object:
+- **U0.1** `lib/data/ui_prefs.dart` — theme mode + text-scale persistence
+- **U0.2** `lib/theme/app_palette.dart` — `AppPalette` ThemeExtension (warm dark + light) + `context.c` getter
+- **U0.3** rewrite `lib/main.dart` → `RemindersApp` with light/dark `themeMode` from `UiPrefs`
 
-```dart
-class ResolvedDay {
-  final List<Block> blocks;       // ordered with estStart populated
-  final bool circuitBreakerFired; // true if cutoffTime or maxDrift exceeded
-  final String? breakerReason;
-}
-```
+### Then: U1 → U8
 
-The engine (in order):
+- **U1** pure UI logic: `PriorityLevel`, `DriftCopy`, `HomeNowState`
+- **U2** shared widgets: `BudgetBar`, `AnchorWall`
+- **U3** read-only Live timeline + `WeeklyReviewCard` (supersedes the interim D3 card)
+- **U4/U5** Adjust mode (humanized priority, remove-for-today, reorder, Undo) + just-in-time teaching — **this absorbs engine Phase E**
+- **U6/U7** Home hero redesign + avatar menu + settings/glossary screens
+- **U8** cleanup: retire `now_card.dart` / `today_screen.dart`, delete `AppColors`
 
-1. **Assemble** base blocks via `TimelineAssembler.assembleDay()`
-2. **Inject drift** — for each block, `estStart = seedStart + accumulatedDrift`
-3. **Transition buffer** — add 5-min gap between consecutive non-anchor blocks if needed
-4. **Compaction** — if `estStart + idealDuration > nextAnchorStart`, shrink to `durationMinutes = max(minDuration, available)`; set `isCompacted = true`
-5. **Jettison** — if `durationMinutes < minDuration` after compaction, or `estStart > cutoffTime`, drop the block (`status = BlockStatus.dropped`); emit a `DriftEvent`
-6. **Two-way elasticity** — if a block finishes early (user marks done before estEnd), push the saved time forward (expand next block or absorb drift)
-7. **Circuit-breaker** — if `accumulatedDrift > maxDriftMinutes` for any block, fire the breaker: `circuitBreakerFired = true`, remaining blocks collapse to their seed times
+### Watch out for (plan-vs-reality drift)
 
-TDD: write failing test → run → implement step → run → pass → commit. Phase B plan is in `plans/2026-06-07-life-json-v3-drift-engine.md` tasks B1–B7.
+The UX plan's code samples import `../logic/timeline.dart` for `buildTimeline`, but that function moved to `lib/logic/assembler.dart` as `TimelineAssembler.assembleDay` (A11 cutover). `timeline.dart` now holds only `buildTimes()` + `nowDecimal()`. Fix imports when executing U3.2.
 
-### After Phase B: Phase C → D → E
+### Note
 
-- **C**: `NotificationService` — `flutter_local_notifications`; circuit-breaker alert, "you're running late" nudges
-- **D**: `StateStore` surfaced in Sunday review (drift log aggregation display in `TodayScreen`)
-- **E**: Live timeline sandbox — drag-reorder, swipe-delete, priority override, Undo transaction protocol
+The interim **D3 weekly-summary card** is committed (`4da84d7`, `today_screen.dart` + test, old `AppColors`). It's an interim ship: U3.1's `WeeklyReviewCard` supersedes it and U8 retires `today_screen.dart`. Don't invest further in it.
 
 ---
 
