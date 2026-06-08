@@ -1,5 +1,5 @@
 # Continuation Document
-**Last updated:** 2026-06-07 (session 3)
+**Last updated:** 2026-06-08 (session 4)
 
 If you're an AI agent starting fresh on this project, read this first. It tells you exactly where things stand and what to do next without requiring you to re-derive it from the codebase.
 
@@ -18,59 +18,114 @@ The **product direction** is bigger than Cyrus: a reusable, configurable life-ex
 | Doc | What it is | Status |
 |---|---|---|
 | [`specs/2026-06-05-widget-app-design.md`](superpowers/specs/2026-06-05-widget-app-design.md) | Original Flutter app design | Phase 1 shipped |
-| [`specs/2026-06-05-reminders-2-redesign-design.md`](superpowers/specs/2026-06-05-reminders-2-redesign-design.md) | Rebrand + adherence + Today screen + week-planner redesign | **In progress on this branch** |
+| [`specs/2026-06-05-reminders-2-redesign-design.md`](superpowers/specs/2026-06-05-reminders-2-redesign-design.md) | Rebrand + adherence + Today screen + week-planner redesign | Shipped |
 | [`specs/2026-06-07-life-json-v3-drift-engine-design.md`](superpowers/specs/2026-06-07-life-json-v3-drift-engine-design.md) | Life JSON v3 + drift-aware engine (the core/moat) | Approved |
-| [`plans/2026-06-07-life-json-v3-drift-engine.md`](superpowers/plans/2026-06-07-life-json-v3-drift-engine.md) | **Implementation plan** for v3 (5 phases A–E, ~30 TDD tasks) | **Written — ready to execute** |
-| [`specs/2026-06-07-local-profiles-login-app-shell-design.md`](superpowers/specs/2026-06-07-local-profiles-login-app-shell-design.md) | Login (local profile picker), per-profile storage, app shell + side panel, onboarding stub | **Approved — next to implement** |
-| [`DECISIONS.md`](DECISIONS.md) | Architectural decision records (ADR-001…017) | Living |
+| [`plans/2026-06-07-life-json-v3-drift-engine.md`](superpowers/plans/2026-06-07-life-json-v3-drift-engine.md) | **Implementation plan** for v3 (5 phases A–E, ~30 TDD tasks) | **Phase A complete — Phase B next** |
+| [`specs/2026-06-07-local-profiles-login-app-shell-design.md`](superpowers/specs/2026-06-07-local-profiles-login-app-shell-design.md) | Login (local profile picker), per-profile storage, app shell + side panel, onboarding stub | After v3 core |
+| [`DECISIONS.md`](DECISIONS.md) | Architectural decision records (ADR-001…019) | Living |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | File map, data flow, storage key map | Living |
-
-History only (carry banners pointing to v3): `specs/2026-06-05-plan-driven-core-design.md` (v1, folded into v3) and `plans/schema-improvement-gemini.md` (the v3 sketch, folded into v3).
 
 ### Roadmap (from the v3 spec)
 
-1. **Core** — plan-driven app + v3 drift engine *(approved; implementation plan written — see plans table above)*. Dual-JSON state, both `cutoffTime`+`maxDriftMinutes`, and the full interactive sandbox were folded in while planning (ADR-015/016/017, from the external `moat-*-67.md` docs).
+1. **Core** — plan-driven app + v3 drift engine *(approved; Phase A done — see below)*
 2. In-app control panel / Life-JSON editor *(later)*
 3. Interview tree *(later)*
 4. AI generation (answers → Claude → validated Life JSON) *(later)*
 5. Onboarding flow *(later)*
 
-The **local-profiles/login** work pulls a minimal, local-only slice of #3/#5 forward (a profile picker + onboarding *stub*), sequenced to ship **after** the v3 core so it can namespace v3's storage rather than re-plumb it (ADR-019).
+The **local-profiles/login** work pulls a minimal, local-only slice of #3/#5 forward (a profile picker + onboarding *stub*), sequenced to ship **after** the v3 core.
 
 ---
 
-## Current state (session 3)
+## Current state (session 4)
 
 ### Branch: `feat/reminders-2-redesign`
 
-**Committed:** the rebrand to "Reminders 2" (`5d54595`) plus the spec docs. (Git history exists — the old "no git history" blocker is resolved.)
+**Phase A is complete (A1–A11 + A8). All 62 tests green.**
 
-**Uncommitted working tree (the redesign — implemented, not yet committed):**
-- `lib/data/models.dart` — `Block.isTrackable` + `Block.signature` getters.
-- `lib/data/adherence_store.dart` *(new)* — per-day done-set + adherence summary + `last7` trend + `weeklyAverage`.
-- `lib/screens/today_screen.dart` *(new)* — full-day tickable checklist + 7-day adherence strip.
-- `lib/widgets/now_card.dart` — new API (`doneToday`, `onViewAll`, `onToggleDone`), green "done" state, "View all" + "Mark done".
-- `lib/widgets/week_planner.dart` — one-row-per-day layout, schedule chip, train/rest switch, inline caption.
-- `lib/screens/home_screen.dart` — owns `_doneToday`, wires card callbacks + navigation, removed SnackBar.
-- Tests added/updated under `test/` (adherence_store, screens, week_planner, now_card).
+### v3 Phase A — what was built
 
-**Verify before calling the redesign done:** the launcher-icon art (`flutter_launcher_icons`, Feature 1 of the redesign spec) may still be outstanding; run `flutter test`; then commit the working tree.
+| Task | What | Tests |
+|---|---|---|
+| A1 | `assets/seed_plan.json` — full v3 blueprint for Cyrus | Asset registered in pubspec |
+| A2–A6 | Complete v3 model layer: `Plan`, `DayTemplate`/`Anchor`/`RoutineItem`, `WorkoutDef`/`ExerciseDef`/`Progression`, `WeekEntry`, `DailyState`/`DriftEvent`/`ItemOverride`, extended `Block` + `displayTime()` | 21 tests |
+| A9 | `PlanValidator` — referential integrity checks (templateId in week ∈ dayTemplates, workoutId ∈ workouts, etc.) | seed passes, error cases tested |
+| A10 | `TimelineAssembler.assembleDay()` — data-driven from Plan; golden test byte-identical to the old hardcoded timeline | golden test (all 4 templates) |
+| A7 | **File-per-profile `ProfileRepository`** + `ProfileDoc` (Plan + states + logs + done + adherence in one JSON file) + `AppStore` facade | 4 tests, multi-profile isolation |
+| A8 | `StateStore` — DailyState + drift log via ProfileRepository | 5 tests |
+| A11 | **Full app cutover** — all screens/widgets wired to `Plan`; dead code deleted | 62 tests total |
+
+### A11 cutover — what was deleted / replaced
+
+- `lib/logic/workouts.dart` — deleted (workouts live in `Plan.workouts` from seed JSON)
+- `lib/logic/timeline.dart` — stripped to `buildTimes()` + `nowDecimal()` only; `buildTimeline()` and all its hardcoded block constants gone
+- `models.dart` — `DaySchedule` enum, `DayPlan` class, `WeekPlan` typedef removed
+- `AdherenceStore` — no longer uses SharedPreferences; routes through `AppStore.repo` (file-per-profile)
+- `PlannerLogic` — now operates on `Plan`/`WeekEntry`; API is `applyBestSpacing(Plan)`, `toggleTraining(Plan, day)`, `toggleSchedule(Plan, day)`
+- All screens/widgets (`HomeScreen`, `TodayScreen`, `NowCard`, `WeekPlanner`) — accept `Plan`, call `TimelineAssembler.assembleDay`
+
+### Storage architecture (implemented)
+
+**File-per-profile:** `<appDocuments>/profiles/<id>.json` holds a `ProfileDoc`:
+
+```text
+ProfileDoc {
+  id, displayName, plan: Plan,
+  states: Map<'yyyy-MM-dd', DailyState>,   // drift log lives here
+  logs: Map<workoutKey, List<WorkoutLog>>,
+  done: Map<'yyyy-MM-dd', List<String>>,   // block signatures
+  adherence: Map<'yyyy-MM-dd', {done, total}>
+}
+```
+Active profile id is a global pointer in SharedPreferences. `AppStore.repo` is injectable (swap for temp dir in tests). Default profile `cyrus` is seeded from `assets/seed_plan.json` on first launch.
 
 ### App status — WORKING
 
 Runs on the phone (Samsung S21 FE, Android 16 / API 36). Dev loop is wireless ADB + `flutter run` (below).
 
-### Android widget — BROKEN (long-standing blocker)
+### Android widget — WORKING (was broken; fixed in session 3)
 
-Consistently rejected by Samsung One UI ("couldn't add widget") in the launcher process. Stripped to a minimal layout for diagnosis; root cause not confirmed. Detail in ADR-010 and "Widget debugging" below. The widget is **out of scope** for the redesign and the profiles work — the app itself is unaffected.
+**Root cause was fixed:** `NowWidgetProvider.kt` was reading from `FlutterSharedPreferences` (`flutter.*` prefix) when it should read from `HomeWidgetPreferences` (raw keys) via `HomeWidgetPlugin.getData(context)`. Widget now shows live data.
+
+**15-minute refresh:** WorkManager drives actual 15-min periodic refresh (`callbackDispatcher` in `main.dart`). The XML `updatePeriodMillis` is 1800000 (30 min, the Android floor) as a fallback; WorkManager is the real driver.
 
 ---
 
 ## What to do next
 
-1. **Finish + commit the redesign** if anything is incomplete (verify icon art; `flutter test`; commit).
-2. **Build the v3 core (drift engine)** per the written plan `plans/2026-06-07-life-json-v3-drift-engine.md`, sequenced Phase A→E. This is the foundation and lands first.
-3. **Then the local-profiles/login feature** per `plans/2026-06-07-local-profiles-login-app-shell.md` (sequenced *after* v3 — see ADR-019). Scope: login screen (local profile picker, no backend), per-profile **key-prefix** storage via `ProfileScope`/`ProfileRepository` (file → export/import backup), app shell + side panel (drawer), onboarding stub, Settings, logout. **Visual polish is a first-class requirement** — use the `frontend-design` skill and the existing palette/fonts.
+### Immediate: Phase B — DriftEngine
+
+File to create: `lib/logic/drift_engine.dart`
+
+Pure function `DriftEngine.computeDay(Plan plan, DailyState state, double nowDecimal)` → `ResolvedDay`.
+
+`ResolvedDay` is a value object:
+
+```dart
+class ResolvedDay {
+  final List<Block> blocks;       // ordered with estStart populated
+  final bool circuitBreakerFired; // true if cutoffTime or maxDrift exceeded
+  final String? breakerReason;
+}
+```
+
+The engine (in order):
+
+1. **Assemble** base blocks via `TimelineAssembler.assembleDay()`
+2. **Inject drift** — for each block, `estStart = seedStart + accumulatedDrift`
+3. **Transition buffer** — add 5-min gap between consecutive non-anchor blocks if needed
+4. **Compaction** — if `estStart + idealDuration > nextAnchorStart`, shrink to `durationMinutes = max(minDuration, available)`; set `isCompacted = true`
+5. **Jettison** — if `durationMinutes < minDuration` after compaction, or `estStart > cutoffTime`, drop the block (`status = BlockStatus.dropped`); emit a `DriftEvent`
+6. **Two-way elasticity** — if a block finishes early (user marks done before estEnd), push the saved time forward (expand next block or absorb drift)
+7. **Circuit-breaker** — if `accumulatedDrift > maxDriftMinutes` for any block, fire the breaker: `circuitBreakerFired = true`, remaining blocks collapse to their seed times
+
+TDD: write failing test → run → implement step → run → pass → commit. Phase B plan is in `plans/2026-06-07-life-json-v3-drift-engine.md` tasks B1–B7.
+
+### After Phase B: Phase C → D → E
+
+- **C**: `NotificationService` — `flutter_local_notifications`; circuit-breaker alert, "you're running late" nudges
+- **D**: `StateStore` surfaced in Sunday review (drift log aggregation display in `TodayScreen`)
+- **E**: Live timeline sandbox — drag-reorder, swipe-delete, priority override, Undo transaction protocol
 
 ---
 
@@ -103,29 +158,20 @@ Firewall rule for adb is already in place. Run tests: `flutter test` (from `dail
 
 ---
 
-## Widget debugging (when you return to the blocker)
-
-Capture the launcher's crash while adding the widget:
-```powershell
-& "C:\Users\Cyrus\AppData\Local\Android\Sdk\platform-tools\adb.exe" -s 192.168.1.4:PORT logcat *:E
-```
-Look for errors in the Samsung launcher process (`com.sec.android.app.launcher`) around `APPWIDGET_DELETED`. Things to try: add `android:previewLayout="@layout/now_widget"` to `now_widget_info.xml`; plain hex `android:background`; test on an emulator (API 33/34) to rule out Samsung-specific behavior; remove `android:layout_weight` from the title TextView. Full history in ADR-010.
-
----
-
 ## Active blockers / constraints
 
-1. **Widget rejected by Samsung One UI** — see above. App is fine; only the home-screen widget fails.
-2. **Disk space tight** (~4.6 GB free on C:). NDK was removed from the build (ADR-006) to avoid a ~1.5 GB download. Free space before adding any package with native code.
-3. **HTML file is stale** — `daily-command-center.html` at the project root is the old version (also edited by an external agent). Do not edit it for new features.
+1. **Disk space tight** (~4.6 GB free on C:). NDK was removed from the build (ADR-006) to avoid a ~1.5 GB download. Free space before adding any package with native code.
+2. **HTML file is stale** — `daily-command-center.html` at the project root is the old version. Do not edit it for new features.
 
 ---
 
 ## Key invariants (do not break)
 
-- `PlannerLogic.toggleTraining` always returns a plan with exactly 4 training days and no consecutive training days. Tests enforce this.
-- `buildTimes` in `timeline.dart` must return strictly monotonically increasing values. The PM disambiguation (walk forward, never backward) is critical and proven — leave it and its tests untouched.
-- `writeWidgetData` in `store.dart` must stay wrapped in try-catch — `home_widget` platform calls throw when no widget is on the home screen (ADR-009).
-- `home_widget` does **not** write to `FlutterSharedPreferences` and does **not** add a `flutter.` prefix — that convention belongs to the separate `shared_preferences` plugin. `home_widget` stores widget data in its own `HomeWidgetPreferences` file under **raw** keys (`currentAction`, `nextAction`, `dayLabel`, `progressPct`). `NowWidgetProvider.kt` must read them via `HomeWidgetPlugin.getData(context)` with **un-prefixed** keys. (Confusing the two files/prefixes left the widget stuck on "Loading…" — fixed in `a4518b0`.)
-- Adherence counts **trackable** blocks only (`cls != 'work' && cls != 'chill'`). Block identity is `signature = '$time|$label'`.
-- **When the profiles work lands:** persistence moves to one JSON file per profile under `profiles/<id>.json`, fronted by `ProfileRepository`; the flat keys above become per-profile data — including whatever the v3 engine writes (`activePlan`, `state_<date>`, `driftLog`). See ADR-018/019 and the profiles spec.
+- **File-per-profile storage**: All plan data, daily state, workout logs, done-sets, and adherence live in `profiles/<id>.json` via `ProfileRepository`. Never write profile data directly to SharedPreferences. `AppStore.repo` is injectable for tests — always use `ProfileRepository(baseDir: tmp)` in tests that touch storage.
+- **`home_widget` uses raw keys** — `home_widget` does NOT add a `flutter.` prefix. Read from `HomeWidgetPreferences` via `HomeWidgetPlugin.getData(context)` with un-prefixed keys (`currentAction`, `nextAction`, `dayLabel`, `progressPct`). The `shared_preferences` plugin uses a separate file with `flutter.` prefix — do not confuse the two.
+- **`buildTimes`** in `timeline.dart` must return strictly monotonically increasing values. The PM disambiguation (walk forward, never backward) is critical — leave it and its test untouched.
+- **`writeWidgetData`** in `store.dart` must stay wrapped in try-catch — `home_widget` platform calls throw when no widget is on the home screen (ADR-009).
+- **`PlannerLogic.toggleTraining`** always returns a plan with exactly 4 training days and no consecutive training days. Tests enforce this.
+- **`TimelineAssembler`** is the only place blocks are assembled from a Plan. Never hard-code block lists in screens. The golden test (`test/logic/golden_timeline_test.dart`) is the canonical correctness check — keep it green.
+- **Adherence counts trackable blocks only** (`cls != 'work' && cls != 'chill'`). Block identity is `signature = '$time|$label'`.
+- **Seed plan**: `assets/seed_plan.json` is the source of truth for the default plan. If you change the seed, re-run the golden test — it will fail if the timeline changes, which is a deliberate safety net.
