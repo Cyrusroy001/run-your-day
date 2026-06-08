@@ -25,6 +25,11 @@ class Block {
   final bool isAnchor;
   final bool hardAnchor;
   final BlockStatus status;
+  final int minMinutes;
+  final double? cutoffDecimal;
+  final int? maxDriftMinutes;
+  final double seedStart;
+  final String? dropStrategy;
 
   const Block({
     required this.time,
@@ -41,6 +46,11 @@ class Block {
     this.isAnchor = false,
     this.hardAnchor = false,
     this.status = BlockStatus.pending,
+    this.minMinutes = 0,
+    this.cutoffDecimal,
+    this.maxDriftMinutes,
+    this.seedStart = 0,
+    this.dropStrategy,
   });
 
   /// Blocks the user actively chooses to do (counted for adherence).
@@ -56,12 +66,16 @@ class Block {
     String? time, String? cls, String? label, String? desc, bool? isTrain, String? workout, String? id,
     double? estStart, int? durationMinutes, int? idealMinutes, int? priority,
     bool? isAnchor, bool? hardAnchor, BlockStatus? status,
+    int? minMinutes, double? cutoffDecimal, int? maxDriftMinutes, double? seedStart, String? dropStrategy,
   }) => Block(
         time: time ?? this.time, cls: cls ?? this.cls, label: label ?? this.label, desc: desc ?? this.desc,
         isTrain: isTrain ?? this.isTrain, workout: workout ?? this.workout, id: id ?? this.id,
         estStart: estStart ?? this.estStart, durationMinutes: durationMinutes ?? this.durationMinutes,
         idealMinutes: idealMinutes ?? this.idealMinutes, priority: priority ?? this.priority,
         isAnchor: isAnchor ?? this.isAnchor, hardAnchor: hardAnchor ?? this.hardAnchor, status: status ?? this.status,
+        minMinutes: minMinutes ?? this.minMinutes, cutoffDecimal: cutoffDecimal ?? this.cutoffDecimal,
+        maxDriftMinutes: maxDriftMinutes ?? this.maxDriftMinutes, seedStart: seedStart ?? this.seedStart,
+        dropStrategy: dropStrategy ?? this.dropStrategy,
       );
 }
 

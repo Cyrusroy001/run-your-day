@@ -72,6 +72,7 @@ class TimelineAssembler {
     final priority = state.dailyOverrides[item.id]?.priority ?? item.priority;
     // 'goal' kind renders with the existing 'dsa' class used by today's UI.
     final cls = item.kind == 'goal' ? 'dsa' : item.kind;
+    final seedDec = _decimal24(item.start);
     return Block(
       time: displayTime(item.start),
       cls: cls,
@@ -80,10 +81,15 @@ class TimelineAssembler {
       isTrain: isTrain,
       workout: workout,
       id: item.id,
-      estStart: _decimal24(item.start),
+      estStart: seedDec,
+      seedStart: seedDec,
       durationMinutes: item.idealDuration,
       idealMinutes: item.idealDuration,
+      minMinutes: item.minDuration,
       priority: priority,
+      cutoffDecimal: item.cutoffTime == null ? null : _decimal24(item.cutoffTime!),
+      maxDriftMinutes: item.maxDriftMinutes,
+      dropStrategy: item.dropStrategy,
     );
   }
 
