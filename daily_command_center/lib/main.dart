@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:workmanager/workmanager.dart';
+import 'data/notifications.dart';
 import 'data/store.dart';
 import 'screens/home_screen.dart';
 
@@ -19,6 +20,7 @@ void callbackDispatcher() {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService.init();
   await Workmanager().initialize(callbackDispatcher);
   // Android's WorkManager floor is 15 min — this is the real driver of the
   // widget's "live" refresh (the appwidget updatePeriodMillis is capped at 30).
