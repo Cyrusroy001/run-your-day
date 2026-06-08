@@ -98,4 +98,14 @@ class AppStore {
       // Widget not on home screen or platform error — safe to ignore
     }
   }
+
+  // Load the plan, work out today's key, and push now-state to the widget.
+  // Shared by the foreground screens and the background WorkManager task so
+  // the day-key logic lives in one place.
+  static Future<void> refreshWidgetData() async {
+    const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+    final plan = await loadPlan();
+    final todayKey = days[DateTime.now().weekday % 7];
+    await writeWidgetData(plan, todayKey);
+  }
 }

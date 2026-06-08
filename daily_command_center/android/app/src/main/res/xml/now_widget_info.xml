@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- updatePeriodMillis is capped at 30 min (1800000) by Android and ignored below
+     that. The real 15-min refresh is driven by WorkManager (see main.dart); this
+     is only a system fallback. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:minWidth="250dp"
     android:minHeight="110dp"
     android:targetCellWidth="4"
     android:targetCellHeight="2"
-    android:updatePeriodMillis="900000"
+    android:updatePeriodMillis="1800000"
     android:initialLayout="@layout/now_widget"
     android:widgetCategory="home_screen"
     android:resizeMode="horizontal|vertical"

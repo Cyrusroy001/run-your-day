@@ -1,9 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:workmanager/workmanager.dart';
+import 'data/store.dart';
 import 'screens/home_screen.dart';
+
+// Unique name for the periodic home-widget refresh task.
+const _widgetRefreshTask = 'now-widget-refresh';
+
+// Entry point for the WorkManager background isolate. Must be a top-level
+// function and kept by the compiler for the background engine, hence the pragma.
+@pragma('vm:entry-point')
+void callbackDispatcher() {
+  Workmanager().executeTask((task, inputData) async {
+    await AppStore.refreshWidgetData();
+    return true;
+  });
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Workmanager().initialize(callbackDispatcher);
+  // Android's WorkManager floor is 15 min — this is the real driver of the
+  // widget's "live" refresh (the appwidget updatePeriodMillis is capped at 30).
+  await Workmanager().registerPeriodicTask(
+    _widgetRefreshTask,
+    _widgetRefreshTask,
+    frequency: const Duration(minutes: 15),
+    existingWorkPolicy: ExistingPeriodicWorkPolicy.update,
+  );
   runApp(const DailyCommandCenterApp());
 }
 
