@@ -3,7 +3,10 @@
 **Date:** 2026-06-07
 **Status:** Approved design
 **Applies to:** `daily_command_center/` (Flutter app)
-**Related:** [`2026-06-07-life-json-v3-drift-engine-design.md`](2026-06-07-life-json-v3-drift-engine-design.md) (the core engine; this spec is independent and ships on today's data model). This work pulls the *onboarding* and *multi-profile* ideas (roadmap sub-projects 3–5) forward in a deliberately minimal, local-only form.
+**Related:** [`2026-06-07-life-json-v3-drift-engine-design.md`](2026-06-07-life-json-v3-drift-engine-design.md) (the core engine). This work pulls the *onboarding* and *multi-profile* ideas (roadmap sub-projects 3–5) forward in a deliberately minimal, local-only form.
+**Implementation plan:** [`../plans/2026-06-07-local-profiles-login-app-shell.md`](../plans/2026-06-07-local-profiles-login-app-shell.md)
+
+> **Sequencing + storage update (2026-06-08).** This feature is sequenced to ship **after the v3 core**, and §3's storage approach was revised from "one JSON file per profile" to a **per-profile key prefix** (file → export/import backup) to avoid re-plumbing v3's SharedPreferences-based stores. See **ADR-019** and the plan. The §3 prose below is kept for context; the prefix approach is the one that ships.
 
 ---
 
@@ -51,9 +54,9 @@ Profile **id** is the lower-cased, trimmed name (`"Cyrus"` → `cyrus`); `displa
 
 ---
 
-## 3. Storage — one JSON file per profile
+## 3. Storage — one JSON file per profile *(SUPERSEDED — ships as a per-profile key prefix; see the update banner at top + ADR-019)*
 
-Chosen over key-prefixing because it gives clean physical isolation, trivial export/import (copy the file), and fits the project's "everything is JSON" direction.
+Originally chosen over key-prefixing for clean physical isolation and trivial export/import. Reversed after reading the v3 plan (every store is SharedPreferences-key based and v3 adds another): the shipping approach is a central per-profile **key prefix** (`p_<id>__<base>`), with the JSON file kept as the export/import backup format. The original write-up follows for context.
 
 ### Layout
 

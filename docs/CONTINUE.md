@@ -35,7 +35,7 @@ History only (carry banners pointing to v3): `specs/2026-06-05-plan-driven-core-
 4. AI generation (answers → Claude → validated Life JSON) *(later)*
 5. Onboarding flow *(later)*
 
-The **local-profiles/login** work pulls a minimal, local-only slice of #3/#5 forward now (a profile picker + onboarding *stub*), independent of the v3 engine.
+The **local-profiles/login** work pulls a minimal, local-only slice of #3/#5 forward (a profile picker + onboarding *stub*), sequenced to ship **after** the v3 core so it can namespace v3's storage rather than re-plumb it (ADR-019).
 
 ---
 
@@ -69,8 +69,8 @@ Consistently rejected by Samsung One UI ("couldn't add widget") in the launcher 
 ## What to do next
 
 1. **Finish + commit the redesign** if anything is incomplete (verify icon art; `flutter test`; commit).
-2. **Implement the local-profiles/login spec.** Plan: `docs/superpowers/plans/2026-06-07-local-profiles-login-app-shell.md`. Scope: login screen (local profile picker, no backend), one-JSON-file-per-profile storage via `ProfileRepository`, app shell + side panel (drawer), onboarding stub, Settings, logout. **Visual polish is a first-class requirement** — use the `frontend-design` skill and the existing palette/fonts.
-3. **Then** the v3 core (drift engine) per the written plan `plans/2026-06-07-life-json-v3-drift-engine.md`, sequenced Phase A→E.
+2. **Build the v3 core (drift engine)** per the written plan `plans/2026-06-07-life-json-v3-drift-engine.md`, sequenced Phase A→E. This is the foundation and lands first.
+3. **Then the local-profiles/login feature** per `plans/2026-06-07-local-profiles-login-app-shell.md` (sequenced *after* v3 — see ADR-019). Scope: login screen (local profile picker, no backend), per-profile **key-prefix** storage via `ProfileScope`/`ProfileRepository` (file → export/import backup), app shell + side panel (drawer), onboarding stub, Settings, logout. **Visual polish is a first-class requirement** — use the `frontend-design` skill and the existing palette/fonts.
 
 ---
 

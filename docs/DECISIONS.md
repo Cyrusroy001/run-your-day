@@ -191,12 +191,12 @@ Read this before proposing architectural changes.
 
 ---
 
-## ADR-019 — One JSON file per profile (chosen over key-prefixing)
+## ADR-019 — Per-profile key prefix (revised; profiles sequenced after v3)
 
-**Decision:** Each profile is a single JSON file at `‹appDocumentsDir›/profiles/‹id›.json` holding that profile's whole dataset; a tiny `shared_preferences` key `activeProfileId` points to who is logged in. A new `ProfileRepository` owns list/create/load/save/delete/export/import and the in-memory active `ProfileData`. `AppStore`/`AdherenceStore` are refactored to read/write through the active profile instead of flat global keys. First run seeds/migrates legacy flat keys into `cyrus.json`.
+**Decision (revised 2026-06-08):** Isolate profiles with a **per-profile SharedPreferences key prefix** (`p_<id>__<base>`), applied centrally in a `ProfileScope` helper that every store routes its key construction through. The active profile is a tiny global pointer (`activeProfileId`); a `ProfileRepository` owns the profile index, create/list/delete, first-run seed/migration, and **export/import**. The "one JSON file per profile" survives only as the **export/import backup format** (gather every `p_<id>__*` key → one JSON blob), not the live backing. **Profiles is sequenced to ship after the v3 core.** Plan: [`docs/superpowers/plans/2026-06-07-local-profiles-login-app-shell.md`](superpowers/plans/2026-06-07-local-profiles-login-app-shell.md).
 
-**Why:** Clean physical isolation between profiles, trivially correct delete (remove the file) and export/import (copy the JSON), and a natural fit for the project's "everything is JSON" direction. Key-prefixing was the smaller-diff alternative but smears one profile across many keys and makes export/delete enumeration-based and error-prone.
+**Why the reversal:** The original choice was one JSON file per profile (cleaner physical isolation). But reading the v3 plan showed every store is SharedPreferences-key based and v3 *adds* another (`state_store.dart`). File-backing would force v3's stores to be re-plumbed to file IO — duplicate, conflicting work. A central key prefix namespaces **all** existing and future keys (`activePlan`, `state_<date>`, `log_*`, `done_*`, `adherence_*`, drift log) for free, touching each store by one line. The user explicitly chose to build profiles after v3 and avoid the duplicate work.
 
-**Compatibility with the v3 engine (ADR-015):** the per-profile file is the container for *all* of that profile's state — the immutable `activePlan` blob **and** the ephemeral `state_<date>` / `driftLog` streams. Whatever keys the DriftEngine introduces become fields inside the profile file rather than new global keys, so dual-JSON state and per-profile storage compose cleanly. Whichever of the two features lands second must namespace its storage per active profile.
+**Compatibility with the v3 engine (ADR-015):** because v3 lands first, the prefix simply wraps whatever keys exist at that point. Global keys never get prefixed: `activeProfileId`, `profileIndex`, and the `flutter.*` widget keys (the widget shows the active profile's now-state).
 
-**Do not flatten back to global keys unless:** dropping multi-profile support entirely.
+**Do not revert to file-per-profile / flatten to global keys unless:** dropping multi-profile support, or abandoning the SharedPreferences-based stores wholesale.
