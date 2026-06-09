@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../data/models.dart';
 import '../data/state_store.dart';
 import '../data/adherence_store.dart';
+import '../data/teaching_flags.dart';
 import '../logic/assembler.dart';
 import '../logic/timeline.dart';
 import '../logic/drift_engine.dart';
@@ -14,6 +15,8 @@ import '../theme/app_palette.dart';
 import '../widgets/budget_bar.dart';
 import '../widgets/anchor_wall.dart';
 import '../widgets/weekly_review_card.dart';
+import '../widgets/teaching_card.dart';
+import 'glossary_screen.dart';
 
 class LiveTimelineView extends StatefulWidget {
   final Plan plan;
@@ -36,6 +39,7 @@ class LiveTimelineViewState extends State<LiveTimelineView> {
   List<DayAdherence> _last7 = const [];
   bool _adjusting = false;
   DailyState? _checkpoint;
+  String? _teachText;
 
   @override
   void initState() {
@@ -116,17 +120,49 @@ class LiveTimelineViewState extends State<LiveTimelineView> {
   }
 
   Widget _readonlyBody(AppPalette c, ResolvedDay day) {
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeTeach(day));
     final summary = _summary;
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
       children: [
         if (summary != null)
           WeeklyReviewCard(summary: summary, isSunday: widget.todayKey == 'sun', nudge: _nudge, last7: _last7),
+        if (_teachText != null)
+          TeachingCard(
+            text: _teachText!,
+            onGotIt: () => setState(() => _teachText = null),
+            onWhy: () {
+              setState(() => _teachText = null);
+              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GlossaryScreen()));
+            },
+          ),
         _driftSummary(c, day),
         const SizedBox(height: 4),
         ..._rows(c, day),
       ],
     );
+  }
+
+  /// On first occurrence of a compaction/drop, surface a one-time explainer.
+  void _maybeTeach(ResolvedDay day) {
+    if (_teachText != null) return;
+    final tmpl = widget.plan.dayTemplates[widget.plan.week[widget.todayKey]?.templateId];
+    final anchorLabels = tmpl?.anchors.where((a) => a.hard).map((a) => a.label).toList();
+    final anchor = (anchorLabels != null && anchorLabels.isNotEmpty) ? anchorLabels.first : 'what matters';
+    final compacted = day.blocks.where((b) => b.isCompacted).toList();
+    final dropped = day.blocks.where((b) => b.isDropped).toList();
+    Future<void> trip(String concept, String text) async {
+      if (await TeachingFlags.seen(concept)) return;
+      await TeachingFlags.markSeen(concept);
+      if (mounted) setState(() => _teachText = text);
+    }
+    if (dropped.isNotEmpty) {
+      trip('drop', DriftCopy.teachDrop(itemLabel: dropped.first.label));
+    } else if (compacted.isNotEmpty) {
+      final b = compacted.first;
+      trip('compaction', DriftCopy.teachCompaction(
+          itemLabel: b.label, minutes: b.idealMinutes - b.durationMinutes, anchorLabel: anchor));
+    }
   }
 
   // ── Adjust mode (writes DailyState only; routed through _commit) ───────────

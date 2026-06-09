@@ -9,6 +9,7 @@ import 'package:daily_command_center/data/store.dart';
 import 'package:daily_command_center/data/profile_repository.dart';
 import 'package:daily_command_center/logic/priority_level.dart';
 import 'package:daily_command_center/theme/app_palette.dart';
+import 'package:daily_command_center/widgets/teaching_card.dart';
 import 'package:daily_command_center/screens/live_timeline_view.dart';
 
 late Plan _plan;
@@ -70,6 +71,10 @@ void main() {
     // adherence_store_test.dart; here we assert the in-memory toggle wiring.
     await tester.runAsync(() async {
       await tester.tap(find.text('Deep Focus — AI Building'));
+      // tester.tap doesn't await _toggle's returned future; give its dart:io
+      // writes (saveDone + writeAdherence) time to flush on the real event loop
+      // so no I/O dangles past the test.
+      await Future.delayed(const Duration(milliseconds: 200));
     });
     expect(state.doneSignatures.any((s) => s.contains('Deep Focus')), true);
   });
@@ -166,5 +171,23 @@ void main() {
     expect(st.stateForTest.deletedItems, contains('snack'));
     await tester.runAsync(() => st.undoForTest());
     expect(st.stateForTest.deletedItems, isNot(contains('snack')));
+  });
+
+  // ── Phase U5.2: just-in-time teaching ──────────────────────────────────────
+
+  testWidgets('first compaction shows a teaching card', (tester) async {
+    tester.view.physicalSize = const Size(1200, 3000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    // Late office morning: the cascade pushes the day past the 14:00 work
+    // anchor, forcing compaction/drops -> a one-time teaching card.
+    await tester.pumpWidget(MaterialApp(theme: AppPalette.darkTheme,
+        home: LiveTimelineView(plan: _plan, todayKey: 'mon', debugNow: 11.5)));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+    await tester.pump(const Duration(milliseconds: 200));
+
+    expect(find.byType(TeachingCard), findsWidgets);
   });
 }
