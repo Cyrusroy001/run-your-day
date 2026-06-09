@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:workmanager/workmanager.dart';
 import 'data/notifications.dart';
 import 'data/store.dart';
+import 'data/ui_prefs.dart';
+import 'theme/app_palette.dart';
 import 'screens/home_screen.dart';
 
 // Unique name for the periodic home-widget refresh task.
@@ -30,46 +31,49 @@ void main() async {
     frequency: const Duration(minutes: 15),
     existingWorkPolicy: ExistingPeriodicWorkPolicy.update,
   );
-  runApp(const DailyCommandCenterApp());
+  final prefs = await UiPrefs.load();
+  runApp(RemindersApp(prefs: prefs));
 }
 
-class DailyCommandCenterApp extends StatelessWidget {
-  const DailyCommandCenterApp({super.key});
+class RemindersApp extends StatefulWidget {
+  final UiPrefs prefs;
+  const RemindersApp({super.key, this.prefs = const UiPrefs()});
+
+  static _RemindersAppState? of(BuildContext c) =>
+      c.findAncestorStateOfType<_RemindersAppState>();
+
+  @override
+  State<RemindersApp> createState() => _RemindersAppState();
+}
+
+class _RemindersAppState extends State<RemindersApp> {
+  late UiPrefs _prefs = widget.prefs;
+
+  void updatePrefs(UiPrefs p) {
+    setState(() => _prefs = p);
+    UiPrefs.save(p);
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Reminders 2',
-      theme: _theme(),
+      theme: AppPalette.lightTheme,
+      darkTheme: AppPalette.darkTheme,
+      themeMode: _prefs.themeMode,
+      builder: (ctx, child) => MediaQuery.withClampedTextScaling(
+        minScaleFactor: _prefs.textScale,
+        maxScaleFactor: _prefs.textScale,
+        child: child!,
+      ),
       home: const HomeScreen(),
       debugShowCheckedModeBanner: false,
     );
   }
-
-  ThemeData _theme() {
-    const bg    = Color(0xFF0E1311);
-    const panel = Color(0xFF19211D);
-    const cream = Color(0xFFF2EDE1);
-    const terra = Color(0xFFD9663D);
-    const line  = Color(0xFF2C3833);
-
-    return ThemeData(
-      colorScheme: const ColorScheme.dark(
-        surface: bg,
-        onSurface: cream,
-        primary: terra,
-        outline: line,
-      ),
-      scaffoldBackgroundColor: bg,
-      cardColor: panel,
-      textTheme: GoogleFonts.splineSansTextTheme(
-        ThemeData.dark().textTheme.apply(bodyColor: cream, displayColor: cream),
-      ),
-      useMaterial3: true,
-    );
-  }
 }
 
+// AppColors is intentionally kept verbatim — un-migrated widgets still
+// reference it. It will be removed in task U7.2.
 class AppColors {
   static const bg        = Color(0xFF0E1311);
   static const bg2       = Color(0xFF141B18);
