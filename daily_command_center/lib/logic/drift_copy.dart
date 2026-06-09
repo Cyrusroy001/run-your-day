@@ -65,4 +65,15 @@ class DriftCopy {
     if (items.length == 2) return '${items[0]} & ${items[1]}';
     return '${items.sublist(0, items.length - 1).join(', ')} & ${items.last}';
   }
+
+  /// Sunday nudge — names the item dropped/cancelled most. null if nothing notable.
+  static String? weeklyNudge(List<DriftEvent> events) {
+    final kills = <String, int>{};
+    for (final e in events.where((e) => e.event == 'killed' || e.event == 'jettisoned')) {
+      kills[e.label] = (kills[e.label] ?? 0) + 1;
+    }
+    if (kills.isEmpty) return null;
+    final worst = kills.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
+    return '$worst keeps getting squeezed out — move it earlier, or shorten its budget?';
+  }
 }

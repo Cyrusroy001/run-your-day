@@ -36,4 +36,14 @@ void main() {
     expect(DriftCopy.peek(blk, anchorLabel: 'Work'),
         'planned 11:00 · now 11:10 · budget 45→30m (to hold Work)');
   });
+
+  test('weeklyNudge names the most-killed item from labels', () {
+    final events = [
+      const DriftEvent(date: 'x', itemId: 'train', label: 'Train', event: 'killed'),
+      const DriftEvent(date: 'y', itemId: 'train', label: 'Train', event: 'killed'),
+      const DriftEvent(date: 'z', itemId: 'focus', label: 'Focus', event: 'compacted'),
+    ];
+    expect(DriftCopy.weeklyNudge(events), 'Train keeps getting squeezed out — move it earlier, or shorten its budget?');
+    expect(DriftCopy.weeklyNudge(const []), isNull);
+  });
 }
