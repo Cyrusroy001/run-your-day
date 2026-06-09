@@ -25,8 +25,26 @@ class TimelineAssembler {
     // 2. Anchors -> Blocks (never filtered by condition; never deleted).
     final anchors = tmpl.anchors.map(_anchorToBlock).toList();
 
-    // 3. Merge + order.
-    final merged = [...items, ...anchors];
+    // 3. Fold in custom tasks for this day (priority 0, never filtered).
+    final customBlocks = state.addedItems
+        .where((t) => state.date.isEmpty || t.date == state.date)
+        .map((t) => Block(
+              id: t.id,
+              time: displayTime(t.startTime),
+              cls: 'custom',
+              label: t.label,
+              estStart: _decimal24(t.startTime),
+              seedStart: _decimal24(t.startTime),
+              durationMinutes: t.durationMinutes,
+              idealMinutes: t.durationMinutes,
+              minMinutes: t.durationMinutes,
+              priority: 0,
+              isCustom: true,
+            ))
+        .toList();
+
+    // 4. Merge + order.
+    final merged = [...items, ...anchors, ...customBlocks];
     if (state.dailySequence.isNotEmpty) {
       // Reorder by explicit sequence; unknown/extra ids keep clock order after.
       final order = {for (int i = 0; i < state.dailySequence.length; i++) state.dailySequence[i]: i};
