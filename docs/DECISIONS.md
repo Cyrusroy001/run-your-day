@@ -179,6 +179,8 @@ Read this before proposing architectural changes.
 
 **Trade-off:** Larger sub-project 1. Sequenced last (Phase E) so the engine + read-only surfaces (Phases A–D) ship and de-risk first.
 
+**Supersession note (session 6):** Engine Phase E was **not built as a standalone phase**. Its functionality (reorder, remove, priority override, Undo) was absorbed into the UX-layer plan as tasks U4/U5 (`LiveTimelineView` Adjust mode). The Adjust mode is the canonical implementation. Do not build Phase E separately.
+
 ---
 
 ## ADR-018 — "Login" is a local profile picker, not authentication
@@ -188,6 +190,16 @@ Read this before proposing architectural changes.
 **Why:** The app is local-only by design (the v3 spec lists multi-user/cloud sync as a non-goal). Real auth needs a server and contradicts that. A profile picker delivers the actual want — multiple isolated identities, a seeded `cyrus`, onboarding for new users — with zero backend, and stays the front door when real accounts are added later. The onboarding stub's only output is "a valid plan," so the future interview tree (sub-project 3) can replace it without touching anything downstream.
 
 **Do not turn into real auth unless:** the project adopts a backend and cross-device sync (a deliberate scope change, not a tweak).
+
+---
+
+## ADR-020 — AppPalette ThemeExtension replaces AppColors (no-red warm palette)
+
+**Decision:** All color tokens live in `lib/theme/app_palette.dart` as `AppPalette`, a Flutter `ThemeExtension<AppPalette>`. Widgets access colors via `context.c` (the `PaletteX` extension on `BuildContext`). `class AppColors` in `main.dart` is deleted. The app ships two token sets: `AppPalette.dark` (warm dark, bg `#17120E`) and `AppPalette.light` (warm light, bg `#F3EBDE`). Both `darkTheme`/`lightTheme` factory getters are exposed on `AppPalette` and wired into `RemindersApp` via `UiPrefs.themeMode`.
+
+**Why:** Hardcoding hex values in widgets prevents runtime theme switching and makes the palette impossible to evolve. The 14-token set (bg/panel/panel2/cream/muted/dim/line + terra/terraD/moss/mossD/amber/amberD/sky) captures the full design language. `amber` is the loudest accent (never red — calm, not alarming); `terra` is the anchor color. `context.c` gives zero-boilerplate access from any build method.
+
+**Do not revert to AppColors:** Any new widget must use `context.c.xxx`, not hardcoded hex. To add a token: add it to both `dark` and `light` const instances, update `copyWith`, and document in ARCHITECTURE.md.
 
 ---
 

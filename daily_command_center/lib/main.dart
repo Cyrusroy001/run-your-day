@@ -74,20 +74,3 @@ class _RemindersAppState extends State<RemindersApp> {
   }
 }
 
-// AppColors is intentionally kept verbatim — un-migrated widgets still
-// reference it. It will be removed in task U7.2.
-class AppColors {
-  static const bg        = Color(0xFF0E1311);
-  static const bg2       = Color(0xFF141B18);
-  static const panel     = Color(0xFF19211D);
-  static const panel2    = Color(0xFF1F2925);
-  static const cream     = Color(0xFFF2EDE1);
-  static const terra     = Color(0xFFD9663D);
-  static const terraDark = Color(0xFFB8512C);
-  static const moss      = Color(0xFF8FB05A);
-  static const amber     = Color(0xFFE0A23A);
-  static const sky       = Color(0xFF6FA8C7);
-  static const line      = Color(0xFF2C3833);
-  static const muted     = Color(0xFF8A978F);
-  static const dim       = Color(0xFF5E6C64);
-}

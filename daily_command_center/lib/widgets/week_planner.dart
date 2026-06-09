@@ -161,7 +161,7 @@ class _DayRow extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          Text(entry.training ? 'Train' : 'Rest',
+          Text(entry.training ? 'Training' : 'Rest',
               style: TextStyle(fontSize: 11, color: entry.training ? c.moss : c.dim, fontWeight: FontWeight.w600)),
           const SizedBox(width: 8),
           GestureDetector(

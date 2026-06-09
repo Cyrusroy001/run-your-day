@@ -1,5 +1,5 @@
 # Continuation Document
-**Last updated:** 2026-06-09 (session 5)
+**Last updated:** 2026-06-09 (session 6)
 
 If you're an AI agent starting fresh on this project, read this first. It tells you exactly where things stand and what to do next without requiring you to re-derive it from the codebase.
 
@@ -21,7 +21,7 @@ The **product direction** is bigger than Cyrus: a reusable, configurable life-ex
 | [`specs/2026-06-05-reminders-2-redesign-design.md`](superpowers/specs/2026-06-05-reminders-2-redesign-design.md) | Rebrand + adherence + Today screen + week-planner redesign | Shipped |
 | [`specs/2026-06-07-life-json-v3-drift-engine-design.md`](superpowers/specs/2026-06-07-life-json-v3-drift-engine-design.md) | Life JSON v3 + drift-aware engine (the core/moat) | Approved |
 | [`plans/2026-06-07-life-json-v3-drift-engine.md`](superpowers/plans/2026-06-07-life-json-v3-drift-engine.md) | **Engine plan** for v3 (5 phases A–E, ~30 TDD tasks) | **A–D done; E superseded by UX layer** |
-| [`specs/2026-06-08-reminders-2-ux-design.md`](superpowers/specs/2026-06-08-reminders-2-ux-design.md) + [`plans/2026-06-08-reminders-2-ux-layer.md`](superpowers/plans/2026-06-08-reminders-2-ux-layer.md) | **UX-layer plan** (U0–U8): calm Home, rich Live timeline, Adjust mode, teaching, weekly review, avatar menu, light/dark theme. Mockup: [`specs/2026-06-08-reminders-2-ux-mockup.html`](superpowers/specs/2026-06-08-reminders-2-ux-mockup.html) | **Approved — not started; U0 next** |
+| [`specs/2026-06-08-reminders-2-ux-design.md`](superpowers/specs/2026-06-08-reminders-2-ux-design.md) + [`plans/2026-06-08-reminders-2-ux-layer.md`](superpowers/plans/2026-06-08-reminders-2-ux-layer.md) | **UX-layer plan** (U0–U7): calm Home, rich Live timeline, Adjust mode, teaching, weekly review, avatar menu, light/dark theme. Mockup: [`specs/2026-06-08-reminders-2-ux-mockup.html`](superpowers/specs/2026-06-08-reminders-2-ux-mockup.html) | **Complete** (U0–U7 done; `feat/reminders-2-redesign`) |
 | [`specs/2026-06-07-local-profiles-login-app-shell-design.md`](superpowers/specs/2026-06-07-local-profiles-login-app-shell-design.md) | Login (local profile picker), per-profile storage, app shell + side panel, onboarding stub | After v3 core + UX layer |
 | [`DECISIONS.md`](DECISIONS.md) | Architectural decision records (ADR-001…019) | Living |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | File map, data flow, storage key map | Living |
@@ -38,11 +38,11 @@ The **local-profiles/login** work pulls a minimal, local-only slice of #3/#5 for
 
 ---
 
-## Current state (session 5)
+## Current state (session 6)
 
 ### Branch: `feat/reminders-2-redesign`
 
-**Engine plan is complete: Phases A, B, C, and D (D1–D3) are committed.** The interim D3 (weekly-summary card on the Today screen, `4da84d7`) ships now; the UX-layer plan's `WeeklyReviewCard` (U3.1) will later supersede it. Phase E is **not built and should not be** — it is superseded by UX U4/U5 (Adjust mode).
+**UX layer is complete (U0–U7).** Engine plan phases A–D are committed; Phase E is superseded by UX U4/U5. The D3 interim screen (`today_screen.dart`) is deleted — `WeeklyReviewCard` (U3.1) supersedes it. The branch is ready to merge or continue with the custom-task feature.
 
 The **next body of work is the UX-layer plan (U0–U8)** — none of its files exist yet. Start at U0 (theme foundation).
 
@@ -55,8 +55,8 @@ The **next body of work is the UX-layer plan (U0–U8)** — none of its files e
 | C (C1–C4) | Circuit-breaker (cutoff + maxDrift) → `NotificationService` + `DriftRunner` | ✅ committed (`50512db`) |
 | D1 | Drift-log rolling cap (50 events/day) | ✅ committed (`760d494`) |
 | D2 | `WeeklyReview.summarize` aggregation (plain-language sentence) | ✅ committed (`a3b7f6b`) |
-| D3 | Weekly-summary card on Today screen | ✅ committed (`4da84d7`; interim — U3.1 supersedes) |
-| E (E1–E5) | Interactive sandbox (drag/swipe/priority/undo) | ❌ **superseded** by UX U4/U5 — do not build |
+| D3 | Weekly-summary card on Today screen | ✅ committed (`4da84d7`; **interim — superseded by `WeeklyReviewCard` in U3.1; `today_screen.dart` deleted in U7.2**) |
+| E (E1–E5) | Interactive sandbox (drag/swipe/priority/undo) | ❌ **superseded** by UX U4/U5 (Adjust mode in `LiveTimelineView`) — do not build |
 
 ### v3 Phase A — what was built
 
@@ -108,32 +108,34 @@ Runs on the phone (Samsung S21 FE, Android 16 / API 36). Dev loop is wireless AD
 
 ## What to do next
 
-The engine is built. The remaining work is the **UX-layer plan** — [`plans/2026-06-08-reminders-2-ux-layer.md`](superpowers/plans/2026-06-08-reminders-2-ux-layer.md) (phases U0–U8). None of its files exist yet. Execute it task-by-task with TDD (failing test → run → implement → run → commit), matching the visual target in [`specs/2026-06-08-reminders-2-ux-mockup.html`](superpowers/specs/2026-06-08-reminders-2-ux-mockup.html).
+The engine and UX layer are both complete. The branch is in a shippable state. Candidate next steps (in rough priority order):
 
-### Immediate: Phase U0 — theme + prefs foundation
+### 1. Custom-task feature (discussed in session 6)
 
-The prerequisite for everything else (low-risk, no behavior change to existing screens, which keep compiling via the old `AppColors`):
+User can inject ad-hoc tasks into the Live view with a time. The system squeezes lower-priority blocks to make room and notifies what was dropped/compacted. Amber-border UI (already designed). Next-day repeat option (+1/+2/+3/+7 days). Sunday review surfaces them for promotion into `seed_plan.json`'s `routineStack`.
 
-- **U0.1** `lib/data/ui_prefs.dart` — theme mode + text-scale persistence
-- **U0.2** `lib/theme/app_palette.dart` — `AppPalette` ThemeExtension (warm dark + light) + `context.c` getter
-- **U0.3** rewrite `lib/main.dart` → `RemindersApp` with light/dark `themeMode` from `UiPrefs`
+Key model change: add `List<RoutineItem> addedItems` to `DailyState`. Separate `recurringCustomTasks` store for repeat schedule. `TimelineAssembler.assembleDay` folds in `addedItems`. Implement in 3 phases: (1) single-day inject, (2) recurrence, (3) Sunday promote-to-blueprint.
 
-### Then: U1 → U8
+### 2. Merge `feat/reminders-2-redesign` → `main`
 
-- **U1** pure UI logic: `PriorityLevel`, `DriftCopy`, `HomeNowState`
-- **U2** shared widgets: `BudgetBar`, `AnchorWall`
-- **U3** read-only Live timeline + `WeeklyReviewCard` (supersedes the interim D3 card)
-- **U4/U5** Adjust mode (humanized priority, remove-for-today, reorder, Undo) + just-in-time teaching — **this absorbs engine Phase E**
-- **U6/U7** Home hero redesign + avatar menu + settings/glossary screens
-- **U8** cleanup: retire `now_card.dart` / `today_screen.dart`, delete `AppColors`
+Branch is green (115 tests). Ready to merge once custom-task decision is made.
 
-### Watch out for (plan-vs-reality drift)
+### 3. Local-profiles/login (sequenced after the above)
 
-The UX plan's code samples import `../logic/timeline.dart` for `buildTimeline`, but that function moved to `lib/logic/assembler.dart` as `TimelineAssembler.assembleDay` (A11 cutover). `timeline.dart` now holds only `buildTimes()` + `nowDecimal()`. Fix imports when executing U3.2.
+Full profile picker + per-profile storage + onboarding stub. See [`specs/2026-06-07-local-profiles-login-app-shell-design.md`](superpowers/specs/2026-06-07-local-profiles-login-app-shell-design.md) and [`plans/2026-06-07-local-profiles-login-app-shell.md`](superpowers/plans/2026-06-07-local-profiles-login-app-shell.md).
 
-### Note
+---
 
-The interim **D3 weekly-summary card** is committed (`4da84d7`, `today_screen.dart` + test, old `AppColors`). It's an interim ship: U3.1's `WeeklyReviewCard` supersedes it and U8 retires `today_screen.dart`. Don't invest further in it.
+### Completed work (for reference)
+
+All UX-layer tasks are done:
+- **U0** `UiPrefs` + `AppPalette` ThemeExtension + `RemindersApp` rewrite
+- **U1** `PriorityLevel`, `DriftCopy`, `HomeNowState`
+- **U2** `BudgetBar`, `AnchorWall`
+- **U3** `LiveTimelineView` (read-only), `WeeklyReviewCard`
+- **U4/U5** Adjust mode (`_adjusting`, reorder, remove-for-today, priority chips, Undo) + `TeachingCard`
+- **U6** `NowHeroCard`, `AvatarMenuSheet`, `GlossaryScreen`, `SettingsScreen`, `HomeScreen` rebuild, `WeekPlanner` migration
+- **U7** guard test, retire `now_card.dart`/`today_screen.dart`/`AppColors`, docs
 
 ---
 
