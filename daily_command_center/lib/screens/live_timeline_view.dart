@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../data/models.dart';
 import '../data/state_store.dart';
@@ -26,6 +27,9 @@ class LiveTimelineView extends StatefulWidget {
 class LiveTimelineViewState extends State<LiveTimelineView> {
   DailyState _state = const DailyState(date: '');
   Set<String> _done = {};
+
+  /// Exposed for widget tests only.
+  Set<String> get doneSignatures => _done;
   WeeklySummary? _summary;
   String? _nudge;
   List<DayAdherence> _last7 = const [];
@@ -49,6 +53,21 @@ class LiveTimelineViewState extends State<LiveTimelineView> {
       _nudge = DriftCopy.weeklyNudge(events);
       _last7 = last7;
     });
+  }
+
+  Future<void> _toggle(Block b) async {
+    final next = {..._done};
+    next.contains(b.signature) ? next.remove(b.signature) : next.add(b.signature);
+    HapticFeedback.lightImpact();
+    setState(() => _done = next);
+    await AdherenceStore.saveDone(DateTime.now(), next);
+    final entry = widget.plan.week[widget.todayKey];
+    final assembled = entry == null
+        ? <Block>[]
+        : TimelineAssembler.assembleDay(widget.plan, entry.templateId, widget.todayKey,
+            training: entry.training, state: _state);
+    final t = assembled.where((x) => x.isTrackable).toList();
+    await AdherenceStore.writeAdherence(DateTime.now(), t.where((x) => next.contains(x.signature)).length, t.length);
   }
 
   double _now() => widget.debugNow ?? nowDecimal();
@@ -121,7 +140,8 @@ class LiveTimelineViewState extends State<LiveTimelineView> {
       if (b.isAnchor) { out.add(AnchorWall(block: b, timeText: _anchorTimeText(b))); continue; }
       if (b.isDropped) { out.add(_droppedRow(c, b)); continue; }
       final done = _done.contains(b.signature);
-      if (i == activeIdx) { out.add(_activeRow(c, b)); } else { out.add(_normalRow(c, b, done)); }
+      final w = (i == activeIdx) ? _activeRow(c, b) : _normalRow(c, b, done);
+      out.add(GestureDetector(behavior: HitTestBehavior.opaque, onTap: () => _toggle(b), child: w));
     }
     return out;
   }
@@ -139,6 +159,18 @@ class LiveTimelineViewState extends State<LiveTimelineView> {
                 decoration: done ? TextDecoration.lineThrough : null, decorationColor: c.dim)),
             if (!done) Padding(padding: const EdgeInsets.only(top: 6), child: BudgetBar(idealMinutes: b.idealMinutes, currentMinutes: b.durationMinutes)),
           ])),
+          if (b.isCompacted)
+            IconButton(
+              icon: Icon(Icons.info_outline, size: 16, color: c.dim),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              onPressed: () {
+                final tmpl = widget.plan.dayTemplates[widget.plan.week[widget.todayKey]?.templateId];
+                final hardAnchors = tmpl?.anchors.where((a) => a.hard).map((a) => a.label).toList() ?? const [];
+                final anchorLabel = hardAnchors.isEmpty ? 'what matters' : hardAnchors.first;
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(DriftCopy.peek(b, anchorLabel: anchorLabel))));
+              },
+            ),
         ]),
       );
 
