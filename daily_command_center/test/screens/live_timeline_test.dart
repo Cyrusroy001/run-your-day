@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:daily_command_center/data/models.dart';
 import 'package:daily_command_center/data/store.dart';
 import 'package:daily_command_center/data/profile_repository.dart';
+import 'package:daily_command_center/logic/priority_level.dart';
 import 'package:daily_command_center/theme/app_palette.dart';
 import 'package:daily_command_center/screens/live_timeline_view.dart';
 
@@ -25,7 +26,15 @@ void main() {
     _tmp = Directory.systemTemp.createTempSync('live_timeline_test');
     AppStore.repo = ProfileRepository(baseDir: _tmp);
   });
-  tearDown(() => _tmp.deleteSync(recursive: true));
+  tearDown(() {
+    try {
+      _tmp.deleteSync(recursive: true);
+    } on FileSystemException {
+      // On Windows a just-written profile file can still be handle-locked the
+      // instant tearDown runs (Adjust-mode tests persist via StateStore). The
+      // OS reclaims the temp dir later regardless.
+    }
+  });
 
   testWidgets('renders anchor wall + a routine block on an office day', (tester) async {
     tester.view.physicalSize = const Size(1200, 3000);
@@ -83,5 +92,79 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
       expect(find.textContaining('planned'), findsOneWidget);
     }
+  });
+
+  // ── Phase U4: Adjust mode ──────────────────────────────────────────────────
+  // Mutations route through _commit (which does dart:io via StateStore). We
+  // drive them through @visibleForTesting seams inside tester.runAsync so the
+  // real writes complete, then assert on in-memory state (stateForTest). Disk
+  // persistence is covered by state_store_test.dart.
+
+  testWidgets('Adjust toggle reveals editor; reorder writes dailySequence', (tester) async {
+    tester.view.physicalSize = const Size(1200, 3000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(MaterialApp(theme: AppPalette.darkTheme,
+        home: LiveTimelineView(plan: _plan, todayKey: 'mon', debugNow: 7.0)));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    await tester.tap(find.text('Adjust today'));
+    await tester.pump();
+    expect(find.text('Done'), findsOneWidget);
+
+    final st = tester.state<LiveTimelineViewState>(find.byType(LiveTimelineView));
+    await tester.runAsync(() => st.reorderForTest(0, 3));
+    expect(st.stateForTest.dailySequence, isNotEmpty);
+  });
+
+  testWidgets('remove-for-today then restore updates deletedItems', (tester) async {
+    tester.view.physicalSize = const Size(1200, 3000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(MaterialApp(theme: AppPalette.darkTheme,
+        home: LiveTimelineView(plan: _plan, todayKey: 'mon', debugNow: 7.0)));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    final st = tester.state<LiveTimelineViewState>(find.byType(LiveTimelineView));
+    await tester.runAsync(() => st.removeForTest('snack'));
+    expect(st.stateForTest.deletedItems, contains('snack'));
+    await tester.runAsync(() => st.restoreForTest('snack'));
+    expect(st.stateForTest.deletedItems, isNot(contains('snack')));
+  });
+
+  testWidgets('priority chip writes dailyOverrides', (tester) async {
+    tester.view.physicalSize = const Size(1200, 3000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(MaterialApp(theme: AppPalette.darkTheme,
+        home: LiveTimelineView(plan: _plan, todayKey: 'mon', debugNow: 7.0)));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    final st = tester.state<LiveTimelineViewState>(find.byType(LiveTimelineView));
+    await tester.runAsync(() => st.setLevelForTest('focus', PriorityLevel.dropFirst));
+    expect(st.stateForTest.dailyOverrides['focus']!.priority, PriorityLevel.dropFirst.toPriority());
+  });
+
+  testWidgets('undo restores the prior state after a remove', (tester) async {
+    tester.view.physicalSize = const Size(1200, 3000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(MaterialApp(theme: AppPalette.darkTheme,
+        home: LiveTimelineView(plan: _plan, todayKey: 'mon', debugNow: 7.0)));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    final st = tester.state<LiveTimelineViewState>(find.byType(LiveTimelineView));
+    await tester.runAsync(() => st.removeForTest('snack'));
+    expect(st.stateForTest.deletedItems, contains('snack'));
+    await tester.runAsync(() => st.undoForTest());
+    expect(st.stateForTest.deletedItems, isNot(contains('snack')));
   });
 }
