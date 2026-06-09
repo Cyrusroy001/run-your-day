@@ -30,6 +30,7 @@ class Block {
   final int? maxDriftMinutes;
   final double seedStart;
   final String? dropStrategy;
+  final bool isCustom;
 
   const Block({
     required this.time,
@@ -51,6 +52,7 @@ class Block {
     this.maxDriftMinutes,
     this.seedStart = 0,
     this.dropStrategy,
+    this.isCustom = false,
   });
 
   /// Blocks the user actively chooses to do (counted for adherence).
@@ -67,6 +69,7 @@ class Block {
     double? estStart, int? durationMinutes, int? idealMinutes, int? priority,
     bool? isAnchor, bool? hardAnchor, BlockStatus? status,
     int? minMinutes, double? cutoffDecimal, int? maxDriftMinutes, double? seedStart, String? dropStrategy,
+    bool? isCustom,
   }) => Block(
         time: time ?? this.time, cls: cls ?? this.cls, label: label ?? this.label, desc: desc ?? this.desc,
         isTrain: isTrain ?? this.isTrain, workout: workout ?? this.workout, id: id ?? this.id,
@@ -76,6 +79,7 @@ class Block {
         minMinutes: minMinutes ?? this.minMinutes, cutoffDecimal: cutoffDecimal ?? this.cutoffDecimal,
         maxDriftMinutes: maxDriftMinutes ?? this.maxDriftMinutes, seedStart: seedStart ?? this.seedStart,
         dropStrategy: dropStrategy ?? this.dropStrategy,
+        isCustom: isCustom ?? this.isCustom,
       );
 }
 
@@ -492,12 +496,52 @@ class DriftEvent {
       };
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Custom task — an ad-hoc block injected into a single day by the user.
+// Persisted inside DailyState.addedItems; assembled at priority 0.
+// ─────────────────────────────────────────────────────────────────────────────
+
+class CustomTask {
+  final String id;            // 'custom_<ms-timestamp>'
+  final String label;
+  final String startTime;     // 'HH:mm' 24-hour
+  final int durationMinutes;
+  final String date;          // 'yyyy-MM-dd'
+
+  const CustomTask({
+    required this.id,
+    required this.label,
+    required this.startTime,
+    required this.durationMinutes,
+    required this.date,
+  });
+
+  factory CustomTask.fromJson(Map<String, dynamic> j) => CustomTask(
+        id: j['id'] as String,
+        label: j['label'] as String,
+        startTime: j['startTime'] as String,
+        durationMinutes: j['durationMinutes'] as int,
+        date: j['date'] as String,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'label': label,
+        'startTime': startTime,
+        'durationMinutes': durationMinutes,
+        'date': date,
+      };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 class DailyState {
   final String date; // yyyy-MM-dd
   final List<String> deletedItems;
   final List<String> dailySequence;
   final Map<String, ItemOverride> dailyOverrides;
   final List<DriftEvent> driftLog;
+  final List<CustomTask> addedItems;
 
   const DailyState({
     required this.date,
@@ -505,6 +549,7 @@ class DailyState {
     this.dailySequence = const [],
     this.dailyOverrides = const {},
     this.driftLog = const [],
+    this.addedItems = const [],
   });
 
   factory DailyState.fromJson(Map<String, dynamic> j) => DailyState(
@@ -514,6 +559,7 @@ class DailyState {
         dailyOverrides: ((j['dailyOverrides'] ?? const {}) as Map<String, dynamic>)
             .map((k, v) => MapEntry(k, ItemOverride.fromJson(v as Map<String, dynamic>))),
         driftLog: ((j['driftLog'] ?? const []) as List).map((e) => DriftEvent.fromJson(e as Map<String, dynamic>)).toList(),
+        addedItems: ((j['addedItems'] ?? const []) as List).map((e) => CustomTask.fromJson(e as Map<String, dynamic>)).toList(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -522,16 +568,19 @@ class DailyState {
         'dailySequence': dailySequence,
         'dailyOverrides': dailyOverrides.map((k, v) => MapEntry(k, v.toJson())),
         'driftLog': driftLog.map((e) => e.toJson()).toList(),
+        'addedItems': addedItems.map((e) => e.toJson()).toList(),
       };
 
   DailyState copyWith({
     List<String>? deletedItems, List<String>? dailySequence,
     Map<String, ItemOverride>? dailyOverrides, List<DriftEvent>? driftLog,
+    List<CustomTask>? addedItems,
   }) => DailyState(
         date: date,
         deletedItems: deletedItems ?? this.deletedItems,
         dailySequence: dailySequence ?? this.dailySequence,
         dailyOverrides: dailyOverrides ?? this.dailyOverrides,
         driftLog: driftLog ?? this.driftLog,
+        addedItems: addedItems ?? this.addedItems,
       );
 }
