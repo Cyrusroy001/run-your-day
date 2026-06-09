@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../data/models.dart';
 import '../logic/planner.dart';
-import '../main.dart';
+import '../theme/app_palette.dart';
 
 const _dayOrder = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 const _dayNames = {
@@ -64,12 +64,13 @@ class _WeekPlannerState extends State<WeekPlanner> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.c;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.panel,
-        border: Border.all(color: AppColors.line),
+        color: c.panel,
+        border: Border.all(color: c.line),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -78,13 +79,13 @@ class _WeekPlannerState extends State<WeekPlanner> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('PLAN YOUR WEEK',
-                  style: TextStyle(fontSize: 11, letterSpacing: 1.2, color: AppColors.sky, fontWeight: FontWeight.w600)),
+              Text('PLAN YOUR WEEK',
+                  style: TextStyle(fontSize: 11, letterSpacing: 1.2, color: c.sky, fontWeight: FontWeight.w600)),
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 200),
                 child: Text('$_trainCount training days',
                     key: ValueKey(_trainCount),
-                    style: TextStyle(fontSize: 11, color: _trainCount == 4 ? AppColors.moss : AppColors.amber, fontWeight: FontWeight.w500)),
+                    style: TextStyle(fontSize: 11, color: _trainCount == 4 ? c.moss : c.amber, fontWeight: FontWeight.w500)),
               ),
             ],
           ),
@@ -99,13 +100,13 @@ class _WeekPlannerState extends State<WeekPlanner> {
           if (_caption != null)
             Padding(
               padding: const EdgeInsets.only(top: 10),
-              child: Text(_caption!, style: const TextStyle(fontSize: 12, color: AppColors.sky)),
+              child: Text(_caption!, style: TextStyle(fontSize: 12, color: c.sky)),
             ),
           const SizedBox(height: 10),
           GestureDetector(
             onTap: () => widget.onPlanChanged(PlannerLogic.applyBestSpacing(widget.plan)),
-            child: const Text('Reset to suggested week',
-                style: TextStyle(fontSize: 11.5, color: AppColors.dim, decoration: TextDecoration.underline, decorationColor: AppColors.dim)),
+            child: Text('Reset to suggested week',
+                style: TextStyle(fontSize: 11.5, color: c.dim, decoration: TextDecoration.underline, decorationColor: c.dim)),
           ),
         ],
       ),
@@ -130,20 +131,21 @@ class _DayRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.c;
     final isWeekend = entry.templateId.startsWith('weekend');
     final schedLabel = isWeekend ? 'Weekend' : (entry.templateId == 'office' ? 'Office' : 'WFH');
-    final schedColor = isWeekend ? AppColors.amber : (entry.templateId == 'office' ? AppColors.terra : AppColors.sky);
+    final schedColor = isWeekend ? c.amber : (entry.templateId == 'office' ? c.terra : c.sky);
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 3),
       decoration: BoxDecoration(
-        border: Border(left: BorderSide(color: isToday ? AppColors.amber : Colors.transparent, width: 3)),
+        border: Border(left: BorderSide(color: isToday ? c.amber : Colors.transparent, width: 3)),
       ),
       child: Row(
         children: [
           const SizedBox(width: 8),
           SizedBox(width: 38, child: Text(_dayNames[day]!,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.cream))),
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: c.cream))),
           const SizedBox(width: 8),
           GestureDetector(
             key: Key('sched-$day'),
@@ -160,7 +162,7 @@ class _DayRow extends StatelessWidget {
           ),
           const Spacer(),
           Text(entry.training ? 'Train' : 'Rest',
-              style: TextStyle(fontSize: 11, color: entry.training ? AppColors.moss : AppColors.dim, fontWeight: FontWeight.w600)),
+              style: TextStyle(fontSize: 11, color: entry.training ? c.moss : c.dim, fontWeight: FontWeight.w600)),
           const SizedBox(width: 8),
           GestureDetector(
             key: Key('train-$day'),
@@ -171,14 +173,14 @@ class _DayRow extends StatelessWidget {
               height: 28,
               padding: const EdgeInsets.all(3),
               decoration: BoxDecoration(
-                color: entry.training ? AppColors.terra : AppColors.line,
+                color: entry.training ? c.terra : c.line,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: AnimatedAlign(
                 duration: const Duration(milliseconds: 180),
                 alignment: entry.training ? Alignment.centerRight : Alignment.centerLeft,
                 child: Container(width: 22, height: 22,
-                    decoration: const BoxDecoration(color: AppColors.cream, shape: BoxShape.circle)),
+                    decoration: BoxDecoration(color: c.cream, shape: BoxShape.circle)),
               ),
             ),
           ),

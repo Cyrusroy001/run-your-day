@@ -3,23 +3,34 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../data/models.dart';
 import '../data/store.dart';
+import '../data/state_store.dart';
 import '../data/adherence_store.dart';
 import '../logic/assembler.dart';
-import '../main.dart';
-import '../widgets/now_card.dart';
+import '../logic/timeline.dart';
+import '../logic/drift_engine.dart';
+import '../logic/home_now_state.dart';
+import '../theme/app_palette.dart';
+import '../widgets/now_hero_card.dart';
 import '../widgets/week_planner.dart';
-import 'today_screen.dart';
+import '../widgets/avatar_menu_sheet.dart';
+import 'live_timeline_view.dart';
+import 'settings_screen.dart';
+import 'glossary_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
-
+  /// Test seam: when provided, the screen renders this plan immediately and
+  /// skips the async profile load (real dart:io can't complete under the test
+  /// clock, and runAsync would force a google_fonts load that throws in tests).
+  final Plan? debugPlan;
+  const HomeScreen({super.key, this.debugPlan});
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
   Plan? _plan;
-  Set<String> _doneToday = {};
+  DailyState _state = const DailyState(date: '');
+  Set<String> _done = {};
   static const _days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
   late String _todayKey;
 
@@ -27,117 +38,97 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _todayKey = _days[DateTime.now().weekday % 7];
+    _plan = widget.debugPlan;
     _load();
   }
 
   Future<void> _load() async {
+    if (widget.debugPlan != null) return; // tests inject the plan directly
     final plan = await AppStore.loadPlan();
+    final state = await StateStore.loadState(DateTime.now());
     final done = await AdherenceStore.loadDone(DateTime.now());
     if (!mounted) return;
-    setState(() {
-      _plan = plan;
-      _doneToday = done;
-    });
+    setState(() { _plan = plan; _state = state; _done = done; });
     AppStore.writeWidgetData(plan, _todayKey).ignore();
-    _recordAdherence(plan, done);
   }
 
-  ({int done, int total}) _tally(Plan plan, Set<String> done) {
+  List<Block> _assemble(Plan plan) {
     final entry = plan.week[_todayKey];
-    if (entry == null) return (done: 0, total: 0);
-    final blocks = TimelineAssembler.assembleDay(plan, entry.templateId, _todayKey, training: entry.training);
-    final trackable = blocks.where((b) => b.isTrackable).toList();
-    return (
-      done: trackable.where((b) => done.contains(b.signature)).length,
-      total: trackable.length,
-    );
+    return entry == null
+        ? const []
+        : TimelineAssembler.assembleDay(plan, entry.templateId, _todayKey,
+            training: entry.training, state: _state);
   }
 
-  void _recordAdherence(Plan plan, Set<String> done) {
-    final t = _tally(plan, done);
-    AdherenceStore.writeAdherence(DateTime.now(), t.done, t.total).ignore();
-  }
+  ResolvedDay _resolve(Plan plan) =>
+      DriftEngine.computeDay(_assemble(plan), now: nowDecimal(), done: _done, dateIso: _state.date);
 
-  Future<void> _updatePlan(Plan newPlan) async {
-    await AppStore.savePlan(newPlan);
-    setState(() => _plan = newPlan);
-    AppStore.writeWidgetData(newPlan, _todayKey).ignore();
-    _recordAdherence(newPlan, _doneToday);
-  }
+  void _openLive(Plan plan) => Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => LiveTimelineView(plan: plan, todayKey: _todayKey)));
 
-  Future<void> _toggleDone(String signature) async {
-    final next = {..._doneToday};
-    next.contains(signature) ? next.remove(signature) : next.add(signature);
-    setState(() => _doneToday = next);
-    await AdherenceStore.saveDone(DateTime.now(), next);
-    if (_plan != null) _recordAdherence(_plan!, next);
-  }
-
-  void _openToday() {
-    final plan = _plan;
-    if (plan == null) return;
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => TodayScreen(
-        plan: plan,
-        todayKey: _todayKey,
-        doneToday: _doneToday,
-        onToggle: _toggleDone,
-      ),
-    ));
+  void _updatePlan(Plan plan) {
+    AppStore.savePlan(plan);
+    setState(() => _plan = plan);
+    AppStore.writeWidgetData(plan, _todayKey).ignore();
   }
 
   @override
   Widget build(BuildContext context) {
+    final c = context.c;
     final plan = _plan;
+    if (plan == null) return Scaffold(body: Center(child: CircularProgressIndicator(color: c.terra)));
+    final now = HomeNowState.from(_resolve(plan), now: nowDecimal());
+    final trackable = _assemble(plan).where((b) => b.isTrackable).toList();
+    final doneCount = trackable.where((b) => _done.contains(b.signature)).length;
+
     return Scaffold(
-      backgroundColor: AppColors.bg,
-      body: plan == null
-          ? const Center(child: CircularProgressIndicator(color: AppColors.terra))
-          : CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(child: _buildHeader()),
-                SliverToBoxAdapter(
-                  child: NowCard(
-                    plan: plan,
-                    todayKey: _todayKey,
-                    doneToday: _doneToday,
-                    onViewAll: _openToday,
-                    onToggleDone: _toggleDone,
-                  ),
-                ),
-                const SliverToBoxAdapter(child: SizedBox(height: 16)),
-                SliverToBoxAdapter(
-                  child: WeekPlanner(
-                    plan: plan,
-                    todayKey: _todayKey,
-                    onPlanChanged: _updatePlan,
-                  ),
-                ),
-                const SliverToBoxAdapter(child: SizedBox(height: 60)),
-              ],
-            ),
+      body: ListView(children: [
+        _header(c),
+        NowHeroCard(state: now, onOpen: () => _openLive(plan)),
+        _miniStrip(c, doneCount, trackable.length, now.whisper != null),
+        WeekPlanner(plan: plan, todayKey: _todayKey, onPlanChanged: _updatePlan),
+        const SizedBox(height: 50),
+      ]),
     );
   }
 
-  Widget _buildHeader() {
-    final dateStr = DateFormat('EEEE, d MMMM').format(DateTime.now());
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 52, 20, 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('CYRUS · DAILY COMMAND CENTER',
-              style: TextStyle(fontSize: 10, letterSpacing: 3, color: AppColors.terra, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 8),
-          Text('Run The Day.',
-              style: GoogleFonts.fraunces(fontSize: 36, fontWeight: FontWeight.w900, color: AppColors.cream, height: 0.95, letterSpacing: -0.5)),
-          const SizedBox(height: 6),
-          Text('Lean & defined — not big. Plan it, then run it.',
-              style: GoogleFonts.fraunces(fontSize: 15, fontStyle: FontStyle.italic, color: AppColors.muted)),
-          const SizedBox(height: 6),
-          Text(dateStr, style: const TextStyle(fontSize: 13, color: AppColors.moss, fontWeight: FontWeight.w500)),
-        ],
+  Widget _header(AppPalette c) => Padding(
+    padding: const EdgeInsets.fromLTRB(20, 52, 20, 4),
+    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(DateFormat('EEEE · d MMMM').format(DateTime.now()).toUpperCase(),
+            style: TextStyle(fontSize: 10, letterSpacing: 3, color: c.terra, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 8),
+        Text('Run the day.', style: GoogleFonts.fraunces(fontSize: 34, fontWeight: FontWeight.w900, color: c.cream, height: .95)),
+      ])),
+      GestureDetector(
+        onTap: () => showAvatarMenu(context, name: 'Cyrus', subtitle: _plan?.meta.lifestyleArchetype ?? '',
+          onSwitchProfile: () {}, // wired to the profiles spec later
+          onOpenSettings: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
+          onOpenGlossary: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GlossaryScreen())),
+          onLogout: () {}),
+        child: CircleAvatar(radius: 19, backgroundColor: c.terraD,
+            child: Text('C', style: TextStyle(color: c.terra, fontWeight: FontWeight.w700))),
       ),
-    );
-  }
+    ]),
+  );
+
+  Widget _miniStrip(AppPalette c, int done, int total, bool drifting) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 20),
+    child: Row(children: [
+      Expanded(child: _pill(c, '$done / $total', 'done today')),
+      const SizedBox(width: 8),
+      Expanded(child: _pill(c, drifting ? 'Reflowed' : 'On track', drifting ? 'engine adjusted' : 'no drift',
+          color: drifting ? c.amber : c.moss)),
+    ]),
+  );
+
+  Widget _pill(AppPalette c, String n, String t, {Color? color}) => Container(
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(color: c.panel, border: Border.all(color: c.line), borderRadius: BorderRadius.circular(12)),
+    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(n, style: GoogleFonts.fraunces(fontWeight: FontWeight.w900, fontSize: 16, color: color ?? c.cream)),
+      Text(t, style: TextStyle(fontSize: 10.5, color: c.dim)),
+    ]),
+  );
 }

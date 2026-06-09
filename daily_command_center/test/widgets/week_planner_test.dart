@@ -7,13 +7,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:daily_command_center/data/models.dart';
 import 'package:daily_command_center/data/store.dart';
 import 'package:daily_command_center/data/profile_repository.dart';
+import 'package:daily_command_center/theme/app_palette.dart';
 import 'package:daily_command_center/widgets/week_planner.dart';
 
 late Plan _plan;
 late Directory _tmp;
 
 Widget _host(Plan plan, void Function(Plan) onChanged) =>
-    MaterialApp(home: Scaffold(body: WeekPlanner(
+    MaterialApp(theme: AppPalette.darkTheme, home: Scaffold(body: WeekPlanner(
       plan: plan, todayKey: 'mon', onPlanChanged: onChanged)));
 
 void main() {
