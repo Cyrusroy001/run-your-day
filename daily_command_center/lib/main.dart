@@ -49,6 +49,8 @@ class RemindersApp extends StatefulWidget {
 class _RemindersAppState extends State<RemindersApp> {
   late UiPrefs _prefs = widget.prefs;
 
+  UiPrefs get prefs => _prefs;
+
   void updatePrefs(UiPrefs p) {
     setState(() => _prefs = p);
     UiPrefs.save(p);
