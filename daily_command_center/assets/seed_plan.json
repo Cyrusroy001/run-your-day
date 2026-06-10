@@ -47,9 +47,8 @@
         { "id": "train",   "kind": "train", "label": "Train", "desc": "Tap to open workout.", "start": "11:00", "idealDuration": 60, "minDuration": 40, "priority": 3, "condition": "isTrainingDay", "workoutId": "A", "cutoffTime": "20:00", "dropStrategy": "kill_and_notify" },
         { "id": "brunch",  "kind": "meal",  "label": "Shower + brunch", "desc": "Big protein meal", "start": "12:00", "idealDuration": 45, "minDuration": 30, "priority": 4 },
         { "id": "dsa",     "kind": "goal",  "label": "DSA Practice (45 min)", "desc": "1–2 problems. Keep coding sharp.", "goalId": "dsa", "start": "13:00", "idealDuration": 45, "minDuration": 25, "priority": 5, "maxDriftMinutes": 45, "dropStrategy": "scale_to_min" },
-        { "id": "commute", "kind": "work",  "label": "Walk to office (10 min)", "desc": "", "start": "13:50", "idealDuration": 10, "minDuration": 10, "priority": 1 },
-        { "id": "lunch3",  "kind": "meal",  "label": "Lunch at office", "desc": "Dal-bhat + soya or paneer.", "start": "15:00", "idealDuration": 30, "minDuration": 20, "priority": 4 },
-        { "id": "snack5",  "kind": "meal",  "label": "Light snack at office", "desc": "Roasted chana, peanuts, or curd.", "start": "17:00", "idealDuration": 15, "minDuration": 10, "priority": 6 },
+        { "id": "lunch3",  "kind": "meal",  "label": "Lunch at home", "desc": "Dal-bhat + soya or paneer.", "start": "15:00", "idealDuration": 30, "minDuration": 20, "priority": 4 },
+        { "id": "snack5",  "kind": "meal",  "label": "Afternoon snack", "desc": "Roasted chana, peanuts, or curd.", "start": "17:00", "idealDuration": 15, "minDuration": 10, "priority": 6 },
         { "id": "dinner",  "kind": "meal",  "label": "Dinner", "desc": "Roti + paneer/chicken + saag.", "start": "20:30", "idealDuration": 45, "minDuration": 30, "priority": 4 },
         { "id": "chill",   "kind": "chill", "label": "Chill — protected downtime", "desc": "Yours. No forced work.", "start": "21:15", "idealDuration": 90, "minDuration": 30, "priority": 7 },
         { "id": "wind",    "kind": "chill", "label": "Wind-down", "desc": "Screens dim. Makes the 8am wake work.", "start": "22:45", "idealDuration": 30, "minDuration": 20, "priority": 7 }

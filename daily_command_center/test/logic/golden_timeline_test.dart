@@ -57,11 +57,14 @@ void main() {
     ]);
   });
 
-  test('wfh + training uses workout A', () {
+  test('wfh + training uses workout A, no commute, home meals', () {
     final got = _sig(TimelineAssembler.assembleDay(plan, 'wfh', 'wed', training: true));
     expect(got.firstWhere((s) => s.contains('|train|')), '11:00|train|Train — Full Body A|true|A');
     expect(got.first, '8:00|meal|Wake · water · sunlight|false|');
     expect(got.last, '11:15|chill|Sleep target|false|');
+    expect(got.any((s) => s.contains('Walk to office')), false, reason: 'WFH has no commute');
+    expect(got.any((s) => s.contains('Lunch at home')), true, reason: 'WFH lunch label');
+    expect(got.any((s) => s.contains('Afternoon snack')), true, reason: 'WFH snack label');
   });
 
   test('weekend sat training uses BENCH; weekend_sun training uses CARDIO + review', () {
