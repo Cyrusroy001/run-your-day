@@ -13,6 +13,21 @@ class WeeklySummary {
   });
 }
 
+/// A custom task the user has run on enough distinct days that it's worth
+/// offering to bake into their permanent blueprint (see C10/C11).
+class PromotionCandidate {
+  final String label;
+  final int count;             // distinct days the task ran in the window
+  final String preferredTime;  // 'HH:mm' — from the most recent run
+  final int durationMinutes;   // from the most recent run
+  const PromotionCandidate({
+    required this.label,
+    required this.count,
+    required this.preferredTime,
+    required this.durationMinutes,
+  });
+}
+
 class WeeklyReview {
   static WeeklySummary summarize(List<DriftEvent> events) {
     final kills = events.where((e) => e.event == 'killed').toList();
@@ -45,5 +60,38 @@ class WeeklyReview {
       counts[e.label] = (counts[e.label] ?? 0) + 1;
     }
     return counts.entries.map((e) => '${e.key} $verb ${e.value}×').toList();
+  }
+
+  /// Scan a window of [DailyState]s for custom tasks the user ran on at least
+  /// [minRuns] distinct days — these are worth promoting into the blueprint.
+  /// Time/duration reflect the most recent run; results sort by count desc.
+  static List<PromotionCandidate> promotionCandidates(
+    List<DailyState> states, {
+    int minRuns = 3,
+  }) {
+    // label -> (date -> most-recent task seen on that date)
+    final byLabel = <String, Map<String, CustomTask>>{};
+    for (final s in states) {
+      for (final t in s.addedItems) {
+        byLabel.putIfAbsent(t.label, () => {})[t.date] = t;
+      }
+    }
+
+    final out = <PromotionCandidate>[];
+    byLabel.forEach((label, byDate) {
+      if (byDate.length < minRuns) return;
+      // Most recent run by date key (ISO yyyy-MM-dd sorts lexicographically).
+      final latestDate = byDate.keys.reduce((a, b) => a.compareTo(b) >= 0 ? a : b);
+      final latest = byDate[latestDate]!;
+      out.add(PromotionCandidate(
+        label: label,
+        count: byDate.length,
+        preferredTime: latest.startTime,
+        durationMinutes: latest.durationMinutes,
+      ));
+    });
+
+    out.sort((a, b) => b.count.compareTo(a.count));
+    return out;
   }
 }

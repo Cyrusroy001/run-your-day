@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../data/adherence_store.dart';
+import '../data/models.dart' show displayTime;
 import '../logic/weekly_review.dart';
 import '../theme/app_palette.dart';
 
@@ -8,7 +9,19 @@ class WeeklyReviewCard extends StatelessWidget {
   final bool isSunday;
   final String? nudge;
   final List<DayAdherence> last7;
-  const WeeklyReviewCard({super.key, required this.summary, required this.isSunday, this.nudge, this.last7 = const []});
+  final List<PromotionCandidate> promotionCandidates;
+  final void Function(PromotionCandidate)? onPromote;
+  final void Function(PromotionCandidate)? onDismiss;
+  const WeeklyReviewCard({
+    super.key,
+    required this.summary,
+    required this.isSunday,
+    this.nudge,
+    this.last7 = const [],
+    this.promotionCandidates = const [],
+    this.onPromote,
+    this.onDismiss,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -42,9 +55,52 @@ class WeeklyReviewCard extends StatelessWidget {
           Text('No streaks. No scores. Just what happened, and a gentle next step.',
               style: TextStyle(fontSize: 10.5, color: c.dim)),
         ],
+        if (promotionCandidates.isNotEmpty) ...[
+          const SizedBox(height: 14),
+          Text('YOU DID THESE OFTEN', style: TextStyle(fontSize: 11, letterSpacing: 1, color: c.amber, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 4),
+          Text('Make them part of your plan?', style: TextStyle(fontSize: 12.5, color: c.dim)),
+          const SizedBox(height: 8),
+          ...promotionCandidates.map((cand) => _promotionRow(c, cand)),
+        ],
       ]),
     );
   }
+
+  Widget _promotionRow(AppPalette c, PromotionCandidate cand) => Container(
+        margin: const EdgeInsets.only(top: 8),
+        padding: const EdgeInsets.all(11),
+        decoration: BoxDecoration(
+          color: c.amberD,
+          border: Border.all(color: c.amber),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(cand.label, style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: c.cream)),
+          const SizedBox(height: 2),
+          Text('${cand.count}× this week · ${displayTime(cand.preferredTime)} · ${cand.durationMinutes}m',
+              style: TextStyle(fontSize: 11.5, color: c.dim)),
+          const SizedBox(height: 8),
+          Row(children: [
+            GestureDetector(
+              onTap: onPromote == null ? null : () => onPromote!(cand),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(color: c.amber, borderRadius: BorderRadius.circular(999)),
+                child: Text('Add to plan →', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: c.bg)),
+              ),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: onDismiss == null ? null : () => onDismiss!(cand),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                child: Text('Not yet', style: TextStyle(fontSize: 12, color: c.dim)),
+              ),
+            ),
+          ]),
+        ]),
+      );
 
   Widget _bar(AppPalette c, DayAdherence d) {
     final pct = d.pct;
