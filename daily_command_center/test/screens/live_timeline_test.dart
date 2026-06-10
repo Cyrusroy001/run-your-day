@@ -190,4 +190,88 @@ void main() {
 
     expect(find.byType(TeachingCard), findsWidgets);
   });
+
+  // ── Phase C6: custom task wiring ───────────────────────────────────────────
+
+  testWidgets('insertCustomTaskForTest adds task to addedItems', (tester) async {
+    tester.view.physicalSize = const Size(1200, 3000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(MaterialApp(theme: AppPalette.darkTheme,
+        home: LiveTimelineView(plan: _plan, todayKey: 'mon', debugNow: 7.0)));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    final st = tester.state<LiveTimelineViewState>(find.byType(LiveTimelineView));
+    const task = CustomTask(
+        id: 'custom_test1', label: 'Call mom', startTime: '19:30',
+        durationMinutes: 45, date: '');
+    await tester.runAsync(() => st.insertCustomTaskForTest(task));
+
+    expect(st.stateForTest.addedItems.any((t) => t.id == 'custom_test1'), isTrue);
+  });
+
+  testWidgets('insertCustomTaskForTest with drop adds ids to deletedItems', (tester) async {
+    tester.view.physicalSize = const Size(1200, 3000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(MaterialApp(theme: AppPalette.darkTheme,
+        home: LiveTimelineView(plan: _plan, todayKey: 'mon', debugNow: 7.0)));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    final st = tester.state<LiveTimelineViewState>(find.byType(LiveTimelineView));
+    const task = CustomTask(
+        id: 'custom_test2', label: 'Team meeting', startTime: '15:00',
+        durationMinutes: 60, date: '');
+    const dropBlock = Block(
+        id: 'chill', time: '21:00', cls: 'goal', label: 'Evening chill',
+        estStart: 21.0, seedStart: 21.0,
+        durationMinutes: 90, idealMinutes: 90, minMinutes: 30, priority: 7);
+    await tester.runAsync(
+        () => st.insertCustomTaskForTest(task, drop: [dropBlock]));
+
+    expect(st.stateForTest.addedItems.any((t) => t.id == 'custom_test2'), isTrue);
+    expect(st.stateForTest.deletedItems, contains('chill'));
+  });
+
+  testWidgets('custom block renders with CUSTOM badge', (tester) async {
+    tester.view.physicalSize = const Size(1200, 3000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(MaterialApp(theme: AppPalette.darkTheme,
+        home: LiveTimelineView(plan: _plan, todayKey: 'mon', debugNow: 7.0)));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    final st = tester.state<LiveTimelineViewState>(find.byType(LiveTimelineView));
+    const task = CustomTask(
+        id: 'custom_badge', label: 'My custom task', startTime: '10:00',
+        durationMinutes: 30, date: '');
+    await tester.runAsync(() => st.insertCustomTaskForTest(task));
+    await tester.pump();
+
+    expect(find.text('My custom task'), findsOneWidget);
+    expect(find.text('CUSTOM'), findsOneWidget);
+  });
+
+  testWidgets('FAB is visible in readonly mode and hidden in adjust mode', (tester) async {
+    tester.view.physicalSize = const Size(1200, 3000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(MaterialApp(theme: AppPalette.darkTheme,
+        home: LiveTimelineView(plan: _plan, todayKey: 'mon', debugNow: 7.0)));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(find.byType(FloatingActionButton), findsOneWidget);
+
+    await tester.tap(find.text('Adjust today'));
+    await tester.pumpAndSettle();
+    expect(find.byType(FloatingActionButton), findsNothing);
+  });
 }

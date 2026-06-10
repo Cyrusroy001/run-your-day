@@ -9,11 +9,14 @@ import '../logic/assembler.dart';
 import '../logic/timeline.dart';
 import '../logic/drift_engine.dart';
 import '../logic/drift_copy.dart';
+import '../logic/custom_task_fitter.dart';
 import '../logic/priority_level.dart';
 import '../logic/weekly_review.dart';
 import '../theme/app_palette.dart';
+import '../widgets/add_custom_task_sheet.dart';
 import '../widgets/budget_bar.dart';
 import '../widgets/anchor_wall.dart';
+import '../widgets/sacrifice_picker_sheet.dart';
 import '../widgets/weekly_review_card.dart';
 import '../widgets/teaching_card.dart';
 import 'glossary_screen.dart';
@@ -116,6 +119,15 @@ class LiveTimelineViewState extends State<LiveTimelineView> {
         ],
       ),
       body: _adjusting ? _adjustBody(c, day) : _readonlyBody(c, day),
+      floatingActionButton: _adjusting
+          ? null
+          : FloatingActionButton(
+              heroTag: 'add_custom_task',
+              onPressed: _openAddCustomTask,
+              backgroundColor: c.terra,
+              foregroundColor: c.cream,
+              child: const Icon(Icons.add),
+            ),
     );
   }
 
@@ -241,6 +253,65 @@ class LiveTimelineViewState extends State<LiveTimelineView> {
     _checkpoint = null;
   }
 
+  // ── Custom tasks ───────────────────────────────────────────────────────────
+
+  void _openAddCustomTask() {
+    showAddCustomTaskSheet(context, onSubmit: _addCustomTask);
+  }
+
+  Future<void> _addCustomTask(String label, String time, int durationMinutes) async {
+    final entry = widget.plan.week[widget.todayKey];
+    if (entry == null) return;
+    final assembled = TimelineAssembler.assembleDay(
+      widget.plan, entry.templateId, widget.todayKey,
+      training: entry.training, state: _state);
+
+    final task = CustomTask(
+      id: 'custom_${DateTime.now().millisecondsSinceEpoch}',
+      label: label,
+      startTime: time,
+      durationMinutes: durationMinutes,
+      date: _state.date,
+    );
+
+    final slack = CustomTaskFitter.compactionSlack(assembled);
+    if (slack >= durationMinutes) {
+      await _insertCustomTask(task, drop: const []);
+      return;
+    }
+
+    final offers = CustomTaskFitter.computeOffers(assembled, durationMinutes);
+    if (offers.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('No room today — try a shorter task or remove something first'),
+      ));
+      return;
+    }
+
+    if (!mounted) return;
+    showSacrificePickerSheet(context,
+      offers: offers,
+      taskLabel: label,
+      onConfirm: (offer) => _insertCustomTask(task, drop: offer.drop),
+    );
+  }
+
+  Future<void> _insertCustomTask(CustomTask task, {required List<Block> drop}) async {
+    final dropIds = drop.map((b) => b.id).whereType<String>().toList();
+    await _commit(
+      _state.copyWith(
+        addedItems: [..._state.addedItems, task],
+        deletedItems: [..._state.deletedItems, ...dropIds],
+      ),
+      '"${task.label}" added',
+    );
+  }
+
+  @visibleForTesting
+  Future<void> insertCustomTaskForTest(CustomTask task, {List<Block> drop = const []}) =>
+      _insertCustomTask(task, drop: drop);
+
   Widget _adjustBody(AppPalette c, ResolvedDay day) {
     return Column(children: [
       Padding(padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
@@ -341,7 +412,9 @@ class LiveTimelineViewState extends State<LiveTimelineView> {
       if (b.isAnchor) { out.add(AnchorWall(block: b, timeText: _anchorTimeText(b))); continue; }
       if (b.isDropped) { out.add(_droppedRow(c, b)); continue; }
       final done = _done.contains(b.signature);
-      final w = (i == activeIdx) ? _activeRow(c, b) : _normalRow(c, b, done);
+      final w = b.isCustom
+          ? _customRow(c, b, done)
+          : (i == activeIdx) ? _activeRow(c, b) : _normalRow(c, b, done);
       out.add(GestureDetector(behavior: HitTestBehavior.opaque, onTap: () => _toggle(b), child: w));
     }
     return out;
@@ -372,6 +445,29 @@ class LiveTimelineViewState extends State<LiveTimelineView> {
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(DriftCopy.peek(b, anchorLabel: anchorLabel))));
               },
             ),
+        ]),
+      );
+
+  Widget _customRow(AppPalette c, Block b, bool done) => Container(
+        decoration: BoxDecoration(border: Border(left: BorderSide(color: c.amber, width: 4))),
+        padding: const EdgeInsets.only(left: 9, top: 9, bottom: 9),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          _check(c, done, false),
+          const SizedBox(width: 10),
+          SizedBox(width: 42, child: Text(_fmt(b.estStart), style: TextStyle(fontSize: 11, color: c.dim))),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Expanded(child: Text(b.label, style: TextStyle(fontSize: 13.5,
+                  color: done ? c.muted : c.cream,
+                  decoration: done ? TextDecoration.lineThrough : null, decorationColor: c.dim))),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(color: c.amberD, borderRadius: BorderRadius.circular(4)),
+                child: Text('CUSTOM', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: c.amber, letterSpacing: 0.5)),
+              ),
+            ]),
+            if (!done) Padding(padding: const EdgeInsets.only(top: 6), child: BudgetBar(idealMinutes: b.idealMinutes, currentMinutes: b.durationMinutes)),
+          ])),
         ]),
       );
 
