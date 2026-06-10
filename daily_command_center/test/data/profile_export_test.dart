@@ -26,14 +26,17 @@ void main() {
 
     // Fresh store (new temp dir), then import.
     final tmp2 = await Directory.systemTemp.createTemp();
-    AppStore.repo = ProfileRepository(baseDir: tmp2);
-    final meta = await AppStore.repo.importProfile(blob);
-    expect(meta.id, 'cyrus');
-    expect(await AppStore.repo.listProfiles(), contains('cyrus'));
+    try {
+      AppStore.repo = ProfileRepository(baseDir: tmp2);
+      final meta = await AppStore.repo.importProfile(blob);
+      expect(meta.id, 'cyrus');
+      expect(await AppStore.repo.listProfiles(), contains('cyrus'));
 
-    await AppStore.repo.setActiveProfileId('cyrus');
-    expect((await AppStore.loadLogs('A')).single.reps, '12');
-    tmp2.deleteSync(recursive: true);
+      await AppStore.repo.setActiveProfileId('cyrus');
+      expect((await AppStore.loadLogs('A')).single.reps, '12');
+    } finally {
+      tmp2.deleteSync(recursive: true);
+    }
   });
 
   test('exported blob is valid JSON carrying the ProfileDoc', () async {
