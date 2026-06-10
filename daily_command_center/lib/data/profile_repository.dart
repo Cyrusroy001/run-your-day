@@ -18,6 +18,7 @@ class ProfileDoc {
   final Map<String, List<String>> done;         // 'yyyy-MM-dd' -> block signatures
   final Map<String, Map<String, int>> adherence; // 'yyyy-MM-dd' -> {done,total}
   final List<RecurringCustomTask> recurringTasks;
+  final List<String> skippedRepeatIds; // custom task IDs the user declined to repeat
 
   const ProfileDoc({
     required this.id,
@@ -28,6 +29,7 @@ class ProfileDoc {
     this.done = const {},
     this.adherence = const {},
     this.recurringTasks = const [],
+    this.skippedRepeatIds = const [],
   });
 
   factory ProfileDoc.fromJson(Map<String, dynamic> j) => ProfileDoc(
@@ -45,6 +47,9 @@ class ProfileDoc {
         recurringTasks: ((j['recurringTasks'] ?? const []) as List)
             .map((e) => RecurringCustomTask.fromJson(e as Map<String, dynamic>))
             .toList(),
+        skippedRepeatIds: ((j['skippedRepeatIds'] ?? const []) as List)
+            .map((e) => e as String)
+            .toList(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -56,6 +61,7 @@ class ProfileDoc {
         'done': done,
         'adherence': adherence,
         'recurringTasks': recurringTasks.map((t) => t.toJson()).toList(),
+        'skippedRepeatIds': skippedRepeatIds,
       };
 
   ProfileDoc copyWith({
@@ -66,6 +72,7 @@ class ProfileDoc {
     Map<String, List<String>>? done,
     Map<String, Map<String, int>>? adherence,
     List<RecurringCustomTask>? recurringTasks,
+    List<String>? skippedRepeatIds,
   }) =>
       ProfileDoc(
         id: id,
@@ -76,6 +83,7 @@ class ProfileDoc {
         done: done ?? this.done,
         adherence: adherence ?? this.adherence,
         recurringTasks: recurringTasks ?? this.recurringTasks,
+        skippedRepeatIds: skippedRepeatIds ?? this.skippedRepeatIds,
       );
 }
 

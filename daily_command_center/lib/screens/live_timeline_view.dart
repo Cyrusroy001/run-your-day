@@ -1,9 +1,14 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import '../data/models.dart';
+import '../data/profile_repository.dart';
+import '../data/store.dart';
 import '../data/state_store.dart';
 import '../data/adherence_store.dart';
+import '../data/recurring_store.dart';
 import '../data/teaching_flags.dart';
 import '../logic/assembler.dart';
 import '../logic/timeline.dart';
@@ -43,18 +48,41 @@ class LiveTimelineViewState extends State<LiveTimelineView> {
   bool _adjusting = false;
   DailyState? _checkpoint;
   String? _teachText;
+  Timer? _ticker;
+  List<CustomTask> _pendingRepeatTasks = const [];
 
   @override
   void initState() {
     super.initState();
     _load();
+    // Refresh every 30 s so the active-row progress bar and minutes-left stay live.
+    _ticker = Timer.periodic(const Duration(seconds: 30), (_) { if (mounted) setState(() {}); });
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    super.dispose();
   }
 
   Future<void> _load() async {
-    final state = await StateStore.loadState(DateTime.now());
-    final done = await AdherenceStore.loadDone(DateTime.now());
-    final events = await StateStore.recentDriftEvents(DateTime.now(), days: 7);
-    final last7 = await AdherenceStore.last7(DateTime.now());
+    final now = DateTime.now();
+    final yesterday = now.subtract(const Duration(days: 1));
+    final state = await StateStore.loadState(now);
+    final done = await AdherenceStore.loadDone(now);
+    final events = await StateStore.recentDriftEvents(now, days: 7);
+    final last7 = await AdherenceStore.last7(now);
+    final yesterdayState = await StateStore.loadState(yesterday);
+    final yesterdayDone = await AdherenceStore.loadDone(yesterday);
+    final allRecurring = await RecurringStore.loadAll();
+    final skippedIds = await _loadSkippedRepeatIds();
+    final recurringOriginIds = allRecurring.map((t) => t.originTaskId).toSet();
+    final pending = yesterdayState.addedItems.where((t) {
+      final sig = '${displayTime(t.startTime)}|${t.label}';
+      return yesterdayDone.contains(sig) &&
+          !recurringOriginIds.contains(t.id) &&
+          !skippedIds.contains(t.id);
+    }).toList();
     if (!mounted) return;
     setState(() {
       _state = state;
@@ -62,7 +90,45 @@ class LiveTimelineViewState extends State<LiveTimelineView> {
       _summary = WeeklyReview.summarize(events);
       _nudge = DriftCopy.weeklyNudge(events);
       _last7 = last7;
+      _pendingRepeatTasks = pending;
     });
+  }
+
+  Future<Set<String>> _loadSkippedRepeatIds() async {
+    final doc = await AppStore.repo.loadActive();
+    return doc.skippedRepeatIds.toSet();
+  }
+
+  Future<void> _addSkippedRepeatId(String id) async {
+    final doc = await AppStore.repo.loadActive();
+    if (doc.skippedRepeatIds.contains(id)) return;
+    await AppStore.repo.save(
+      doc.copyWith(skippedRepeatIds: [...doc.skippedRepeatIds, id]),
+    );
+  }
+
+  Future<void> _createRecurringTask(CustomTask task, String date) async {
+    final recurring = RecurringCustomTask(
+      id: 'recur_${DateTime.now().millisecondsSinceEpoch}',
+      label: task.label,
+      preferredTime: task.startTime,
+      durationMinutes: task.durationMinutes,
+      activeDates: [date],
+      originTaskId: task.id,
+    );
+    await RecurringStore.save(recurring);
+    if (mounted) {
+      setState(() => _pendingRepeatTasks =
+          _pendingRepeatTasks.where((t) => t.id != task.id).toList());
+    }
+  }
+
+  Future<void> _skipRepeatTask(CustomTask task) async {
+    await _addSkippedRepeatId(task.id);
+    if (mounted) {
+      setState(() => _pendingRepeatTasks =
+          _pendingRepeatTasks.where((t) => t.id != task.id).toList());
+    }
   }
 
   Future<void> _toggle(Block b) async {
@@ -137,6 +203,12 @@ class LiveTimelineViewState extends State<LiveTimelineView> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
       children: [
+        for (final task in _pendingRepeatTasks)
+          _RepeatPromptCard(
+            task: task,
+            onRepeat: (date) => _createRecurringTask(task, date),
+            onSkip: () => _skipRepeatTask(task),
+          ),
         if (summary != null)
           WeeklyReviewCard(summary: summary, isSunday: widget.todayKey == 'sun', nudge: _nudge, last7: _last7),
         if (_teachText != null)
@@ -191,6 +263,32 @@ class LiveTimelineViewState extends State<LiveTimelineView> {
   Future<void> undoForTest() => _undo();
   @visibleForTesting
   DailyState get stateForTest => _state;
+  @visibleForTesting
+  Future<void> loadForTest() => _load();
+  @visibleForTesting
+  List<CustomTask> get pendingRepeatTasksForTest => _pendingRepeatTasks;
+
+  /// Lean test seam: computes pending repeat tasks with ONE profile read
+  /// (vs 8 in _load()), minimising time spent in runAsync so Google Fonts
+  /// HTTP futures don't fire before we exit real-async.
+  @visibleForTesting
+  Future<void> loadPendingRepeatTasksForTest() async {
+    final now = DateTime.now();
+    final yesterday = now.subtract(const Duration(days: 1));
+    final yesterdayKey = DateFormat('yyyy-MM-dd').format(yesterday);
+    final doc = await AppStore.repo.load(ProfileRepository.defaultProfileId);
+    final yesterdayState = doc.states[yesterdayKey] ?? const DailyState(date: '');
+    final yesterdayDone = (doc.done[yesterdayKey] ?? const []).toSet();
+    final recurringOriginIds = doc.recurringTasks.map((t) => t.originTaskId).toSet();
+    final skippedIds = doc.skippedRepeatIds.toSet();
+    final pending = yesterdayState.addedItems.where((t) {
+      final sig = '${displayTime(t.startTime)}|${t.label}';
+      return yesterdayDone.contains(sig) &&
+          !recurringOriginIds.contains(t.id) &&
+          !skippedIds.contains(t.id);
+    }).toList();
+    if (mounted) setState(() => _pendingRepeatTasks = pending);
+  }
 
   Future<void> _onReorder(int oldIndex, int newIndex) async {
     final day = resolve();
@@ -332,7 +430,7 @@ class LiveTimelineViewState extends State<LiveTimelineView> {
                     onDismissed: (_) => _remove(day.blocks[i].id!),
                     background: Container(alignment: Alignment.centerRight, padding: const EdgeInsets.only(right: 20),
                         color: c.terraD, child: Icon(Icons.delete_outline, color: c.terra)),
-                    child: ReorderableDragStartListener(index: i, child: _adjustRow(c, day.blocks[i])),
+                    child: ReorderableDelayedDragStartListener(index: i, child: _adjustRow(c, day.blocks[i])),
                   ),
         ],
       )),
@@ -493,13 +591,36 @@ class LiveTimelineViewState extends State<LiveTimelineView> {
   }
 
   Widget _droppedRow(AppPalette c, Block b) => Opacity(
-        opacity: .5,
-        child: Padding(padding: const EdgeInsets.symmetric(vertical: 5),
-          child: Row(children: [
-            const SizedBox(width: 29),
-            Expanded(child: Text('${b.label} · dropped to protect your evening',
-                style: TextStyle(fontSize: 12, color: c.dim, decoration: TextDecoration.lineThrough))),
-          ])),
+        opacity: .45,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 9),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            // Show as auto-checked (engine did it, not the user).
+            Container(
+              width: 19, height: 19, margin: const EdgeInsets.only(top: 1),
+              decoration: BoxDecoration(
+                color: c.dim,
+                border: Border.all(color: c.dim, width: 2),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Icon(Icons.check, size: 13, color: c.bg),
+            ),
+            const SizedBox(width: 10),
+            SizedBox(width: 42, child: Text(_fmt(b.estStart), style: TextStyle(fontSize: 11, color: c.dim))),
+            Expanded(child: Text(b.label,
+                style: TextStyle(fontSize: 13.5, color: c.dim,
+                    decoration: TextDecoration.lineThrough, decorationColor: c.dim))),
+            Container(
+              margin: const EdgeInsets.only(left: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                border: Border.all(color: c.dim),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text('dropped', style: TextStyle(fontSize: 9, color: c.dim, letterSpacing: 0.4)),
+            ),
+          ]),
+        ),
       );
 
   Widget _check(AppPalette c, bool done, bool cur) => Container(
@@ -511,4 +632,73 @@ class LiveTimelineViewState extends State<LiveTimelineView> {
         ),
         child: done ? Icon(Icons.check, size: 13, color: c.bg) : null,
       );
+}
+
+// ── Repeat prompt card ────────────────────────────────────────────────────────
+
+class _RepeatPromptCard extends StatelessWidget {
+  final CustomTask task;
+  final void Function(String dateIso) onRepeat;
+  final VoidCallback onSkip;
+
+  const _RepeatPromptCard({
+    required this.task,
+    required this.onRepeat,
+    required this.onSkip,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.c;
+    final fmt = DateFormat('yyyy-MM-dd');
+    final today = DateTime.now();
+    final chips = [
+      ('Today', fmt.format(today)),
+      ('+2', fmt.format(today.add(const Duration(days: 2)))),
+      ('+3', fmt.format(today.add(const Duration(days: 3)))),
+      ('+7', fmt.format(today.add(const Duration(days: 7)))),
+    ];
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(13),
+      decoration: BoxDecoration(
+        color: c.amberD,
+        border: Border.all(color: c.amber),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Text('✦', style: TextStyle(color: c.amber, fontSize: 13)),
+          const SizedBox(width: 6),
+          Expanded(child: Text('Repeat "${task.label}"?',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: c.cream))),
+        ]),
+        const SizedBox(height: 4),
+        Text('${displayTime(task.startTime)} · ${task.durationMinutes}m',
+            style: TextStyle(fontSize: 12, color: c.dim)),
+        const SizedBox(height: 10),
+        Wrap(spacing: 6, children: [
+          for (final (label, date) in chips)
+            GestureDetector(
+              onTap: () => onRepeat(date),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  border: Border.all(color: c.amber),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: c.amber)),
+              ),
+            ),
+        ]),
+        const SizedBox(height: 8),
+        Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+          TextButton(
+            onPressed: onSkip,
+            child: Text('Skip', style: TextStyle(fontSize: 12, color: c.dim)),
+          ),
+        ]),
+      ]),
+    );
+  }
 }
