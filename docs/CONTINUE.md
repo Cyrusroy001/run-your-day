@@ -1,5 +1,5 @@
 # Continuation Document
-**Last updated:** 2026-06-09 (session 6)
+**Last updated:** 2026-06-10 (session 7)
 
 If you're an AI agent starting fresh on this project, read this first. It tells you exactly where things stand and what to do next without requiring you to re-derive it from the codebase.
 
@@ -108,21 +108,13 @@ Runs on the phone (Samsung S21 FE, Android 16 / API 36). Dev loop is wireless AD
 
 ## What to do next
 
-The engine and UX layer are both complete. The branch is in a shippable state. Candidate next steps (in rough priority order):
+The engine, UX layer, and custom-task feature are all complete. The branch is in a shippable state. Candidate next steps (in rough priority order):
 
-### 1. Custom-task feature — SPECCED, READY TO IMPLEMENT
+### 1. Merge `feat/custom-tasks` → `main`
 
-Full spec + plan written in session 6:
-- Spec: [`specs/2026-06-09-custom-tasks-design.md`](superpowers/specs/2026-06-09-custom-tasks-design.md)
-- Plan: [`plans/2026-06-09-custom-tasks.md`](superpowers/plans/2026-06-09-custom-tasks.md) (tasks C1–C11)
+`feat/custom-tasks` is the most complete branch — 63 commits ahead of `main`, and it is a strict superset of `feat/reminders-2-redesign` and `feature/plan-driven-core` (those have 0 unique commits). Green (188 tests). This is the merge candidate; `feat/reminders-2-redesign` no longer needs a separate merge.
 
-Three phases: (1) single-day injection with sacrifice picker, (2) recurrence (+1/+2/+3/+7), (3) Sunday review → promote to blueprint (first in-app plan write). Phase 1 ships standalone. Branch off `feat/reminders-2-redesign`.
-
-### 2. Merge `feat/reminders-2-redesign` → `main`
-
-Branch is green (115 tests). Ready to merge once custom-task decision is made.
-
-### 3. Local-profiles/login (sequenced after the above)
+### 2. Local-profiles/login (sequenced after the above)
 
 Full profile picker + per-profile storage + onboarding stub. See [`specs/2026-06-07-local-profiles-login-app-shell-design.md`](superpowers/specs/2026-06-07-local-profiles-login-app-shell-design.md) and [`plans/2026-06-07-local-profiles-login-app-shell.md`](superpowers/plans/2026-06-07-local-profiles-login-app-shell.md).
 
@@ -138,6 +130,14 @@ All UX-layer tasks are done:
 - **U4/U5** Adjust mode (`_adjusting`, reorder, remove-for-today, priority chips, Undo) + `TeachingCard`
 - **U6** `NowHeroCard`, `AvatarMenuSheet`, `GlossaryScreen`, `SettingsScreen`, `HomeScreen` rebuild, `WeekPlanner` migration
 - **U7** guard test, retire `now_card.dart`/`today_screen.dart`/`AppColors`, docs
+
+Custom-task feature (C1–C11) is done on `feat/custom-tasks` — spec [`specs/2026-06-09-custom-tasks-design.md`](superpowers/specs/2026-06-09-custom-tasks-design.md), plan [`plans/2026-06-09-custom-tasks.md`](superpowers/plans/2026-06-09-custom-tasks.md):
+
+- **C1–C6** Phase 1 — single-day injection: `CustomTask` model, assembler fold at priority 0, `CustomTaskFitter` sacrifice ranking, `AddCustomTaskSheet`, `SacrificePickerSheet`, FAB + amber row wiring
+- **C7–C9** Phase 2 — recurrence: `RecurringCustomTask` + `RecurringStore`, assembler fold, repeat-prompt card (+1/+2/+3/+7)
+- **C10–C11** Phase 3 — blueprint promotion: Sunday review surfaces frequent tasks, `PromoteToBlueprintSheet` writes new `RoutineItem`s into the plan (first in-app plan write)
+
+Session 7 follow-ups (also on `feat/custom-tasks`): home-card quick-complete + live progress ring, Android widget redesign (progress bar, done strip, minutes-left), WFH day drops commute / home meal labels.
 
 ---
 
