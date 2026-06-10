@@ -1,9 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'models.dart';
+
+/// The logged-in profile id, or null when logged out. [AuthGate] listens to
+/// this; [ProfileRepository] keeps it in sync with the persisted pointer.
+final ValueNotifier<String?> activeProfile = ValueNotifier<String?>(null);
 
 /// The complete on-disk state for one profile — the v3 file-per-profile unit.
 /// Holds the immutable Plan blueprint plus every per-profile data stream
@@ -133,9 +138,24 @@ class ProfileRepository {
     return prefs.getString(_activeKey) ?? defaultProfileId;
   }
 
+  /// The raw active pointer — null when logged out (unlike [activeProfileId],
+  /// which defaults to [defaultProfileId] for store back-compat).
+  Future<String?> activeProfileIdOrNull() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_activeKey);
+  }
+
+  /// Log out: clear the pointer + notifier.
+  Future<void> clearActive() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_activeKey);
+    activeProfile.value = null;
+  }
+
   Future<void> setActiveProfileId(String id) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_activeKey, id);
+    activeProfile.value = id;
   }
 
   Future<List<String>> listProfiles() async {
