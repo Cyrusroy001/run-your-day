@@ -534,6 +534,49 @@ class CustomTask {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Recurring custom task — repeats on specific future dates chosen by the user.
+// ─────────────────────────────────────────────────────────────────────────────
+
+class RecurringCustomTask {
+  final String id;              // 'recur_<ms-timestamp>'
+  final String label;
+  final String preferredTime;   // 'HH:mm' 24-hour
+  final int durationMinutes;
+  final List<String> activeDates; // 'yyyy-MM-dd', sorted, ≤7
+  final String originTaskId;    // id of the CustomTask that spawned this
+
+  const RecurringCustomTask({
+    required this.id,
+    required this.label,
+    required this.preferredTime,
+    required this.durationMinutes,
+    required this.activeDates,
+    required this.originTaskId,
+  });
+
+  factory RecurringCustomTask.fromJson(Map<String, dynamic> j) =>
+      RecurringCustomTask(
+        id: j['id'] as String,
+        label: j['label'] as String,
+        preferredTime: j['preferredTime'] as String,
+        durationMinutes: (j['durationMinutes'] as num).toInt(),
+        activeDates: ((j['activeDates'] ?? const []) as List)
+            .map((e) => e as String)
+            .toList(),
+        originTaskId: j['originTaskId'] as String,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'label': label,
+        'preferredTime': preferredTime,
+        'durationMinutes': durationMinutes,
+        'activeDates': activeDates,
+        'originTaskId': originTaskId,
+      };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 class DailyState {
   final String date; // yyyy-MM-dd

@@ -17,6 +17,7 @@ class ProfileDoc {
   final Map<String, List<WorkoutLog>> logs;     // workoutKey -> logs
   final Map<String, List<String>> done;         // 'yyyy-MM-dd' -> block signatures
   final Map<String, Map<String, int>> adherence; // 'yyyy-MM-dd' -> {done,total}
+  final List<RecurringCustomTask> recurringTasks;
 
   const ProfileDoc({
     required this.id,
@@ -26,6 +27,7 @@ class ProfileDoc {
     this.logs = const {},
     this.done = const {},
     this.adherence = const {},
+    this.recurringTasks = const [],
   });
 
   factory ProfileDoc.fromJson(Map<String, dynamic> j) => ProfileDoc(
@@ -40,6 +42,9 @@ class ProfileDoc {
             .map((k, v) => MapEntry(k, (v as List).map((e) => e as String).toList())),
         adherence: ((j['adherence'] ?? const {}) as Map<String, dynamic>).map((k, v) =>
             MapEntry(k, (v as Map<String, dynamic>).map((kk, vv) => MapEntry(kk, (vv as num).toInt())))),
+        recurringTasks: ((j['recurringTasks'] ?? const []) as List)
+            .map((e) => RecurringCustomTask.fromJson(e as Map<String, dynamic>))
+            .toList(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -50,6 +55,7 @@ class ProfileDoc {
         'logs': logs.map((k, v) => MapEntry(k, v.map((e) => e.toJson()).toList())),
         'done': done,
         'adherence': adherence,
+        'recurringTasks': recurringTasks.map((t) => t.toJson()).toList(),
       };
 
   ProfileDoc copyWith({
@@ -59,6 +65,7 @@ class ProfileDoc {
     Map<String, List<WorkoutLog>>? logs,
     Map<String, List<String>>? done,
     Map<String, Map<String, int>>? adherence,
+    List<RecurringCustomTask>? recurringTasks,
   }) =>
       ProfileDoc(
         id: id,
@@ -68,6 +75,7 @@ class ProfileDoc {
         logs: logs ?? this.logs,
         done: done ?? this.done,
         adherence: adherence ?? this.adherence,
+        recurringTasks: recurringTasks ?? this.recurringTasks,
       );
 }
 
