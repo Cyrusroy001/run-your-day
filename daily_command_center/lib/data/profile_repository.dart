@@ -265,5 +265,27 @@ class ProfileRepository {
     );
   }
 
+  /// Wipe a profile's logged history (logs, done sets, adherence, daily states),
+  /// keeping the plan and recurring tasks.
+  Future<void> clearHistory(String id) async {
+    final doc = await load(id);
+    await save(doc.copyWith(states: {}, logs: {}, done: {}, adherence: {}));
+  }
+
+  /// Re-seed a profile's plan from the bundled blueprint, keeping history.
+  Future<void> resetPlan(String id) async {
+    final seedRaw = await rootBundle.loadString(seedAsset);
+    final plan = Plan.fromJson(jsonDecode(seedRaw) as Map<String, dynamic>);
+    final doc = await load(id);
+    await save(doc.copyWith(plan: plan));
+  }
+
+  /// First-run: ensure the default `cyrus` profile exists on disk WITHOUT
+  /// logging in (so the login picker shows it). Idempotent.
+  Future<void> ensureSeeded() async {
+    if ((await listProfiles()).isNotEmpty) return;
+    await load(defaultProfileId); // load() seeds + saves cyrus.json when absent
+  }
+
   static String _titleCase(String s) => s.isEmpty ? s : '${s[0].toUpperCase()}${s.substring(1)}';
 }
