@@ -15,24 +15,24 @@ late Plan _plan;
 late Directory _tmp;
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   setUpAll(() async {
-    TestWidgetsFlutterBinding.ensureInitialized();
     final raw = await rootBundle.loadString('assets/seed_plan.json');
     _plan = Plan.fromJson(jsonDecode(raw) as Map<String, dynamic>);
   });
 
-  setUp(() {
+  setUp(() async {
     SharedPreferences.setMockInitialValues({});
-    _tmp = Directory.systemTemp.createTempSync('auth_gate_test');
+    _tmp = await Directory.systemTemp.createTemp('auth_gate_test');
     AppStore.repo = ProfileRepository(baseDir: _tmp);
     activeProfile.value = null;
   });
   tearDown(() {
-    try { _tmp.deleteSync(recursive: true); } on FileSystemException {}
+    if (_tmp.existsSync()) _tmp.deleteSync(recursive: true);
   });
 
   testWidgets('null active profile → LoginScreen', (tester) async {
-    activeProfile.value = null;
     await tester.pumpWidget(const MaterialApp(home: AuthGate()));
     await tester.pump();
     expect(find.byType(LoginScreen), findsOneWidget);
@@ -42,6 +42,7 @@ void main() {
   testWidgets('non-null active profile → HomeScreen', (tester) async {
     activeProfile.value = 'cyrus';
     await tester.pumpWidget(MaterialApp(
+      // id unused — HomeScreen reads activeProfile notifier directly
       home: AuthGate(homeBuilder: (_) => HomeScreen(debugPlan: _plan)),
     ));
     await tester.pump();
