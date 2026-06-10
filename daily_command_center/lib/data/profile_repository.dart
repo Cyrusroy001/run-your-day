@@ -8,6 +8,9 @@ import 'models.dart';
 
 /// The logged-in profile id, or null when logged out. [AuthGate] listens to
 /// this; [ProfileRepository] keeps it in sync with the persisted pointer.
+///
+/// NOTE: boots as null. main.dart must initialize it from the persisted
+/// pointer (`activeProfileIdOrNull`) before runApp (done in the AuthGate task).
 final ValueNotifier<String?> activeProfile = ValueNotifier<String?>(null);
 
 /// The complete on-disk state for one profile — the v3 file-per-profile unit.

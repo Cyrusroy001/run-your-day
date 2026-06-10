@@ -6,10 +6,15 @@ import 'package:daily_command_center/data/store.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  late Directory tmp;
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
-    AppStore.repo = ProfileRepository(baseDir: await Directory.systemTemp.createTemp());
+    tmp = await Directory.systemTemp.createTemp();
+    AppStore.repo = ProfileRepository(baseDir: tmp);
     activeProfile.value = null;
+  });
+  tearDown(() {
+    if (tmp.existsSync()) tmp.deleteSync(recursive: true);
   });
 
   test('fresh store → activeProfileIdOrNull is null (logged out)', () async {
