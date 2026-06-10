@@ -92,7 +92,11 @@ class ProfileMeta {
   final String id;
   final String displayName;
   final String archetype;
-  const ProfileMeta({required this.id, required this.displayName, this.archetype = ''});
+  const ProfileMeta({
+    required this.id,
+    required this.displayName,
+    this.archetype = '',
+  });
 }
 
 /// Owns one JSON file per profile under `<appDocuments>/profiles/<id>.json`.
@@ -170,11 +174,14 @@ class ProfileRepository {
     await file.writeAsString(jsonEncode(doc.toJson()));
   }
 
+  static final _whitespace = RegExp(r'\s+');
+
   /// Lower-cased, trimmed, spaces→underscores. The storage id for a display name.
   static String idFor(String displayName) =>
-      displayName.trim().toLowerCase().replaceAll(RegExp(r'\s+'), '_');
+      displayName.trim().toLowerCase().replaceAll(_whitespace, '_');
 
-  /// Every profile on disk, with display name + archetype (reads each file).
+  /// Every profile on disk, with display name + archetype. Fully deserializes
+  /// each profile file — acceptable while profile counts stay small.
   Future<List<ProfileMeta>> listProfileMetas() async {
     final ids = await listProfiles();
     final metas = <ProfileMeta>[];

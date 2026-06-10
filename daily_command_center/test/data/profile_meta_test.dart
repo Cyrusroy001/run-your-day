@@ -21,5 +21,6 @@ void main() {
     final metas = await AppStore.repo.listProfileMetas();
     expect(metas.map((m) => m.id), contains('cyrus'));
     expect(metas.firstWhere((m) => m.id == 'cyrus').displayName, 'Cyrus');
+    expect(metas.firstWhere((m) => m.id == 'cyrus').archetype, isA<String>());
   });
 }
