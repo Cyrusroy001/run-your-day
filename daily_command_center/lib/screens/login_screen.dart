@@ -6,12 +6,14 @@ import '../theme/app_palette.dart';
 import 'onboarding_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  /// Test seam: override profile loading. Defaults to [AppStore.repo.listProfileMetas].
+  final Future<List<ProfileMeta>> Function()? profileLoader;
+  const LoginScreen({super.key, this.profileLoader});
   @override
-  State<LoginScreen> createState() => LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen> {
   final _nameCtrl = TextEditingController();
   List<ProfileMeta> _profiles = [];
   bool _loading = true;
@@ -22,11 +24,6 @@ class LoginScreenState extends State<LoginScreen> {
     _load();
   }
 
-  /// Exposed for widget tests: call this inside runAsync to redo the disk IO
-  /// on the real event loop and await completion before asserting.
-  @visibleForTesting
-  Future<void> reloadForTest() => _load();
-
   @override
   void dispose() {
     _nameCtrl.dispose();
@@ -34,7 +31,8 @@ class LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _load() async {
-    final p = await AppStore.repo.listProfileMetas();
+    final loader = widget.profileLoader ?? AppStore.repo.listProfileMetas;
+    final p = await loader();
     if (mounted) setState(() { _profiles = p; _loading = false; });
   }
 
@@ -47,8 +45,10 @@ class LoginScreenState extends State<LoginScreen> {
     if (name.isEmpty) return;
     final id = ProfileRepository.idFor(name);
     if (_profiles.any((m) => m.id == id)) { await _enter(id); return; }
+    if (!mounted) return;
     await Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => OnboardingScreen(displayName: name)));
+    if (!mounted) return;
     await _load();
   }
 
@@ -75,7 +75,8 @@ class LoginScreenState extends State<LoginScreen> {
                       if (_profiles.isEmpty)
                         Padding(padding: const EdgeInsets.symmetric(vertical: 24),
                             child: Text('No profiles yet — create one below.', style: TextStyle(color: c.dim))),
-                      for (final p in _profiles) _ProfileTile(meta: p, onTap: () => _enter(p.id)),
+                      for (final p in _profiles)
+                        _ProfileTile(meta: p, onTap: () { _enter(p.id).ignore(); }),
                       const SizedBox(height: 16),
                       _NewProfileField(controller: _nameCtrl, onSubmit: _continueNew),
                     ]),
