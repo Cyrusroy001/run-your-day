@@ -110,11 +110,13 @@ Runs on the phone (Samsung S21 FE, Android 16 / API 36). Dev loop is wireless AD
 
 The engine and UX layer are both complete. The branch is in a shippable state. Candidate next steps (in rough priority order):
 
-### 1. Custom-task feature (discussed in session 6)
+### 1. Custom-task feature — SPECCED, READY TO IMPLEMENT
 
-User can inject ad-hoc tasks into the Live view with a time. The system squeezes lower-priority blocks to make room and notifies what was dropped/compacted. Amber-border UI (already designed). Next-day repeat option (+1/+2/+3/+7 days). Sunday review surfaces them for promotion into `seed_plan.json`'s `routineStack`.
+Full spec + plan written in session 6:
+- Spec: [`specs/2026-06-09-custom-tasks-design.md`](superpowers/specs/2026-06-09-custom-tasks-design.md)
+- Plan: [`plans/2026-06-09-custom-tasks.md`](superpowers/plans/2026-06-09-custom-tasks.md) (tasks C1–C11)
 
-Key model change: add `List<RoutineItem> addedItems` to `DailyState`. Separate `recurringCustomTasks` store for repeat schedule. `TimelineAssembler.assembleDay` folds in `addedItems`. Implement in 3 phases: (1) single-day inject, (2) recurrence, (3) Sunday promote-to-blueprint.
+Three phases: (1) single-day injection with sacrifice picker, (2) recurrence (+1/+2/+3/+7), (3) Sunday review → promote to blueprint (first in-app plan write). Phase 1 ships standalone. Branch off `feat/reminders-2-redesign`.
 
 ### 2. Merge `feat/reminders-2-redesign` → `main`
 
