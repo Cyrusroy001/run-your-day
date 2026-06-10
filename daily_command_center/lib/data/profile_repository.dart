@@ -219,5 +219,31 @@ class ProfileRepository {
     return metas;
   }
 
+  /// Create a new profile, make it active, and persist it. If [plan] is null the
+  /// profile is seeded from the bundled blueprint (via [load]); onboarding passes
+  /// a customized plan. An existing id is overwritten.
+  Future<ProfileDoc> createProfile(String displayName, {Plan? plan}) async {
+    final id = idFor(displayName);
+    final ProfileDoc doc;
+    if (plan != null) {
+      doc = ProfileDoc(id: id, displayName: displayName.trim(), plan: plan);
+      await save(doc);
+    } else {
+      // load() seeds + saves a fresh doc from the asset when the file is absent.
+      final seeded = await load(id);
+      doc = seeded.copyWith(displayName: displayName.trim());
+      await save(doc);
+    }
+    await setActiveProfileId(id);
+    return doc;
+  }
+
+  /// Delete a profile's file. If it was the active profile, log out.
+  Future<void> delete(String id) async {
+    final file = await _file(id);
+    if (await file.exists()) await file.delete();
+    if (await activeProfileIdOrNull() == id) await clearActive();
+  }
+
   static String _titleCase(String s) => s.isEmpty ? s : '${s[0].toUpperCase()}${s.substring(1)}';
 }
