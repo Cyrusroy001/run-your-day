@@ -8,6 +8,7 @@ class TimelineAssembler {
     String dayKey, {
     required bool training,
     DailyState state = const DailyState(date: ''),
+    List<RecurringCustomTask> recurringTasks = const [],
   }) {
     final tmpl = plan.dayTemplates[templateId];
     if (tmpl == null) return const [];
@@ -43,8 +44,26 @@ class TimelineAssembler {
             ))
         .toList();
 
-    // 4. Merge + order.
-    final merged = [...items, ...anchors, ...customBlocks];
+    // 4. Fold in recurring tasks active for this day (priority 0).
+    final recurringBlocks = recurringTasks
+        .where((t) => state.date.isEmpty || t.activeDates.contains(state.date))
+        .map((t) => Block(
+              id: t.id,
+              time: displayTime(t.preferredTime),
+              cls: 'custom',
+              label: t.label,
+              estStart: _decimal24(t.preferredTime),
+              seedStart: _decimal24(t.preferredTime),
+              durationMinutes: t.durationMinutes,
+              idealMinutes: t.durationMinutes,
+              minMinutes: t.durationMinutes,
+              priority: 0,
+              isCustom: true,
+            ))
+        .toList();
+
+    // 5. Merge + order.
+    final merged = [...items, ...anchors, ...customBlocks, ...recurringBlocks];
     if (state.dailySequence.isNotEmpty) {
       // Reorder by explicit sequence; unknown/extra ids keep clock order after.
       final order = {for (int i = 0; i < state.dailySequence.length; i++) state.dailySequence[i]: i};
