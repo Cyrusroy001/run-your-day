@@ -266,7 +266,7 @@ class ProfileRepository {
   }
 
   /// Wipe a profile's logged history (logs, done sets, adherence, daily states),
-  /// keeping the plan and recurring tasks.
+  /// keeping the plan, recurring tasks, and skipped-repeat ids.
   Future<void> clearHistory(String id) async {
     final doc = await load(id);
     await save(doc.copyWith(states: {}, logs: {}, done: {}, adherence: {}));
@@ -283,7 +283,7 @@ class ProfileRepository {
   /// First-run: ensure the default `cyrus` profile exists on disk WITHOUT
   /// logging in (so the login picker shows it). Idempotent.
   Future<void> ensureSeeded() async {
-    if ((await listProfiles()).isNotEmpty) return;
+    if ((await listProfiles()).contains(defaultProfileId)) return;
     await load(defaultProfileId); // load() seeds + saves cyrus.json when absent
   }
 

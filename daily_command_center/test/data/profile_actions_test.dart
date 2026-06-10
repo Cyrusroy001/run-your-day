@@ -40,4 +40,14 @@ void main() {
     await AppStore.repo.ensureSeeded();
     expect((await AppStore.repo.listProfiles()).where((id) => id == 'cyrus').length, 1);
   });
+
+  test('resetPlan restores the seed plan while keeping logs', () async {
+    await AppStore.repo.createProfile('Cyrus');
+    await AppStore.saveLogs('A', [const WorkoutLog(date: '2026-06-08', reps: '7')]);
+    await AppStore.repo.resetPlan('cyrus');
+    // plan is back to seed (schemaVersion must still be >= 3)
+    expect((await AppStore.loadPlan()).schemaVersion, greaterThanOrEqualTo(3));
+    // history is untouched
+    expect((await AppStore.loadLogs('A')).single.reps, '7');
+  });
 }
