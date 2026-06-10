@@ -219,9 +219,11 @@ class ProfileRepository {
     return metas;
   }
 
-  /// Create a new profile, make it active, and persist it. If [plan] is null the
-  /// profile is seeded from the bundled blueprint (via [load]); onboarding passes
-  /// a customized plan. An existing id is overwritten.
+  /// Create a new profile, make it active, and persist it. If [plan] is provided
+  /// (onboarding), it becomes the profile's plan. If [plan] is null the profile
+  /// is seeded from the bundled blueprint via [load]. Note: if a file already
+  /// exists for this id, its existing data is preserved and only the display
+  /// name is updated — callers create brand-new ids, so this path seeds fresh.
   Future<ProfileDoc> createProfile(String displayName, {Plan? plan}) async {
     final id = idFor(displayName);
     final ProfileDoc doc;

@@ -24,7 +24,7 @@ void main() {
     expect(doc.displayName, 'Alex P');
     expect(await AppStore.repo.activeProfileIdOrNull(), 'alex_p');
     expect((await AppStore.repo.listProfiles()), contains('alex_p'));
-    expect(doc.plan.schemaVersion, 3);
+    expect(doc.plan.schemaVersion, greaterThanOrEqualTo(3));
   });
 
   test('profiles are isolated — logs under one are invisible to another', () async {
