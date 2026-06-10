@@ -87,6 +87,14 @@ class ProfileDoc {
       );
 }
 
+/// Lightweight profile descriptor for the login picker / drawer header.
+class ProfileMeta {
+  final String id;
+  final String displayName;
+  final String archetype;
+  const ProfileMeta({required this.id, required this.displayName, this.archetype = ''});
+}
+
 /// Owns one JSON file per profile under `<appDocuments>/profiles/<id>.json`.
 /// The active-profile id is a tiny global pointer kept in SharedPreferences
 /// (not profile data); everything else lives in the per-profile file.
@@ -160,6 +168,25 @@ class ProfileRepository {
   Future<void> save(ProfileDoc doc) async {
     final file = await _file(doc.id);
     await file.writeAsString(jsonEncode(doc.toJson()));
+  }
+
+  /// Lower-cased, trimmed, spaces→underscores. The storage id for a display name.
+  static String idFor(String displayName) =>
+      displayName.trim().toLowerCase().replaceAll(RegExp(r'\s+'), '_');
+
+  /// Every profile on disk, with display name + archetype (reads each file).
+  Future<List<ProfileMeta>> listProfileMetas() async {
+    final ids = await listProfiles();
+    final metas = <ProfileMeta>[];
+    for (final id in ids) {
+      final doc = await load(id);
+      metas.add(ProfileMeta(
+        id: doc.id,
+        displayName: doc.displayName,
+        archetype: doc.plan.meta.lifestyleArchetype,
+      ));
+    }
+    return metas;
   }
 
   static String _titleCase(String s) => s.isEmpty ? s : '${s[0].toUpperCase()}${s.substring(1)}';
