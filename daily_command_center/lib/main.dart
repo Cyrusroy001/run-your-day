@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:workmanager/workmanager.dart';
 import 'data/notifications.dart';
+import 'data/profile_repository.dart';
 import 'data/store.dart';
 import 'data/ui_prefs.dart';
 import 'theme/app_palette.dart';
-import 'screens/home_screen.dart';
+import 'screens/auth_gate.dart';
 
 // Unique name for the periodic home-widget refresh task.
 const _widgetRefreshTask = 'now-widget-refresh';
@@ -32,6 +33,8 @@ void main() async {
     existingWorkPolicy: ExistingPeriodicWorkPolicy.update,
   );
   final prefs = await UiPrefs.load();
+  await AppStore.repo.ensureSeeded();
+  activeProfile.value = await AppStore.repo.activeProfileIdOrNull();
   runApp(RemindersApp(prefs: prefs));
 }
 
@@ -68,7 +71,7 @@ class _RemindersAppState extends State<RemindersApp> {
         maxScaleFactor: _prefs.textScale,
         child: child!,
       ),
-      home: const HomeScreen(),
+      home: const AuthGate(),
       debugShowCheckedModeBanner: false,
     );
   }
