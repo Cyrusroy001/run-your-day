@@ -17,12 +17,14 @@ import '../logic/drift_copy.dart';
 import '../logic/custom_task_fitter.dart';
 import '../logic/priority_level.dart';
 import '../logic/weekly_review.dart';
+import '../logic/blueprint_promotion.dart';
 import '../theme/app_palette.dart';
 import '../widgets/add_custom_task_sheet.dart';
 import '../widgets/budget_bar.dart';
 import '../widgets/anchor_wall.dart';
 import '../widgets/sacrifice_picker_sheet.dart';
 import '../widgets/weekly_review_card.dart';
+import '../widgets/promote_blueprint_sheet.dart';
 import '../widgets/teaching_card.dart';
 import 'glossary_screen.dart';
 
@@ -50,6 +52,7 @@ class LiveTimelineViewState extends State<LiveTimelineView> {
   String? _teachText;
   Timer? _ticker;
   List<CustomTask> _pendingRepeatTasks = const [];
+  List<PromotionCandidate> _promotionCandidates = const [];
 
   @override
   void initState() {
@@ -83,6 +86,21 @@ class LiveTimelineViewState extends State<LiveTimelineView> {
           !recurringOriginIds.contains(t.id) &&
           !skippedIds.contains(t.id);
     }).toList();
+
+    // On Sunday, surface custom tasks run often enough to promote into the
+    // blueprint — minus any whose label is already a permanent routine item.
+    var promotions = const <PromotionCandidate>[];
+    if (widget.todayKey == 'sun') {
+      final recentStates = await StateStore.recentStates(now, days: 7);
+      final existingLabels = widget.plan.dayTemplates.values
+          .expand((t) => t.routineStack)
+          .map((r) => r.label)
+          .toSet();
+      promotions = WeeklyReview.promotionCandidates(recentStates)
+          .where((c) => !existingLabels.contains(c.label))
+          .toList();
+    }
+
     if (!mounted) return;
     setState(() {
       _state = state;
@@ -91,6 +109,7 @@ class LiveTimelineViewState extends State<LiveTimelineView> {
       _nudge = DriftCopy.weeklyNudge(events);
       _last7 = last7;
       _pendingRepeatTasks = pending;
+      _promotionCandidates = promotions;
     });
   }
 
@@ -130,6 +149,57 @@ class LiveTimelineViewState extends State<LiveTimelineView> {
           _pendingRepeatTasks.where((t) => t.id != task.id).toList());
     }
   }
+
+  // ── Blueprint promotion (C11 — the first in-app plan write) ─────────────────
+
+  void _openPromoteSheet(PromotionCandidate cand) {
+    final templates = widget.plan.dayTemplates.entries
+        .map((e) => (id: e.key, label: e.value.label))
+        .toList();
+    showPromoteToBlueprintSheet(
+      context,
+      candidate: cand,
+      templates: templates,
+      onConfirm: (label, time, dur, ids) => _applyPromotion(cand, label, time, dur, ids),
+    );
+  }
+
+  Future<void> _applyPromotion(
+      PromotionCandidate cand, String label, String time, int dur, List<String> templateIds) async {
+    final updated = BlueprintPromotion.promote(
+      widget.plan, label: label, time: time, durationMinutes: dur, templateIds: templateIds);
+    await AppStore.savePlan(updated);
+
+    // The task is now a permanent routine — retire any recurring rules for it.
+    final recurring = await RecurringStore.loadAll();
+    for (final r in recurring.where((r) => r.label == cand.label)) {
+      await RecurringStore.removeById(r.id);
+    }
+
+    if (!mounted) return;
+    setState(() => _promotionCandidates =
+        _promotionCandidates.where((p) => p.label != cand.label).toList());
+
+    final allIds = widget.plan.dayTemplates.keys.toSet();
+    final scope = templateIds.toSet().containsAll(allIds)
+        ? 'every day'
+        : templateIds.map((id) => widget.plan.dayTemplates[id]?.label ?? id).join(', ');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Added "$label" to $scope. It’s in your plan from now on.')),
+    );
+  }
+
+  void _dismissPromotion(PromotionCandidate cand) {
+    setState(() => _promotionCandidates =
+        _promotionCandidates.where((p) => p.label != cand.label).toList());
+  }
+
+  @visibleForTesting
+  List<PromotionCandidate> get promotionCandidatesForTest => _promotionCandidates;
+  @visibleForTesting
+  Future<void> applyPromotionForTest(
+          PromotionCandidate cand, String label, String time, int dur, List<String> templateIds) =>
+      _applyPromotion(cand, label, time, dur, templateIds);
 
   Future<void> _toggle(Block b) async {
     final next = {..._done};
@@ -210,7 +280,15 @@ class LiveTimelineViewState extends State<LiveTimelineView> {
             onSkip: () => _skipRepeatTask(task),
           ),
         if (summary != null)
-          WeeklyReviewCard(summary: summary, isSunday: widget.todayKey == 'sun', nudge: _nudge, last7: _last7),
+          WeeklyReviewCard(
+            summary: summary,
+            isSunday: widget.todayKey == 'sun',
+            nudge: _nudge,
+            last7: _last7,
+            promotionCandidates: _promotionCandidates,
+            onPromote: _openPromoteSheet,
+            onDismiss: _dismissPromotion,
+          ),
         if (_teachText != null)
           TeachingCard(
             text: _teachText!,

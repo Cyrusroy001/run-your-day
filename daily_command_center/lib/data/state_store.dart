@@ -47,4 +47,17 @@ class StateStore {
     }
     return out;
   }
+
+  /// The DailyStates that exist across the last [days] days (oldest first).
+  static Future<List<DailyState>> recentStates(DateTime today, {int days = 7}) async {
+    final doc = await AppStore.repo.loadActive();
+    final base = DateTime(today.year, today.month, today.day);
+    final out = <DailyState>[];
+    for (int i = days - 1; i >= 0; i--) {
+      final key = _fmt.format(base.subtract(Duration(days: i)));
+      final state = doc.states[key];
+      if (state != null) out.add(state);
+    }
+    return out;
+  }
 }

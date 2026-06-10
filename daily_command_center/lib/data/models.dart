@@ -291,6 +291,14 @@ class DayTemplate {
         'anchors': anchors.map((e) => e.toJson()).toList(),
         'routineStack': routineStack.map((e) => e.toJson()).toList(),
       };
+
+  DayTemplate copyWith({List<Anchor>? anchors, List<RoutineItem>? routineStack}) =>
+      DayTemplate(
+        label: label,
+        colorKey: colorKey,
+        anchors: anchors ?? this.anchors,
+        routineStack: routineStack ?? this.routineStack,
+      );
 }
 
 class PlanMeta {
@@ -443,8 +451,8 @@ class Plan {
         'goals': goals.map((e) => e.toJson()).toList(),
       };
 
-  Plan copyWith({Map<String, WeekEntry>? week}) => Plan(
-        schemaVersion: schemaVersion, meta: meta, dayTemplates: dayTemplates,
+  Plan copyWith({Map<String, WeekEntry>? week, Map<String, DayTemplate>? dayTemplates}) => Plan(
+        schemaVersion: schemaVersion, meta: meta, dayTemplates: dayTemplates ?? this.dayTemplates,
         week: week ?? this.week, weekEditor: weekEditor, training: training,
         workouts: workouts, nutrition: nutrition, goals: goals,
       );
