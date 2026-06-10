@@ -95,5 +95,25 @@ class PlannerLogic {
     return plan.copyWith(week: {...plan.week, day: entry.copyWith(templateId: newTemplateId)});
   }
 
+  /// Deterministic, well-spaced training-day patterns by weekly frequency.
+  static const _freqPattern = {
+    1: ['wed'],
+    2: ['mon', 'thu'],
+    3: ['mon', 'wed', 'fri'],
+    4: ['mon', 'wed', 'fri', 'sun'],
+    5: ['mon', 'tue', 'thu', 'fri', 'sat'],
+    6: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'],
+  };
+
+  /// Set exactly [n] training days (1–6) using a well-spaced deterministic pattern.
+  static Plan setTrainingFrequency(Plan plan, int n) {
+    final days = _freqPattern[n.clamp(1, 6)]!;
+    final newWeek = Map.fromEntries(_days.map((d) {
+      final entry = plan.week[d]!;
+      return MapEntry(d, entry.copyWith(training: days.contains(d)));
+    }));
+    return plan.copyWith(week: newWeek);
+  }
+
   static String _capitalize(String s) => s[0].toUpperCase() + s.substring(1);
 }
