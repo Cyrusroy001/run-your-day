@@ -247,5 +247,23 @@ class ProfileRepository {
     if (await activeProfileIdOrNull() == id) await clearActive();
   }
 
+  /// Export a profile as a JSON string. The blob is the full [ProfileDoc]
+  /// serialised by [ProfileDoc.toJson] — import it back with [importProfile].
+  Future<String> exportProfile(String id) async =>
+      jsonEncode((await load(id)).toJson());
+
+  /// Recreate a profile from an exported blob. Overwrites any existing file
+  /// with the same id. Returns the profile's [ProfileMeta].
+  /// Does NOT change the active-profile pointer.
+  Future<ProfileMeta> importProfile(String blob) async {
+    final doc = ProfileDoc.fromJson(jsonDecode(blob) as Map<String, dynamic>);
+    await save(doc);
+    return ProfileMeta(
+      id: doc.id,
+      displayName: doc.displayName,
+      archetype: doc.plan.meta.lifestyleArchetype,
+    );
+  }
+
   static String _titleCase(String s) => s.isEmpty ? s : '${s[0].toUpperCase()}${s.substring(1)}';
 }
