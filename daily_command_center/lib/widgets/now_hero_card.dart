@@ -6,14 +6,16 @@ import '../theme/app_palette.dart';
 class NowHeroCard extends StatelessWidget {
   final HomeNowState state;
   final VoidCallback onOpen;
-  const NowHeroCard({super.key, required this.state, required this.onOpen});
+  final VoidCallback? onToggleDone;
+  const NowHeroCard({super.key, required this.state, required this.onOpen, this.onToggleDone});
 
   @override
   Widget build(BuildContext context) {
     final c = context.c;
+    final isActive = !state.isResting && !state.isDayDone;
     final title = state.isResting
         ? 'Still resting'
-        : state.isDayDone ? 'Day’s done. Rest up.' : state.currentLabel;
+        : state.isDayDone ? "Day's done. Rest up." : state.currentLabel;
     return GestureDetector(
       onTap: onOpen,
       child: Container(
@@ -21,17 +23,34 @@ class NowHeroCard extends StatelessWidget {
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(color: c.panel2, border: Border.all(color: c.line), borderRadius: BorderRadius.circular(20)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Text('▶ RIGHT NOW', style: TextStyle(fontSize: 9, letterSpacing: 2, color: c.moss, fontWeight: FontWeight.w700)),
-            if (!state.isResting && !state.isDayDone)
+          Row(children: [
+            Text('RIGHT NOW', style: TextStyle(fontSize: 9, letterSpacing: 2, color: c.moss, fontWeight: FontWeight.w700)),
+            const Spacer(),
+            if (isActive) ...[
               SizedBox(width: 44, height: 44, child: Stack(alignment: Alignment.center, children: [
                 CircularProgressIndicator(value: state.progress, strokeWidth: 4, color: c.moss, backgroundColor: c.line),
-                Text('${state.minutesLeft}′', style: TextStyle(fontSize: 10, color: c.moss, fontWeight: FontWeight.w700)),
+                Text('${state.minutesLeft}m', style: TextStyle(fontSize: 9, color: c.moss, fontWeight: FontWeight.w700)),
               ])),
+              if (onToggleDone != null) ...[
+                const SizedBox(width: 10),
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: onToggleDone,
+                  child: Container(
+                    width: 38, height: 38,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: c.moss, width: 2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(Icons.check, size: 20, color: c.moss),
+                  ),
+                ),
+              ],
+            ],
           ]),
           const SizedBox(height: 10),
           Text(title, style: GoogleFonts.fraunces(fontSize: 21, fontWeight: FontWeight.w600, color: c.cream)),
-          if (!state.isResting && !state.isDayDone)
+          if (isActive)
             Padding(padding: const EdgeInsets.only(top: 2),
               child: Text('${state.minutesLeft}m left of ${state.budgetMinutes}m budget', style: TextStyle(fontSize: 11.5, color: c.muted))),
           if (state.whisper != null)
@@ -40,7 +59,7 @@ class NowHeroCard extends StatelessWidget {
           if (state.nextLabel.isNotEmpty)
             Container(margin: const EdgeInsets.only(top: 10), padding: const EdgeInsets.only(top: 10),
               decoration: BoxDecoration(border: Border(top: BorderSide(color: c.line))),
-              child: Text('Next · ${state.nextTime} ${state.nextLabel}', style: TextStyle(fontSize: 12.5, color: c.muted))),
+              child: Text('Next  ${state.nextTime}  ${state.nextLabel}', style: TextStyle(fontSize: 12.5, color: c.muted))),
         ]),
       ),
     );

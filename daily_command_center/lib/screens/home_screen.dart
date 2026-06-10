@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../data/models.dart';
@@ -33,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Set<String> _done = {};
   static const _days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
   late String _todayKey;
+  Timer? _ticker;
 
   @override
   void initState() {
@@ -40,6 +43,14 @@ class _HomeScreenState extends State<HomeScreen> {
     _todayKey = _days[DateTime.now().weekday % 7];
     _plan = widget.debugPlan;
     _load();
+    // Refresh every 30 s so the progress ring and "minutes left" stay live.
+    _ticker = Timer.periodic(const Duration(seconds: 30), (_) { if (mounted) setState(() {}); });
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -63,8 +74,27 @@ class _HomeScreenState extends State<HomeScreen> {
   ResolvedDay _resolve(Plan plan) =>
       DriftEngine.computeDay(_assemble(plan), now: nowDecimal(), done: _done, dateIso: _state.date);
 
-  void _openLive(Plan plan) => Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => LiveTimelineView(plan: plan, todayKey: _todayKey)));
+  Future<void> _openLive(Plan plan) async {
+    await Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => LiveTimelineView(plan: plan, todayKey: _todayKey)));
+    // Reload done + state after returning so home card reflects any check-offs.
+    if (mounted) _load();
+  }
+
+  /// Quick-complete the current task directly from the home card.
+  Future<void> _toggleCurrentTask(String signature) async {
+    final next = {..._done};
+    next.contains(signature) ? next.remove(signature) : next.add(signature);
+    HapticFeedback.lightImpact();
+    setState(() => _done = next);
+    await AdherenceStore.saveDone(DateTime.now(), next);
+    final plan = _plan;
+    if (plan == null) return;
+    final trackable = _assemble(plan).where((b) => b.isTrackable).toList();
+    await AdherenceStore.writeAdherence(
+        DateTime.now(), trackable.where((b) => next.contains(b.signature)).length, trackable.length);
+    AppStore.writeWidgetData(plan, _todayKey).ignore();
+  }
 
   void _updatePlan(Plan plan) {
     AppStore.savePlan(plan);
@@ -77,14 +107,20 @@ class _HomeScreenState extends State<HomeScreen> {
     final c = context.c;
     final plan = _plan;
     if (plan == null) return Scaffold(body: Center(child: CircularProgressIndicator(color: c.terra)));
-    final now = HomeNowState.from(_resolve(plan), now: nowDecimal());
+    final now = HomeNowState.from(_resolve(plan), now: nowDecimal(), done: _done);
     final trackable = _assemble(plan).where((b) => b.isTrackable).toList();
     final doneCount = trackable.where((b) => _done.contains(b.signature)).length;
 
     return Scaffold(
       body: ListView(children: [
         _header(c),
-        NowHeroCard(state: now, onOpen: () => _openLive(plan)),
+        NowHeroCard(
+          state: now,
+          onOpen: () => _openLive(plan),
+          onToggleDone: now.currentSignature != null
+              ? () => _toggleCurrentTask(now.currentSignature!)
+              : null,
+        ),
         _miniStrip(c, doneCount, trackable.length, now.whisper != null),
         WeekPlanner(plan: plan, todayKey: _todayKey, onPlanChanged: _updatePlan),
         const SizedBox(height: 50),

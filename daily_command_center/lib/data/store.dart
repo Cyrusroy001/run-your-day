@@ -42,30 +42,53 @@ class AppStore {
     String currentAction = 'Wind down';
     String nextAction = '';
     int progressPct = 0;
+    int minutesLeft = 0;
+    int budgetMinutes = 0;
 
     if (now < times.first) {
       currentAction = 'Still resting';
-      nextAction = 'Next · ${blocks.first.time} — ${blocks.first.label}';
+      nextAction = 'Up next · ${blocks.first.time} ${blocks.first.label}';
     } else {
       for (int i = 0; i < blocks.length; i++) {
         final start = times[i];
-        final end = i < blocks.length - 1 ? times[i + 1] : 25.0;
-        if (now >= start && now < end) {
+        final blockDur = blocks[i].durationMinutes / 60.0;
+        final blockEnd = start + blockDur;
+        final displayEnd = i < blocks.length - 1 ? times[i + 1] : blockEnd;
+        if (now >= start && now < displayEnd) {
           currentAction = blocks[i].label;
+          budgetMinutes = blocks[i].durationMinutes;
+          minutesLeft = ((blockEnd - now) * 60).round().clamp(0, 9999);
+          progressPct = blockDur <= 0 ? 100 : ((now - start) / blockDur * 100).round().clamp(0, 100);
           if (i < blocks.length - 1) {
-            nextAction = 'Next · ${blocks[i + 1].time} — ${blocks[i + 1].label}';
+            nextAction = 'Up next · ${blocks[i + 1].time} ${blocks[i + 1].label}';
           }
-          progressPct = ((now - start) / (end - start) * 100).round().clamp(0, 100);
           break;
         }
       }
     }
+
+    // Load adherence count for the done strip.
+    int doneCount = 0;
+    int totalCount = 0;
+    try {
+      final doc = await repo.loadActive();
+      final key = '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}';
+      final adh = doc.adherence[key];
+      if (adh != null) {
+        doneCount = adh['done'] ?? 0;
+        totalCount = adh['total'] ?? 0;
+      }
+    } catch (_) {}
 
     try {
       await HomeWidget.saveWidgetData<String>('currentAction', currentAction);
       await HomeWidget.saveWidgetData<String>('nextAction', nextAction);
       await HomeWidget.saveWidgetData<String>('dayLabel', dayNames[todayKey] ?? todayKey);
       await HomeWidget.saveWidgetData<int>('progressPct', progressPct);
+      await HomeWidget.saveWidgetData<int>('minutesLeft', minutesLeft);
+      await HomeWidget.saveWidgetData<int>('budgetMinutes', budgetMinutes);
+      await HomeWidget.saveWidgetData<int>('doneCount', doneCount);
+      await HomeWidget.saveWidgetData<int>('totalCount', totalCount);
       await HomeWidget.updateWidget(androidName: 'NowWidgetProvider');
     } catch (_) {
       // Widget not on home screen or platform error — safe to ignore

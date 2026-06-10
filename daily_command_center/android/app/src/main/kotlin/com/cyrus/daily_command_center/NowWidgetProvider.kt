@@ -22,20 +22,41 @@ class NowWidgetProvider : AppWidgetProvider() {
 
     companion object {
         fun updateWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
-            // home_widget stores data in its own "HomeWidgetPreferences" file with
-            // raw keys (no "flutter." prefix). Use the plugin's accessor so we read
-            // the same file HomeWidget.saveWidgetData() writes to.
             val prefs = HomeWidgetPlugin.getData(context)
-            val currentAction = prefs.getString("currentAction", "Loading…") ?: "Loading…"
-            val nextAction    = prefs.getString("nextAction", "") ?: ""
-            val dayLabel      = prefs.getString("dayLabel", "") ?: ""
-            val progressPct   = prefs.getInt("progressPct", 0)
+            val currentAction  = prefs.getString("currentAction", "Loading…") ?: "Loading…"
+            val nextAction     = prefs.getString("nextAction", "") ?: ""
+            val dayLabel       = prefs.getString("dayLabel", "") ?: ""
+            val progressPct    = prefs.getInt("progressPct", 0)
+            val minutesLeft    = prefs.getInt("minutesLeft", 0)
+            val budgetMinutes  = prefs.getInt("budgetMinutes", 0)
+            val doneCount      = prefs.getInt("doneCount", 0)
+            val totalCount     = prefs.getInt("totalCount", 0)
 
             val views = RemoteViews(context.packageName, R.layout.now_widget)
-            views.setTextViewText(R.id.widget_label, "Right now · $dayLabel")
+
+            // Top row
+            views.setTextViewText(R.id.widget_day, dayLabel.uppercase())
+            views.setTextViewText(
+                R.id.widget_done,
+                if (totalCount > 0) "$doneCount/$totalCount done" else ""
+            )
+
+            // Current task
             views.setTextViewText(R.id.widget_title, currentAction)
+
+            // Progress bar
+            views.setProgressBar(R.id.widget_progress, 100, progressPct, false)
+
+            // Time left (only when there's an active block with a budget)
+            views.setTextViewText(
+                R.id.widget_time_left,
+                if (budgetMinutes > 0 && minutesLeft > 0) "${minutesLeft}m left" else ""
+            )
+
+            // Next task
             views.setTextViewText(R.id.widget_next, nextAction)
 
+            // Tap opens the app
             val intent = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
