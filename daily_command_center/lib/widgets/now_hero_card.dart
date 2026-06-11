@@ -49,7 +49,7 @@ class NowHeroCard extends StatelessWidget {
             ],
           ]),
           const SizedBox(height: 10),
-          Text(title, style: GoogleFonts.fraunces(fontSize: 21, fontWeight: FontWeight.w600, color: c.cream)),
+          Text(title, style: GoogleFonts.bricolageGrotesque(fontSize: 21, fontWeight: FontWeight.w600, color: c.cream)),
           if (isActive)
             Padding(padding: const EdgeInsets.only(top: 2),
               child: Text('${state.minutesLeft}m left of ${state.budgetMinutes}m budget', style: TextStyle(fontSize: 11.5, color: c.muted))),

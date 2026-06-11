@@ -1,31 +1,56 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+/// Ketchup palette — the condiment rule (spec §0):
+///   char/raise/raise2 = ground · salt/dim = text · line = hairline
+///   tomato = brand · NOW · action (always positive, never a warning)
+///   mustard = the ONLY caution tone (squeezes, moves, drops)
+///   leaf = done · caught up.  There is no alarm-red anywhere.
 @immutable
 class AppPalette extends ThemeExtension<AppPalette> {
-  final Color bg, panel, panel2, cream, muted, dim, line;
-  final Color terra, terraD, moss, mossD, amber, amberD, sky;
+  final Color char, raise, raise2, salt, dim, line;
+  final Color tomato, tomatoDim, mustard, mustardDim, leaf, leafDim;
 
   const AppPalette({
-    required this.bg, required this.panel, required this.panel2,
-    required this.cream, required this.muted, required this.dim, required this.line,
-    required this.terra, required this.terraD, required this.moss, required this.mossD,
-    required this.amber, required this.amberD, required this.sky,
+    required this.char, required this.raise, required this.raise2,
+    required this.salt, required this.dim, required this.line,
+    required this.tomato, required this.tomatoDim,
+    required this.mustard, required this.mustardDim,
+    required this.leaf, required this.leafDim,
   });
 
   static const dark = AppPalette(
-    bg: Color(0xFF17120E), panel: Color(0xFF221A13), panel2: Color(0xFF2C2218),
-    cream: Color(0xFFF4E9DC), muted: Color(0xFFC9B8A6), dim: Color(0xFF8C7B6B), line: Color(0x1AF4E9DC),
-    terra: Color(0xFFC8633A), terraD: Color(0x29C85B34), moss: Color(0xFF8FB36A), mossD: Color(0x298FB36A),
-    amber: Color(0xFFE3A948), amberD: Color(0x24E3A948), sky: Color(0xFF7BA6C9),
+    char: Color(0xFF15110F), raise: Color(0xFF1F1915), raise2: Color(0xFF2A211B),
+    salt: Color(0xFFF0ECE6), dim: Color(0xFF9A8E83), line: Color(0x17F0ECE6),
+    tomato: Color(0xFFD9543E), tomatoDim: Color(0x29D9543E),
+    mustard: Color(0xFFDCA03F), mustardDim: Color(0x24DCA03F),
+    leaf: Color(0xFF7FB46A), leafDim: Color(0x267FB46A),
   );
 
   static const light = AppPalette(
-    bg: Color(0xFFF3EBDE), panel: Color(0xFFFFFAF2), panel2: Color(0xFFF6ECDD),
-    cream: Color(0xFF2A2018), muted: Color(0xFF6B5D4F), dim: Color(0xFF9B8B7A), line: Color(0x1F2A2018),
-    terra: Color(0xFFB24E2A), terraD: Color(0x1AB24E2A), moss: Color(0xFF5D8741), mossD: Color(0x1F5D8741),
-    amber: Color(0xFFB9842A), amberD: Color(0x1FB9842A), sky: Color(0xFF4F7FA3),
+    char: Color(0xFFF4F1EC), raise: Color(0xFFFFFFFF), raise2: Color(0xFFECE7DF),
+    salt: Color(0xFF221A15), dim: Color(0xFF6E635A), line: Color(0x1A221A15),
+    tomato: Color(0xFFB5402C), tomatoDim: Color(0x1AB5402C),
+    mustard: Color(0xFFA1701F), mustardDim: Color(0x1FA1701F),
+    leaf: Color(0xFF4E7F3A), leafDim: Color(0x1C4E7F3A),
   );
+
+  // ---- TEMP migration aliases (old Reminders-2 token names → ketchup) ----
+  // Lets pre-rebrand widgets keep compiling and instantly pick up ketchup
+  // colors during the K1–K7 migration. Removed in K8; the guard test + the
+  // analyzer then flag any straggler. Do NOT use these in new code.
+  Color get bg => char;
+  Color get panel => raise;
+  Color get panel2 => raise2;
+  Color get cream => salt;
+  Color get muted => dim;
+  Color get terra => tomato;
+  Color get terraD => tomatoDim;
+  Color get moss => leaf;
+  Color get mossD => leafDim;
+  Color get amber => mustard;
+  Color get amberD => mustardDim;
+  Color get sky => tomato; // blue is banned (R3) — map the old accent to brand
 
   static ThemeData get darkTheme => _theme(dark, Brightness.dark);
   static ThemeData get lightTheme => _theme(light, Brightness.light);
@@ -33,13 +58,13 @@ class AppPalette extends ThemeExtension<AppPalette> {
   static ThemeData _theme(AppPalette p, Brightness b) => ThemeData(
         useMaterial3: true,
         brightness: b,
-        scaffoldBackgroundColor: p.bg,
-        cardColor: p.panel,
-        colorScheme: ColorScheme.fromSeed(seedColor: p.terra, brightness: b)
-            .copyWith(surface: p.bg, primary: p.terra, outline: p.line),
+        scaffoldBackgroundColor: p.char,
+        cardColor: p.raise,
+        colorScheme: ColorScheme.fromSeed(seedColor: p.tomato, brightness: b)
+            .copyWith(surface: p.char, primary: p.tomato, outline: p.line),
         textTheme: GoogleFonts.splineSansTextTheme(
           (b == Brightness.dark ? ThemeData.dark() : ThemeData.light())
-              .textTheme.apply(bodyColor: p.cream, displayColor: p.cream),
+              .textTheme.apply(bodyColor: p.salt, displayColor: p.salt),
         ),
         extensions: [p],
       );

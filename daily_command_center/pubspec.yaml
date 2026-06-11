@@ -47,10 +47,11 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: false
-  image_path: "assets/icon/reminders2.png"
+  image_path: "assets/icon/ketchup.png"
   min_sdk_android: 21
-  adaptive_icon_background: "#C25B34"
-  adaptive_icon_foreground: "assets/icon/reminders2_fg.png"
+  adaptive_icon_background: "#15110F"
+  adaptive_icon_foreground: "assets/icon/ketchup_fg.png"
+  adaptive_icon_monochrome: "assets/icon/ketchup_mono.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

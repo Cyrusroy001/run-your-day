@@ -157,7 +157,7 @@ class _Welcome extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
         Text('Welcome, $name.',
-            style: GoogleFonts.fraunces(
+            style: GoogleFonts.bricolageGrotesque(
                 fontSize: 32, fontWeight: FontWeight.w900, color: c.cream)),
         const SizedBox(height: 12),
         Text(
@@ -182,7 +182,7 @@ class _WeekStep extends StatelessWidget {
     const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
     return ListView(padding: const EdgeInsets.all(24), children: [
       Text('Your week',
-          style: GoogleFonts.fraunces(
+          style: GoogleFonts.bricolageGrotesque(
               fontSize: 24, fontWeight: FontWeight.w900, color: c.cream)),
       const SizedBox(height: 4),
       Text('Pick the shape of each weekday.', style: TextStyle(color: c.muted)),
@@ -227,14 +227,14 @@ class _TrainingStep extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
           Text('Training days',
-              style: GoogleFonts.fraunces(
+              style: GoogleFonts.bricolageGrotesque(
                   fontSize: 24, fontWeight: FontWeight.w900, color: c.cream)),
           const SizedBox(height: 4),
           Text("How many days a week do you want to train?",
               style: TextStyle(color: c.muted)),
           const SizedBox(height: 24),
           Text('$days days',
-              style: GoogleFonts.fraunces(
+              style: GoogleFonts.bricolageGrotesque(
                   fontSize: 36,
                   fontWeight: FontWeight.w900,
                   color: c.terra)),

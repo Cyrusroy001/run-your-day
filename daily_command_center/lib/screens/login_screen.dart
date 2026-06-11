@@ -62,11 +62,11 @@ class _LoginScreenState extends State<LoginScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 28),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             const SizedBox(height: 64),
-            Text('Reminders 2',
-                style: GoogleFonts.fraunces(fontSize: 40, fontWeight: FontWeight.w900, color: c.cream, height: 1.0)),
+            Text('ketchup.',
+                style: GoogleFonts.bricolageGrotesque(fontSize: 40, fontWeight: FontWeight.w800, color: c.cream, height: 1.0, letterSpacing: -1)),
             const SizedBox(height: 8),
             Text("Who's running the day?",
-                style: GoogleFonts.fraunces(fontSize: 16, fontStyle: FontStyle.italic, color: c.muted)),
+                style: GoogleFonts.bricolageGrotesque(fontSize: 16, fontStyle: FontStyle.italic, color: c.muted)),
             const SizedBox(height: 32),
             Expanded(
               child: _loading

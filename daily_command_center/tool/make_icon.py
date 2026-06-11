@@ -1,60 +1,87 @@
-from PIL import Image, ImageDraw, ImageFont
+"""Ketchup app icon — a drizzle of ketchup, which happens to be a tilde (~).
+
+One thick tomato squiggle, round caps, on flat char (dark roast). No gradient,
+no check, no numeral, no tomato-the-fruit literalism (spec §4). The exact path
+is the SVG from the spec, viewBox 0 0 100 56:
+    M8 38 C 22 6, 40 6, 50 26 S 78 50, 92 18   stroke #D9543E width 15 round-cap
+
+Outputs (assets/icon/):
+  ketchup.png       full square — tomato squiggle on flat char (image_path)
+  ketchup_fg.png    adaptive foreground — tomato squiggle on transparent
+  ketchup_mono.png  Android 13+ themed layer — salt squiggle on transparent
+Then run: flutter pub run flutter_launcher_icons
+"""
+from PIL import Image, ImageDraw
 import os
 
 SIZE = 1024
-TERRA_TOP = (217, 102, 61)   # D9663D
-TERRA_BOT = (184, 81, 44)    # B8512C
-CREAM = (242, 237, 225)      # F2EDE1
-DARK = (14, 19, 17)          # 0E1311
+TOMATO = (217, 84, 62)    # D9543E
+CHAR = (21, 17, 15)       # 15110F  flat dark roast
+SALT = (240, 236, 230)    # F0ECE6  monochrome themed layer
 
 os.makedirs('assets/icon', exist_ok=True)
 
 
-def gradient(size, top, bot):
-    img = Image.new('RGB', (size, size), top)
-    d = ImageDraw.Draw(img)
-    for y in range(size):
-        t = y / (size - 1)
-        d.line([(0, y), (size, y)], fill=(
-            int(top[0] + (bot[0] - top[0]) * t),
-            int(top[1] + (bot[1] - top[1]) * t),
-            int(top[2] + (bot[2] - top[2]) * t),
+SS = 3  # supersample factor for smooth, gap-free anti-aliased edges
+
+
+def _bezier(p0, c1, c2, p3, n=240):
+    out = []
+    for i in range(n + 1):
+        t = i / n
+        m = 1 - t
+        out.append((
+            m**3 * p0[0] + 3 * m**2 * t * c1[0] + 3 * m * t**2 * c2[0] + t**3 * p3[0],
+            m**3 * p0[1] + 3 * m**2 * t * c1[1] + 3 * m * t**2 * c2[1] + t**3 * p3[1],
         ))
-    return img
+    return out
 
 
-def draw_check(d, cx, cy, scale, color, width):
-    p1 = (cx - 0.42 * scale, cy + 0.02 * scale)
-    p2 = (cx - 0.12 * scale, cy + 0.34 * scale)
-    p3 = (cx + 0.46 * scale, cy - 0.34 * scale)
-    d.line([p1, p2, p3], fill=color, width=width, joint='curve')
-    r = width // 2
-    for p in (p1, p2, p3):
-        d.ellipse([p[0] - r, p[1] - r, p[0] + r, p[1] + r], fill=color)
+def _squiggle_path():
+    # Seg 1: cubic C 22,6 40,6 50,26 from M8,38
+    seg1 = _bezier((8, 38), (22, 6), (40, 6), (50, 26))
+    # Seg 2: smooth S 78,50 92,18 — first control is the reflection of (40,6)
+    # about the join (50,26): 2*(50,26)-(40,6) = (60,46)
+    seg2 = _bezier((50, 26), (60, 46), (78, 50), (92, 18))
+    return seg1 + seg2[1:]
 
 
-def serif_font(size):
-    for path in [r'C:\Windows\Fonts\georgiab.ttf', r'C:\Windows\Fonts\timesbd.ttf',
-                 r'C:\Windows\Fonts\georgia.ttf', r'C:\Windows\Fonts\times.ttf']:
-        if os.path.exists(path):
-            return ImageFont.truetype(path, size)
-    return ImageFont.load_default()
+def draw_squiggle(img, color, box_w_frac):
+    """Map the 100x56 viewBox into the canvas, centered, and stroke it.
+
+    Stamps overlapping filled circles along a densely-sampled path on a
+    supersampled canvas, then downsamples — this gives a continuous round-cap
+    round-join stroke with no joint cracks (PIL's thick `line(joint=…)` leaves
+    gaps) and clean anti-aliased edges.
+    """
+    big = SIZE * SS
+    overlay = Image.new('RGBA', (big, big), (0, 0, 0, 0))
+    d = ImageDraw.Draw(overlay)
+    w = big * box_w_frac
+    scale = w / 100.0
+    ox = (big - w) / 2
+    oy = big * 0.5 - (56 * scale) / 2
+    r = (15 * scale) / 2  # stroke 15 in viewBox units → radius
+    for x, y in _squiggle_path():
+        cx, cy = ox + x * scale, oy + y * scale
+        d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=color)
+    overlay = overlay.resize((SIZE, SIZE), Image.LANCZOS)
+    img.paste(overlay, (0, 0), overlay)
 
 
-# Legacy icon: full-bleed gradient + check + serif "2"
-legacy = gradient(SIZE, TERRA_TOP, TERRA_BOT)
-d = ImageDraw.Draw(legacy)
-draw_check(d, SIZE * 0.5, SIZE * 0.46, SIZE * 0.5, CREAM, int(SIZE * 0.09))
-font = serif_font(int(SIZE * 0.22))
-bbox = d.textbbox((0, 0), '2', font=font)
-tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
-d.text((SIZE * 0.72 - tw / 2, SIZE * 0.78 - th / 2), '2', font=font, fill=DARK)
-legacy.save('assets/icon/reminders2.png')
+# Full square icon — tomato squiggle on flat char.
+full = Image.new('RGB', (SIZE, SIZE), CHAR)
+draw_squiggle(full, TOMATO, box_w_frac=0.72)
+full.save('assets/icon/ketchup.png')
 
-# Adaptive foreground: transparent, check centered in safe zone, no "2"
+# Adaptive foreground — squiggle alone, sized to the inner ~60% safe zone.
 fg = Image.new('RGBA', (SIZE, SIZE), (0, 0, 0, 0))
-d2 = ImageDraw.Draw(fg)
-draw_check(d2, SIZE * 0.5, SIZE * 0.5, SIZE * 0.42, CREAM, int(SIZE * 0.085))
-fg.save('assets/icon/reminders2_fg.png')
+draw_squiggle(fg, TOMATO, box_w_frac=0.60)
+fg.save('assets/icon/ketchup_fg.png')
 
-print('icons written to assets/icon/')
+# Monochrome themed layer (Android 13+) — single-tone squiggle on transparent.
+mono = Image.new('RGBA', (SIZE, SIZE), (0, 0, 0, 0))
+draw_squiggle(mono, SALT, box_w_frac=0.60)
+mono.save('assets/icon/ketchup_mono.png')
+
+print('icons written to assets/icon/  (ketchup.png, ketchup_fg.png, ketchup_mono.png)')

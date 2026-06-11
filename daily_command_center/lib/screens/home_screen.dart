@@ -137,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
         Text(DateFormat('EEEE · d MMMM').format(DateTime.now()).toUpperCase(),
             style: TextStyle(fontSize: 10, letterSpacing: 3, color: c.terra, fontWeight: FontWeight.w600)),
         const SizedBox(height: 8),
-        Text('Run the day.', style: GoogleFonts.fraunces(fontSize: 34, fontWeight: FontWeight.w900, color: c.cream, height: .95)),
+        Text('Run the day.', style: GoogleFonts.bricolageGrotesque(fontSize: 34, fontWeight: FontWeight.w900, color: c.cream, height: .95)),
       ])),
       GestureDetector(
         key: const Key('avatar-menu-button'),
@@ -171,7 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
     padding: const EdgeInsets.all(12),
     decoration: BoxDecoration(color: c.panel, border: Border.all(color: c.line), borderRadius: BorderRadius.circular(12)),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(n, style: GoogleFonts.fraunces(fontWeight: FontWeight.w900, fontSize: 16, color: color ?? c.cream)),
+      Text(n, style: GoogleFonts.bricolageGrotesque(fontWeight: FontWeight.w900, fontSize: 16, color: color ?? c.cream)),
       Text(t, style: TextStyle(fontSize: 10.5, color: c.dim)),
     ]),
   );

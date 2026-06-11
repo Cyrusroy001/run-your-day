@@ -16,7 +16,7 @@ Future<void> showAvatarMenu(BuildContext context, {
           CircleAvatar(backgroundColor: c.terra, child: Text(name.isNotEmpty ? name[0] : '?', style: const TextStyle(color: Colors.white))),
           const SizedBox(width: 12),
           Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(name, style: GoogleFonts.fraunces(fontSize: 18, color: c.cream)),
+            Text(name, style: GoogleFonts.bricolageGrotesque(fontSize: 18, color: c.cream)),
             Text(subtitle, style: TextStyle(fontSize: 11, color: c.dim)),
           ]),
         ]),

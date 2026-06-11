@@ -248,7 +248,7 @@ class LiveTimelineViewState extends State<LiveTimelineView> {
     final day = resolve();
     return Scaffold(
       appBar: AppBar(elevation: 0, backgroundColor: c.bg, foregroundColor: c.cream,
-        title: Text(_adjusting ? 'Reshape' : 'Live', style: GoogleFonts.fraunces(fontWeight: FontWeight.w800)),
+        title: Text(_adjusting ? 'Reshape' : 'Live', style: GoogleFonts.bricolageGrotesque(fontWeight: FontWeight.w800)),
         actions: [
           TextButton(onPressed: () => setState(() => _adjusting = !_adjusting),
               child: Text(_adjusting ? 'Done' : 'Adjust today', style: TextStyle(color: c.terra, fontWeight: FontWeight.w600))),

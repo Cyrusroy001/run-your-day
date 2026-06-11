@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ketchup — full visual spec v2 · every screen · rationale included</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Spline+Sans:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ======================================================================
+   KETCHUP — VISUAL SPEC v2 (supersedes the "ish" spec of same date)
+   The day planner that catches you up.
+   Sections: 0 Brand · 1 Rules + ban list · 2 Copy deck · 3 Screens ·
+             4 Icon + widget · 5 Implementation map for Claude Code
+   Brand string lives only in .wordmark elements + icon.
+   ====================================================================== */
+:root{
+  /* ---- DARK tokens (default) ---- */
+  --char:#15110F;            /* bg — dark roast */
+  --raise:#1F1915;           /* card */
+  --raise2:#2A211B;          /* chip / hover */
+  --salt:#F0ECE6;            /* primary text */
+  --dim:#9A8E83;             /* secondary text */
+  --line:rgba(240,236,230,.09);
+  --tomato:#D9543E;          /* brand · now · action  (rich, never used for warnings) */
+  --tomato-dim:rgba(217,84,62,.16);
+  --mustard:#DCA03F;         /* squeeze — the ONLY caution tone */
+  --mustard-dim:rgba(220,160,63,.14);
+  --leaf:#7FB46A;            /* done · caught up */
+  --leaf-dim:rgba(127,180,106,.15);
+  /* ---- LIGHT tokens ---- */
+  --l-char:#F4F1EC; --l-raise:#FFFFFF; --l-raise2:#ECE7DF;
+  --l-salt:#221A15; --l-dim:#6E635A; --l-line:rgba(34,26,21,.10);
+  --l-tomato:#B5402C; --l-tomato-dim:rgba(181,64,44,.10);
+  --l-mustard:#A1701F; --l-mustard-dim:rgba(161,112,31,.12);
+  --l-leaf:#4E7F3A; --l-leaf-dim:rgba(78,127,58,.11);
+  /* ---- type ---- */
+  --disp:"Bricolage Grotesque",sans-serif;
+  --body:"Spline Sans",sans-serif;
+  --mono:"Spline Sans Mono",monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0E0B09;color:var(--salt);font-family:var(--body);line-height:1.5;-webkit-font-smoothing:antialiased}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.wrap{max-width:1280px;margin:0 auto;padding:56px 24px 110px}
+
+/* ===== section scaffolding ===== */
+.sec{margin-top:84px}
+.sec-head{display:flex;align-items:baseline;gap:16px;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:30px}
+.sec-head .n{font-family:var(--mono);font-size:13px;color:var(--tomato)}
+.sec-head h2{font-family:var(--disp);font-weight:800;font-size:30px;letter-spacing:-.02em}
+.sec-head .sub{font-size:14px;color:var(--dim);margin-left:auto;max-width:430px;text-align:right}
+@media(max-width:800px){.sec-head{flex-wrap:wrap}.sec-head .sub{text-align:left}}
+
+/* ===== brand sheet ===== */
+.brand{display:flex;flex-wrap:wrap;align-items:flex-end;gap:28px;border-bottom:1px solid var(--line);padding-bottom:36px}
+.wordmark{font-family:var(--disp);font-weight:800;font-size:84px;line-height:.85;letter-spacing:-.035em}
+.wordmark .dot{color:var(--tomato)}
+.brand-meta{max-width:470px}
+.brand-meta h1{font-family:var(--disp);font-weight:600;font-size:22px;letter-spacing:-.01em;margin-bottom:8px}
+.brand-meta p{color:var(--dim);font-size:14.5px}
+.brand-meta p em{font-style:normal;color:var(--salt)}
+.tokens{display:flex;gap:10px;margin-left:auto;flex-wrap:wrap}
+.tok{width:86px}
+.tok .sw{height:46px;border-radius:10px;border:1px solid var(--line);margin-bottom:7px}
+.tok .nm{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.tok .hx{font-family:var(--mono);font-size:11px;color:var(--salt)}
+.typegrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;margin-top:30px}
+.typecard{border:1px solid var(--line);border-radius:16px;padding:18px 20px;background:rgba(31,25,21,.55)}
+.typecard .role{font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;margin-bottom:8px}
+.typecard .sample{font-size:26px;letter-spacing:-.02em}
+.typecard .use{font-size:12.5px;color:var(--dim);margin-top:8px}
+
+/* ===== rules ===== */
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:16px}
+.rule{border:1px solid var(--line);border-radius:18px;padding:20px 22px;background:rgba(31,25,21,.55)}
+.rule h3{font-family:var(--disp);font-weight:600;font-size:16.5px;margin-bottom:7px;display:flex;gap:10px;align-items:baseline}
+.rule h3 .k{font-family:var(--mono);font-size:11px;color:var(--tomato)}
+.rule p{font-size:13.5px;color:var(--dim)}
+.rule p em{font-style:normal;color:var(--salt)}
+.rule p b{color:var(--mustard);font-weight:500}
+.rule.ban{border-color:rgba(220,160,63,.35)}
+.rule.ban h3 .k{color:var(--mustard)}
+.rule.ban li{font-size:13px;color:var(--dim);margin:5px 0 0 18px}
+.rule.ban li b{color:var(--salt);font-weight:500}
+.rule.ban li i{font-style:normal;font-family:var(--mono);font-size:11.5px;color:var(--mustard)}
+
+/* ===== copy deck ===== */
+.copy{border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.copy .row{display:grid;grid-template-columns:210px 1fr;gap:18px;padding:15px 22px;border-bottom:1px solid var(--line);align-items:baseline}
+.copy .row:last-child{border-bottom:none}
+.copy .when{font-family:var(--mono);font-size:11.5px;color:var(--dim)}
+.copy .what{font-size:14.5px}
+.copy .what em{font-style:normal;color:var(--leaf)}
+.copy .what i{font-style:normal;color:var(--mustard)}
+.copy .what u{text-decoration:none;color:var(--tomato)}
+.copy .what s{text-decoration:none;color:var(--dim);font-size:12.5px;display:block;margin-top:2px}
+@media(max-width:700px){.copy .row{grid-template-columns:1fr}}
+
+/* ===== screens grid ===== */
+.screens{display:grid;grid-template-columns:repeat(auto-fit,minmax(390px,1fr));gap:46px 36px;justify-items:center}
+.unit{width:390px;max-width:100%}
+.frame-label{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin:0 0 12px 6px}
+.frame-label b{color:var(--tomato);font-weight:500}
+.why{margin-top:16px;font-size:13px;color:var(--dim);padding:0 6px}
+.why em{font-style:normal;color:var(--salt)}
+.why b{color:var(--mustard);font-weight:500}
+
+/* ===== phone ===== */
+.phone{width:390px;max-width:100%;border-radius:42px;overflow:hidden;border:1px solid rgba(240,236,230,.13);
+  box-shadow:0 36px 80px rgba(0,0,0,.6), inset 0 0 0 8px #060403;background:var(--char);position:relative}
+.screen{padding:18px 8px 26px;min-height:780px;display:flex;flex-direction:column}
+.inner{padding:0 18px;display:flex;flex-direction:column;flex:1}
+.status{display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;color:var(--dim);padding:4px 22px 14px}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:6px 2px 18px}
+.date{font-family:var(--disp);font-weight:600;font-size:17px;letter-spacing:-.01em}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--tomato);display:grid;place-items:center;font-family:var(--disp);font-weight:800;font-size:14px;color:#FFF6F2;flex:none}
+
+/* past pill */
+.past{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;border:1px dashed var(--line);margin-bottom:14px}
+.past .tick{color:var(--leaf);font-size:13px}
+.past .txt{font-size:13px;color:var(--dim)} .past .txt b{color:var(--salt);font-weight:500}
+
+/* hero */
+.hero{background:var(--raise);border:1px solid var(--line);border-radius:22px;padding:20px 20px 18px}
+.hero .eyebrow{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.now-pill{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--tomato)}
+.now-pill .led{width:7px;height:7px;border-radius:50%;background:var(--tomato);box-shadow:0 0 10px var(--tomato);animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.45}}
+.hero .range{font-family:var(--mono);font-size:12px;color:var(--dim)}
+.hero h2{font-family:var(--disp);font-weight:800;font-size:34px;letter-spacing:-.025em;line-height:1.02;margin-bottom:6px}
+.squeeze-chip{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11.5px;color:var(--mustard);background:var(--mustard-dim);border-radius:99px;padding:4px 10px;margin-bottom:14px}
+.ok-chip{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11.5px;color:var(--leaf);background:var(--leaf-dim);border-radius:99px;padding:4px 10px;margin-bottom:14px}
+.progress{height:3px;border-radius:3px;background:rgba(240,236,230,.10);overflow:hidden;margin-bottom:14px}
+.progress i{display:block;height:100%;width:62%;background:var(--tomato);border-radius:3px}
+.hero .row{display:flex;justify-content:space-between;align-items:center}
+.left-label{font-family:var(--mono);font-size:12.5px;color:var(--dim)} .left-label b{color:var(--salt);font-weight:500}
+.done-btn{font-family:var(--body);font-weight:600;font-size:13.5px;color:#FFF6F2;background:var(--tomato);border:none;border-radius:99px;padding:9px 18px;cursor:pointer}
+
+/* whisper */
+.whisper{display:flex;gap:10px;align-items:flex-start;padding:14px 6px 4px;font-size:13.5px;color:var(--dim)}
+.whisper .mark{color:var(--mustard);font-family:var(--mono);font-size:14px;line-height:1.5}
+.whisper.calm .mark{color:var(--leaf)}
+.whisper em{font-style:normal;color:var(--salt)}
+
+/* teach caption */
+.teach{display:flex;gap:10px;align-items:flex-start;background:var(--tomato-dim);border:1px solid rgba(217,84,62,.3);border-radius:14px;padding:11px 14px;margin:10px 0 2px;font-size:12.5px;color:var(--salt)}
+.teach .x{margin-left:auto;color:var(--dim);font-family:var(--mono);flex:none;cursor:pointer}
+.teach .tl{color:var(--tomato);font-family:var(--mono);flex:none}
+
+/* rail */
+.rail{margin-top:14px;flex:1}
+.rail-head{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);padding:0 4px 10px}
+.stop{display:grid;grid-template-columns:52px 14px 1fr;gap:0 12px}
+.stop .t{font-family:var(--mono);font-size:12px;color:var(--dim);padding-top:13px;text-align:right}
+.spine{position:relative}
+.spine::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:2px;transform:translateX(-50%);background:var(--line)}
+.spine .node{position:absolute;left:50%;top:16px;width:8px;height:8px;border-radius:50%;transform:translateX(-50%);background:var(--raise2);border:2px solid var(--dim)}
+.stop.squeeze .spine::before{background:repeating-linear-gradient(var(--mustard) 0 3px,transparent 3px 6px)}
+.stop.squeeze .spine .node{border-color:var(--mustard)}
+.stop.anchor .spine::before{width:4px;background:var(--salt);opacity:.85}
+.stop.anchor .spine .node{border-color:var(--salt);background:var(--salt)}
+.stop.skip .card{opacity:.45}
+.stop.skip .nm{text-decoration:line-through;text-decoration-color:var(--dim)}
+.card{background:var(--raise);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:5px 0;position:relative}
+.card .nm{font-family:var(--disp);font-weight:600;font-size:15.5px;letter-spacing:-.01em}
+.card .sub{font-family:var(--mono);font-size:11.5px;color:var(--dim);margin-top:2px}
+.stop.short .card{padding:9px 14px}
+.stop.tall .card{padding:20px 14px}
+.stop.squeeze .card{border-color:rgba(220,160,63,.35)} .stop.squeeze .sub{color:var(--mustard)}
+.stop.anchor .card{background:transparent;border:1px solid var(--salt)}
+.stop.anchor .nm{display:flex;align-items:center;gap:8px} .lock{font-size:12px;color:var(--dim)}
+
+/* adjust-mode — two-row card, NO absolute positioning (fixes overlap bug) */
+.adjbar{display:flex;align-items:center;justify-content:space-between;padding:6px 2px 18px}
+.adjbar .ttl{font-family:var(--disp);font-weight:600;font-size:17px}
+.adjbar .done{font-family:var(--body);font-weight:600;font-size:13.5px;color:#FFF6F2;background:var(--tomato);border-radius:99px;padding:8px 18px;border:none}
+.adj-top{display:flex;align-items:center;gap:10px}
+.adj-top .nm{flex:1}
+.adj-top .handle{color:var(--dim);font-size:16px;letter-spacing:1px;padding:4px 2px;flex:none}
+.adj-bottom{display:flex;align-items:center;gap:8px;margin-top:10px}
+.prio{display:inline-flex;border:1px solid var(--line);border-radius:99px;overflow:hidden}
+.prio span{font-family:var(--mono);font-size:10.5px;padding:6px 11px;color:var(--dim)}
+.prio span.on{background:var(--leaf-dim);color:var(--leaf)}
+.prio span.on.warn{background:var(--mustard-dim);color:var(--mustard)}
+.skipbtn{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--dim);border:1px solid var(--line);border-radius:99px;padding:6px 12px;flex:none}
+.undo{margin-top:auto;display:flex;align-items:center;justify-content:space-between;background:var(--raise2);border:1px solid var(--line);border-radius:14px;padding:12px 16px;font-size:13px}
+.undo b{color:var(--tomato);font-weight:600;cursor:pointer;font-family:var(--body)}
+
+/* adjust entry */
+.adjust{margin-top:18px;display:flex;justify-content:center}
+.adjust button{font-family:var(--mono);font-size:12px;letter-spacing:.1em;color:var(--dim);background:transparent;border:1px solid var(--line);border-radius:99px;padding:10px 22px}
+
+/* week planner */
+.dayrow{display:flex;align-items:center;gap:14px;background:var(--raise);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:10px}
+.dayrow .d{font-family:var(--mono);font-size:12px;color:var(--dim);width:34px}
+.dayrow .d b{display:block;font-family:var(--disp);font-size:17px;color:var(--salt);font-weight:600}
+.dayrow .tmpl{flex:1}
+.dayrow .tmpl .tn{font-family:var(--disp);font-weight:600;font-size:15px}
+.dayrow .tmpl .tc{font-family:var(--mono);font-size:11.5px;color:var(--dim)}
+.dayrow .chev{color:var(--dim)}
+.dayrow.today{border-color:rgba(217,84,62,.4)}
+.dayrow.open{flex-wrap:wrap}
+.chips{display:flex;flex-wrap:wrap;gap:6px;width:100%;padding-top:12px;margin-top:12px;border-top:1px solid var(--line)}
+.chip{font-family:var(--mono);font-size:11px;color:var(--salt);background:var(--raise2);border:1px solid var(--line);border-radius:99px;padding:5px 11px}
+.chip.a{border-color:var(--salt)} .chip.add{color:var(--tomato);border-style:dashed}
+.caption{font-size:12.5px;color:var(--leaf);padding:4px 6px 0}
+
+/* avatar sheet */
+.dimmed{position:absolute;inset:0;background:rgba(6,4,3,.62);border-radius:42px}
+.sheet{position:absolute;left:8px;right:8px;bottom:8px;background:var(--raise);border:1px solid var(--line);border-radius:30px 30px 36px 36px;padding:14px 18px 22px}
+.grab{width:42px;height:4px;border-radius:4px;background:var(--line);margin:0 auto 16px}
+.who{display:flex;align-items:center;gap:12px;padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.who .nm{font-family:var(--disp);font-weight:600;font-size:16px}
+.who .sb{font-family:var(--mono);font-size:11.5px;color:var(--dim)}
+.mi{display:flex;align-items:center;gap:14px;padding:13px 4px;font-size:14.5px;border-bottom:1px solid var(--line)}
+.mi:last-of-type{border-bottom:none}
+.mi .ic{font-family:var(--mono);color:var(--tomato);width:18px;text-align:center}
+.mi .arrow{margin-left:auto;color:var(--dim)}
+.mi .note{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--dim)}
+
+/* weekly catch-up */
+.big-disp{font-family:var(--disp);font-weight:800;font-size:30px;letter-spacing:-.025em;line-height:1.05;margin-bottom:8px}
+.review-stat{display:flex;align-items:baseline;gap:10px;margin:18px 0 6px}
+.review-stat .v{font-family:var(--disp);font-weight:800;font-size:52px;letter-spacing:-.03em;color:var(--leaf)}
+.review-stat .l{font-size:13.5px;color:var(--dim);max-width:170px}
+.dots{display:flex;gap:10px;align-items:flex-end;height:74px;margin:18px 0 6px;padding:0 4px}
+.dots .dcol{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px}
+.dots .bar{width:100%;border-radius:8px;background:var(--leaf-dim);position:relative;overflow:hidden}
+.dots .bar i{position:absolute;left:0;right:0;bottom:0;background:var(--leaf);border-radius:8px}
+.dots .dl{font-family:var(--mono);font-size:10px;color:var(--dim)}
+.insight{background:var(--raise);border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:14px;font-size:13.5px;color:var(--dim)}
+.insight em{font-style:normal;color:var(--salt)}
+.review-actions{display:flex;gap:10px;margin-top:14px}
+.review-actions button{flex:1;font-family:var(--body);font-weight:600;font-size:13px;border-radius:99px;padding:11px 0;border:1px solid var(--line);background:transparent;color:var(--salt)}
+.review-actions button.primary{background:var(--tomato);border-color:var(--tomato);color:#FFF6F2}
+
+/* settings */
+.set-group{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin:18px 0 8px;padding:0 4px}
+.set-card{background:var(--raise);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.set-row{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);font-size:14.5px}
+.set-row:last-child{border-bottom:none}
+.seg{margin-left:auto;display:inline-flex;border:1px solid var(--line);border-radius:99px;overflow:hidden}
+.seg span{font-family:var(--mono);font-size:11px;padding:6px 13px;color:var(--dim)}
+.seg span.on{background:var(--tomato-dim);color:var(--tomato)}
+.switch{margin-left:auto;width:42px;height:24px;border-radius:99px;background:var(--leaf);position:relative;flex:none}
+.switch::after{content:"";position:absolute;right:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#15110F}
+.switch.off{background:var(--raise2);border:1px solid var(--line)}
+.switch.off::after{left:3px;right:auto;background:var(--dim)}
+.set-sub{font-size:12px;color:var(--dim);margin-top:2px}
+.scale{margin-left:auto;display:flex;align-items:center;gap:10px;font-family:var(--mono);color:var(--dim);font-size:11px}
+.scale .track{width:90px;height:3px;background:var(--raise2);border-radius:3px;position:relative}
+.scale .track i{position:absolute;left:35%;top:50%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;background:var(--tomato)}
+
+/* onboarding */
+.onb-h{font-family:var(--disp);font-weight:800;font-size:36px;letter-spacing:-.025em;line-height:1.02;margin:24px 0 8px}
+.onb-p{font-size:14.5px;color:var(--dim);margin-bottom:22px}
+.onb-p em{font-style:normal;color:var(--salt)}
+.draft{display:flex;align-items:center;gap:12px;background:var(--raise);border:1px solid var(--line);border-radius:16px;padding:13px 14px;margin-bottom:10px}
+.draft .ti{font-family:var(--mono);font-size:13px;color:var(--tomato);width:58px}
+.draft .nm{font-family:var(--disp);font-weight:600;font-size:15px;flex:1}
+.draft .pin{font-family:var(--mono);font-size:10.5px;color:var(--dim);border:1px solid var(--line);border-radius:99px;padding:3px 9px}
+.draft .pin.on{color:var(--salt);border-color:var(--salt)}
+.draft.ghost{border-style:dashed;color:var(--tomato);justify-content:center;font-size:13.5px;background:transparent}
+.cta{margin-top:auto;font-family:var(--body);font-weight:600;font-size:15px;color:#FFF6F2;background:var(--tomato);border:none;border-radius:99px;padding:15px;width:100%}
+.cta-sub{text-align:center;font-size:12px;color:var(--dim);margin-top:10px}
+
+/* light theme remap */
+.phone.light{background:var(--l-char)}
+.light{color:var(--l-salt)}
+.light .status,.light .rail-head,.light .stop .t,.light .left-label,.light .hero .range{color:var(--l-dim)}
+.light .date{color:var(--l-salt)}
+.light .hero{background:var(--l-raise);border-color:var(--l-line);box-shadow:0 10px 30px rgba(34,26,21,.07)}
+.light .now-pill{color:var(--l-tomato)} .light .now-pill .led{background:var(--l-tomato);box-shadow:0 0 10px var(--l-tomato)}
+.light .ok-chip{color:var(--l-leaf);background:var(--l-leaf-dim)}
+.light .progress{background:rgba(34,26,21,.10)} .light .progress i{background:var(--l-tomato)}
+.light .done-btn{background:var(--l-tomato)}
+.light .left-label b{color:var(--l-salt)}
+.light .whisper{color:var(--l-dim)} .light .whisper em{color:var(--l-salt)} .light .whisper.calm .mark{color:var(--l-leaf)}
+.light .spine::before{background:var(--l-line)} .light .spine .node{background:var(--l-raise2);border-color:var(--l-dim)}
+.light .stop.anchor .spine::before{background:var(--l-salt)} .light .stop.anchor .spine .node{background:var(--l-salt);border-color:var(--l-salt)}
+.light .card{background:var(--l-raise);border-color:var(--l-line)} .light .card .sub{color:var(--l-dim)}
+.light .stop.anchor .card{background:transparent;border-color:var(--l-salt)} .light .lock{color:var(--l-dim)}
+.light .adjust button{color:var(--l-dim);border-color:var(--l-line)}
+
+/* icon + widget */
+.assets{display:flex;flex-wrap:wrap;gap:36px;align-items:flex-start}
+.icon-tile{width:128px;height:128px;border-radius:30px;background:var(--char);border:1px solid var(--line);display:grid;place-items:center;box-shadow:0 18px 40px rgba(0,0,0,.5)}
+.icon-tile svg{width:78%;height:auto}
+.icon-tile.sm{width:64px;height:64px;border-radius:16px}
+.icon-tile.mono{background:#F0ECE6}
+.asset-note{max-width:300px;font-size:13px;color:var(--dim)} .asset-note em{font-style:normal;color:var(--salt)}
+.widget{width:330px;border-radius:26px;background:var(--char);border:1px solid rgba(240,236,230,.13);padding:16px 18px;box-shadow:0 18px 40px rgba(0,0,0,.5)}
+.widget .w-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.widget .w-now{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--tomato)}
+.widget .w-tilde{font-family:var(--disp);font-weight:800;color:var(--tomato);font-size:16px}
+.widget h4{font-family:var(--disp);font-weight:800;font-size:21px;letter-spacing:-.02em}
+.widget .w-left{font-family:var(--mono);font-size:11.5px;color:var(--dim);margin:3px 0 10px}
+.widget .w-left i{font-style:normal;color:var(--mustard)}
+.widget .w-bar{height:3px;background:rgba(240,236,230,.1);border-radius:3px;margin-bottom:10px}
+.widget .w-bar i{display:block;height:100%;width:62%;background:var(--tomato);border-radius:3px}
+.widget .w-next{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.widget .w-next b{color:var(--salt);font-weight:500}
+
+/* implementation map */
+.map{border:1px solid var(--line);border-radius:18px;overflow:hidden;font-size:13.5px}
+.map .mrow{display:grid;grid-template-columns:240px 290px 1fr;gap:16px;padding:13px 20px;border-bottom:1px solid var(--line)}
+.map .mrow:last-child{border-bottom:none}
+.map .mrow.head{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);background:rgba(31,25,21,.55)}
+.map .f{font-family:var(--mono);font-size:12px;color:var(--tomato)}
+.map .f s{text-decoration:line-through;color:var(--dim)}
+.map .d{color:var(--dim)} .map .d em{font-style:normal;color:var(--salt)}
+@media(max-width:860px){.map .mrow{grid-template-columns:1fr}}
+footer{margin-top:84px;border-top:1px solid var(--line);padding-top:20px;font-family:var(--mono);font-size:12px;color:var(--dim)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ================= 0 · BRAND ================= -->
+<div class="brand">
+  <div>
+    <div class="wordmark">ketchup<span class="dot">.</span></div>
+    <div style="font-family:var(--mono);font-size:12px;color:var(--dim);margin-top:10px">always lowercase · tomato full stop</div>
+  </div>
+  <div class="brand-meta">
+    <h1>The day planner that catches you up.</h1>
+    <p>When you fall behind, ketchup quietly <em>squeezes</em> the flexible parts of your day and protects the locked ones. No red alarms — tomato is the brand, mustard is the only caution, leaf means done. One sentence tells you what changed.</p>
+    <p style="margin-top:10px;font-size:12.5px">The tilde <b style="color:var(--tomato)">~</b> survives the rebrand: it's the "approximately" mark on every <em>-ish time</em> ("8-ish"), the squeeze glyph — and, drawn thick, it's literally <em>a drizzle of ketchup</em>. That squiggle is the app icon.</p>
+  </div>
+  <div class="tokens">
+    <div class="tok"><div class="sw" style="background:#15110F"></div><div class="nm">char (bg)</div><div class="hx">#15110F</div></div>
+    <div class="tok"><div class="sw" style="background:#1F1915"></div><div class="nm">raise</div><div class="hx">#1F1915</div></div>
+    <div class="tok"><div class="sw" style="background:#F0ECE6"></div><div class="nm">salt (text)</div><div class="hx">#F0ECE6</div></div>
+    <div class="tok"><div class="sw" style="background:#9A8E83"></div><div class="nm">dim</div><div class="hx">#9A8E83</div></div>
+    <div class="tok"><div class="sw" style="background:#D9543E"></div><div class="nm">tomato ★</div><div class="hx">#D9543E</div></div>
+    <div class="tok"><div class="sw" style="background:#DCA03F"></div><div class="nm">mustard</div><div class="hx">#DCA03F</div></div>
+    <div class="tok"><div class="sw" style="background:#7FB46A"></div><div class="nm">leaf</div><div class="hx">#7FB46A</div></div>
+  </div>
+</div>
+<div class="typegrid">
+  <div class="typecard"><div class="role">Display · Bricolage Grotesque 600–800</div><div class="sample" style="font-family:var(--disp);font-weight:800">Shower + brunch</div><div class="use">Block names, big numbers, screen titles, the wordmark. Tight tracking (−0.02em). No serifs anywhere in the app.</div></div>
+  <div class="typecard"><div class="role">Body · Spline Sans 400–600</div><div class="sample" style="font-size:16px">Gym ran long, so I squeezed brunch. Work is untouched.</div><div class="use">Whispers, settings, buttons. Already shipped — keep.</div></div>
+  <div class="typecard"><div class="role">Data · Spline Sans Mono 400–500</div><div class="sample" style="font-family:var(--mono);font-size:18px">10:25 → 11:00 · −15 min</div><div class="use">Every time, duration and delta. Mono is the engine's voice; prose is ketchup's voice. Never mix in one string.</div></div>
+</div>
+<p style="margin-top:22px;font-size:13.5px;color:var(--dim);max-width:900px"><b style="color:var(--salt)">Color semantics (the condiment rule):</b> <b style="color:var(--tomato)">tomato</b> = brand, NOW, primary actions — always a positive color, <em style="font-style:normal;color:var(--salt)">never a warning</em>. <b style="color:var(--mustard)">mustard</b> = the only caution tone (squeezes, moves, drops). <b style="color:var(--leaf)">leaf</b> = done / all caught up. There is no alarm-red anywhere; the no-red rule survives because tomato never carries bad news. Light theme: char <span style="font-family:var(--mono);color:var(--salt)">#F4F1EC</span> · raise <span style="font-family:var(--mono);color:var(--salt)">#FFFFFF</span> · salt <span style="font-family:var(--mono);color:var(--salt)">#221A15</span> · dim <span style="font-family:var(--mono);color:var(--salt)">#6E635A</span> · tomato <span style="font-family:var(--mono);color:var(--salt)">#B5402C</span> · mustard <span style="font-family:var(--mono);color:var(--salt)">#A1701F</span> · leaf <span style="font-family:var(--mono);color:var(--salt)">#4E7F3A</span>. Verify tomato-on-white button text ≥ 4.5:1; darken to #A63A27 if it fails.</p>
+
+<!-- ================= 1 · RULES + BAN LIST ================= -->
+<div class="sec">
+  <div class="sec-head"><span class="n">01</span><h2>Design rules — the why</h2><span class="sub">Every screen obeys these. The ban list comes straight from the v1 build's screenshots — each item shipped once and must never ship again.</span></div>
+  <div class="rules">
+    <div class="rule"><h3><span class="k">R1</span>One surface for today</h3><p>Home and Live are <em>the same screen</em>. The hero is the timeline's first stop, enlarged. The v1 build rendered the drift summary twice (Home card + Live banner) — merging the surfaces makes duplication impossible.</p></div>
+    <div class="rule"><h3><span class="k">R2</span>One sentence on screen</h3><p>The whisper names the <em>latest</em> squeeze and the protected anchor — never the full list. The v1 four-line paragraph enumerating five trimmed blocks becomes: <em>"Gym ran long, so I squeezed brunch. Work is untouched."</em> The rail shows the rest visually.</p></div>
+    <div class="rule"><h3><span class="k">R3</span>Condiment colors only</h3><p>char/raise (ground), salt/dim (text), <em>tomato</em> (brand·now·action), <em>leaf</em> (done), <b>mustard</b> (the only caution). v1 had six accents on one screen — green, orange, amber, terracotta, blue, yellow. All gone.</p></div>
+    <div class="rule"><h3><span class="k">R4</span>The squeeze is the signature</h3><p>Rail segment length ∝ duration; a squeezed block compresses with a dashed mustard spine + one mono delta. The replan must be <em>legible with zero reading</em> — this animation is the demo video and the differentiator.</p></div>
+    <div class="rule"><h3><span class="k">R5</span>Teach once, inline, then never</h3><p>No glossary screen, no teaching framework. First appearance of a concept → one dismissible caption ≤ 90 chars, stored as a seen-flag. "How ketchup works" (S9) is the whole manual.</p></div>
+    <div class="rule"><h3><span class="k">R6</span>Decoration is deleted</h3><p>Header = date + avatar. No slogan, no eyebrow, no gradients, no rings, no per-row ⓘ buttons. Personality lives in copy and the squeeze motion, not ornament.</p></div>
+    <div class="rule ban"><h3><span class="k">BAN</span>Never again (from the v1 screenshots)</h3>
+      <ul>
+        <li><b>⚠ warning triangles</b> — v1 stacked five in a column. A no-guilt app may not use hazard icons. <i>squeeze = dashed mustard spine + delta, nothing else</i></li>
+        <li><b>Stat tiles</b> — "0/9 done today" is a guilt counter at 10:40 AM; "Reflowed · engine adjusted" is the system admiring itself. Deleted, not replaced.</li>
+        <li><b>System jargon on screen</b> — "Reflowed", "engine", "budget", "fixed", "ANCHOR" never appear. <i>"60 m left of 60m budget" → "60 min left"</i></li>
+        <li><b>Durations inside labels</b> — "BIG Project Block (2 hrs)" → label "Big project", duration as data. Fix at the Life-JSON level.</li>
+        <li><b>Redundant numbers</b> — never state the same value twice ("−60m · 60m budget" + "60 m left of 60m budget" on one card).</li>
+        <li><b>Duplicate drift summaries</b> — the whisper exists exactly once, on the one Today surface.</li>
+        <li><b>Toasts</b> — confirmations are inline leaf captions.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 2 · COPY DECK ================= -->
+<div class="sec">
+  <div class="sec-head"><span class="n">02</span><h2>Copy deck — the ketchup voice</h2><span class="sub">"Squeeze" is the trim verb. "Caught up" is the state of grace. "-ish" stays for approximate times. Templates interpolate JSON labels only — the guard test still applies.</span></div>
+  <div class="copy">
+    <div class="row"><div class="when">whisper · on track</div><div class="what"><em>~</em> All caught up. The plan's holding.</div></div>
+    <div class="row"><div class="when">whisper · squeezed</div><div class="what"><i>~</i> {prev} ran long, so I squeezed {squeezed}. {anchor} is untouched.<s>Names only the latest squeeze + the protected anchor. The rail shows the rest. Ketchup takes responsibility ("I squeezed"); the user gets the win.</s></div></div>
+    <div class="row"><div class="when">whisper · behind, catching up</div><div class="what"><i>~</i> Running ~20 behind. I'll catch you up by {time}.</div></div>
+    <div class="row"><div class="when">whisper · dropped</div><div class="what"><i>~</i> {label} skipped today — it drifted past {time}. Protecting your evening.</div></div>
+    <div class="row"><div class="when">teach · first squeeze</div><div class="what">ketchup squeezes flexible blocks first so locked ones stay put. Change what flexes in Adjust.</div></div>
+    <div class="row"><div class="when">teach · first anchor</div><div class="what">◉ means locked — ketchup plans around it, never through it.</div></div>
+    <div class="row"><div class="when">adjust · undo</div><div class="what">{label} skipped today · <u>Undo</u><s>Persistent for the session — a button, not a vanishing toast.</s></div></div>
+    <div class="row"><div class="when">catch-up · headline</div><div class="what">Your week, caught up.</div></div>
+    <div class="row"><div class="when">catch-up · insight</div><div class="what">{label} got squeezed {n} times. Want {m} more minutes for it next week?<s>One optional action, never a grade.</s></div></div>
+    <div class="row"><div class="when">notification (the only one)</div><div class="what">{label} in 10 — you're all caught up. <s>or: "{label} in 10 — running ~15 behind. I'll catch you up." One quiet heads-up per block, opt-in.</s></div></div>
+    <div class="row"><div class="when">sunday nudge</div><div class="what">Your Sunday catch-up is ready.</div></div>
+    <div class="row"><div class="when">empty evening</div><div class="what">Nothing left today. Go be a person.</div></div>
+    <div class="row"><div class="when">ish times (kept!)</div><div class="what">9-ish · 2 pm · 8-ish<s>minutes == 0 on a flexible block → "{h}-ish"; locked or exact → exact time. The ~ prefix marks every estimated time the engine moved.</s></div></div>
+  </div>
+</div>
+
+<!-- ================= 3 · SCREENS ================= -->
+<div class="sec">
+  <div class="sec-head"><span class="n">03</span><h2>Screens</h2><span class="sub">Nine surfaces. S1–S2 are states of one widget tree; S3 is a mode of it; S4 is a sheet over it. Sample content is one user's day — production reads all labels from Life-JSON.</span></div>
+  <div class="screens">
+
+    <!-- S1 dark drifting -->
+    <div class="unit">
+      <p class="frame-label"><b>S1</b> · Today — squeezed (dark, default)</p>
+      <div class="phone"><div class="screen">
+        <div class="status"><span>10:42</span><span>▲ ▒ ▮</span></div>
+        <div class="inner">
+          <div class="topbar"><div class="date">Wednesday 10 June</div><div class="avatar">C</div></div>
+          <div class="past"><span class="tick">✓✓</span><span class="txt"><b>Morning done</b> — Wake · water · sunlight, Gym (+25)</span></div>
+          <div class="hero">
+            <div class="eyebrow"><span class="now-pill"><span class="led"></span>NOW</span><span class="range">10:25 → 11:00</span></div>
+            <h2>Shower + brunch</h2>
+            <span class="squeeze-chip">~ squeezed −15 min</span>
+            <div class="progress"><i></i></div>
+            <div class="row"><span class="left-label"><b>18 min</b> left</span><button class="done-btn">Done</button></div>
+          </div>
+          <div class="whisper"><span class="mark">~</span><span>Gym ran long, so I squeezed brunch. <em>Work is untouched.</em></span></div>
+          <div class="teach"><span class="tl">~</span><span>ketchup squeezes flexible blocks first so locked ones stay put. Change what flexes in Adjust.</span><span class="x">✕</span></div>
+          <div class="rail">
+            <div class="rail-head">Rest of today</div>
+            <div class="stop"><div class="t">11:03</div><div class="spine"><span class="node"></span></div><div class="card"><div class="nm">Big project</div><div class="sub">2 h deep work</div></div></div>
+            <div class="stop squeeze short"><div class="t">~1:19</div><div class="spine"><span class="node"></span></div><div class="card"><div class="nm">DSA practice</div><div class="sub">−20 min · 25 min</div></div></div>
+            <div class="stop short"><div class="t">1:50</div><div class="spine"><span class="node"></span></div><div class="card"><div class="nm">Walk to office</div><div class="sub">10 min</div></div></div>
+            <div class="stop anchor tall"><div class="t">2:00</div><div class="spine"><span class="node"></span></div><div class="card"><div class="nm"><span class="lock">◉</span> Work</div><div class="sub">held · 2:00 → 8:00</div></div></div>
+            <div class="stop short"><div class="t">8:45</div><div class="spine"><span class="node"></span></div><div class="card"><div class="nm">Dinner</div><div class="sub">45 min</div></div></div>
+          </div>
+          <div class="adjust"><button>ADJUST TODAY</button></div>
+        </div>
+      </div></div>
+      <p class="why"><em>Why:</em> this replaces v1's Home <em>and</em> Live. The four-line trim paragraph, the "0/9" tile, the "Reflowed" tile and the five ⚠ rows are all gone — the mustard chip, one dashed spine and one whisper carry the entire story. <b>~1:19</b> shows the ish-mark on an engine-moved time. Tapping any rail card toggles it done (leaf tint) — no checkbox chrome.</p>
+    </div>
+
+    <!-- S2 light on track -->
+    <div class="unit">
+      <p class="frame-label"><b>S2</b> · Today — all caught up (light theme)</p>
+      <div class="phone light"><div class="screen">
+        <div class="status"><span>08:15</span><span>▲ ▒ ▮</span></div>
+        <div class="inner">
+          <div class="topbar"><div class="date">Wednesday 10 June</div><div class="avatar">C</div></div>
+          <div class="hero">
+            <div class="eyebrow"><span class="now-pill"><span class="led"></span>NOW</span><span class="range">08:00 → 08:20</span></div>
+            <h2>Wake · water · sunlight</h2>
+            <span class="ok-chip">✓ all caught up</span>
+            <div class="progress"><i style="width:30%"></i></div>
+            <div class="row"><span class="left-label"><b>14 min</b> left</span><button class="done-btn">Done</button></div>
+          </div>
+          <div class="whisper calm"><span class="mark">~</span><span>All caught up. <em>The plan's holding.</em></span></div>
+          <div class="rail">
+            <div class="rail-head">Rest of today</div>
+            <div class="stop"><div class="t">8:20</div><div class="spine"><span class="node"></span></div><div class="card"><div class="nm">Big project</div><div class="sub">2 h deep work</div></div></div>
+            <div class="stop short"><div class="t">10:20</div><div class="spine"><span class="node"></span></div><div class="card"><div class="nm">Gym</div><div class="sub">1 h · full-body A</div></div></div>
+            <div class="stop short"><div class="t">11:30</div><div class="spine"><span class="node"></span></div><div class="card"><div class="nm">Shower + brunch</div><div class="sub">45 min</div></div></div>
+            <div class="stop anchor tall"><div class="t">2:00</div><div class="spine"><span class="node"></span></div><div class="card"><div class="nm"><span class="lock">◉</span> Work</div><div class="sub">held · 2:00 → 8:00</div></div></div>
+            <div class="stop short"><div class="t">8:45</div><div class="spine"><span class="node"></span></div><div class="card"><div class="nm">Dinner</div><div class="sub">45 min</div></div></div>
+          </div>
+          <div class="adjust"><button>ADJUST TODAY</button></div>
+        </div>
+      </div></div>
+      <p class="why"><em>Why:</em> the calm state earns the loud state — leaf chip, short whisper, zero mustard anywhere. Identical layout to S1 with remapped tokens via ThemeExtension; nothing restyled per-screen.</p>
+    </div>
+
+    <!-- S3 adjust mode -->
+    <div class="unit">
+      <p class="frame-label"><b>S3</b> · Adjust mode — overlap bug fixed</p>
+      <div class="phone"><div class="screen">
+        <div class="status"><span>10:43</span><span>▲ ▒ ▮</span></div>
+        <div class="inner">
+          <div class="adjbar"><div class="ttl">Adjusting today</div><button class="done">Done</button></div>
+          <div class="rail" style="margin-top:2px">
+            <div class="rail-head">Drag ≡ to reorder · skip removes today only</div>
+            <div class="stop"><div class="t">11:03</div><div class="spine"><span class="node"></span></div>
+              <div class="card">
+                <div class="adj-top"><span class="nm">Big project</span><span class="handle">≡</span></div>
+                <div class="adj-bottom"><span class="prio"><span class="on">Protect</span><span>Normal</span><span>Drop first</span></span><span class="skipbtn">✕ skip</span></div>
+              </div></div>
+            <div class="stop"><div class="t">~1:19</div><div class="spine"><span class="node"></span></div>
+              <div class="card">
+                <div class="adj-top"><span class="nm">DSA practice</span><span class="handle">≡</span></div>
+                <div class="adj-bottom"><span class="prio"><span>Protect</span><span class="on">Normal</span><span>Drop first</span></span><span class="skipbtn">✕ skip</span></div>
+              </div></div>
+            <div class="stop anchor tall"><div class="t">2:00</div><div class="spine"><span class="node"></span></div>
+              <div class="card"><div class="nm"><span class="lock">◉</span> Work</div><div class="sub">locked — edit in Plan my week</div></div></div>
+            <div class="stop skip short"><div class="t">8:45</div><div class="spine"><span class="node"></span></div>
+              <div class="card"><div class="nm">Dinner</div><div class="sub">skipped today</div></div></div>
+            <div class="stop"><div class="t">9-ish</div><div class="spine"><span class="node"></span></div>
+              <div class="card">
+                <div class="adj-top"><span class="nm">Wind down</span><span class="handle">≡</span></div>
+                <div class="adj-bottom"><span class="prio"><span>Protect</span><span>Normal</span><span class="on warn">Drop first</span></span><span class="skipbtn">✕ skip</span></div>
+              </div></div>
+          </div>
+          <div class="undo"><span>Dinner skipped today</span><b>Undo</b></div>
+        </div>
+      </div></div>
+      <p class="why"><em>Why:</em> the card is now <em>two stacked rows</em> — name + drag handle on top, priority segmented control left + a labeled "✕ skip" button right on the bottom — no absolute positioning, nothing can overlap, every target ≥ 44 dp. Priority stays in words. Writes DailyState only; anchors point to Plan my week. Undo is persistent.</p>
+    </div>
+
+    <!-- S4 avatar sheet -->
+    <div class="unit">
+      <p class="frame-label"><b>S4</b> · Avatar menu (sheet over Today)</p>
+      <div class="phone"><div class="screen">
+        <div class="status"><span>10:42</span><span>▲ ▒ ▮</span></div>
+        <div class="inner" style="opacity:.5">
+          <div class="topbar"><div class="date">Wednesday 10 June</div><div class="avatar">C</div></div>
+          <div class="hero"><div class="eyebrow"><span class="now-pill"><span class="led"></span>NOW</span><span class="range">10:25 → 11:00</span></div><h2>Shower + brunch</h2></div>
+        </div>
+        <div class="dimmed"></div>
+        <div class="sheet">
+          <div class="grab"></div>
+          <div class="who"><div class="avatar">C</div><div><div class="nm">Cyrus</div><div class="sb">catching up since June</div></div></div>
+          <div class="mi"><span class="ic">▦</span>Plan my week<span class="arrow">›</span></div>
+          <div class="mi"><span class="ic">~</span>Sunday catch-up<span class="note">new</span></div>
+          <div class="mi"><span class="ic">◐</span>Appearance &amp; text size<span class="arrow">›</span></div>
+          <div class="mi"><span class="ic">♪</span>Heads-up notifications<span class="note">on</span></div>
+          <div class="mi"><span class="ic">?</span>How ketchup works<span class="arrow">›</span></div>
+        </div>
+      </div></div>
+      <p class="why"><em>Why:</em> everything that isn't "living today" lives here — five items, no drawer, no tabs. The week planner moves off Home (in v1 it ate half the screen with lifestyle-specific Training/Rest toggles). The catch-up gets a "new" badge on Sundays only.</p>
+    </div>
+
+    <!-- S5 plan my week -->
+    <div class="unit">
+      <p class="frame-label"><b>S5</b> · Plan my week</p>
+      <div class="phone"><div class="screen">
+        <div class="status"><span>10:44</span><span>▲ ▒ ▮</span></div>
+        <div class="inner">
+          <div class="adjbar"><div class="ttl">Plan my week</div><span style="font-family:var(--mono);font-size:12px;color:var(--dim)">‹ back</span></div>
+          <div class="dayrow"><div class="d">MON<b>8</b></div><div class="tmpl"><div class="tn">Office day</div><div class="tc">7 blocks · ◉ Work 2–8</div></div><span class="chev">›</span></div>
+          <div class="dayrow"><div class="d">TUE<b>9</b></div><div class="tmpl"><div class="tn">Office day</div><div class="tc">7 blocks · ◉ Work 2–8</div></div><span class="chev">›</span></div>
+          <div class="dayrow today open"><div class="d">WED<b>10</b></div><div class="tmpl"><div class="tn">WFH day</div><div class="tc">7 blocks · today</div></div><span class="chev">⌃</span>
+            <div class="chips"><span class="chip">8-ish Wake · water · sunlight</span><span class="chip">Big project · 2 h</span><span class="chip">Gym · 1 h</span><span class="chip a">◉ 2:00 Work</span><span class="chip">Dinner</span><span class="chip">9-ish Wind down</span><span class="chip add">+ block</span></div>
+          </div>
+          <div class="dayrow"><div class="d">THU<b>11</b></div><div class="tmpl"><div class="tn">Office day</div><div class="tc">7 blocks · ◉ Work 2–8</div></div><span class="chev">›</span></div>
+          <div class="dayrow"><div class="d">FRI<b>12</b></div><div class="tmpl"><div class="tn">Office day</div><div class="tc">7 blocks · ◉ Work 2–8</div></div><span class="chev">›</span></div>
+          <div class="dayrow"><div class="d">SAT<b>13</b></div><div class="tmpl"><div class="tn">Open day</div><div class="tc">3 blocks · flexible</div></div><span class="chev">›</span></div>
+          <div class="dayrow"><div class="d">SUN<b>14</b></div><div class="tmpl"><div class="tn">Rest</div><div class="tc">2 blocks</div></div><span class="chev">›</span></div>
+          <p class="caption">~ Wednesday switched to WFH — ketchup rebuilt that day's rhythm.</p>
+        </div>
+      </div></div>
+      <p class="why"><em>Why:</em> day templates are the unit of thought ("Office day", not seven edits) and they're <em>user-named strings from Life-JSON</em> — v1's hardcoded Training/Rest toggle is gone, which also satisfies the lifestyle-agnostic guard test. Confirmation is the inline leaf caption; toasts are banned. This is the only place the weekly Plan is ever written.</p>
+    </div>
+
+    <!-- S6 sunday catch-up -->
+    <div class="unit">
+      <p class="frame-label"><b>S6</b> · Sunday catch-up</p>
+      <div class="phone"><div class="screen">
+        <div class="status"><span>19:30</span><span>▲ ▒ ▮</span></div>
+        <div class="inner">
+          <div class="adjbar"><div class="ttl" style="visibility:hidden">.</div><span style="font-family:var(--mono);font-size:12px;color:var(--dim)">✕</span></div>
+          <div class="big-disp">Your week,<br>caught up.</div>
+          <div class="review-stat"><span class="v">19<span style="font-size:24px;color:var(--dim)">/23</span></span><span class="l">blocks kept. Work held all five days.</span></div>
+          <div class="dots">
+            <div class="dcol"><div class="bar" style="height:58px"><i style="height:78%"></i></div><span class="dl">M</span></div>
+            <div class="dcol"><div class="bar" style="height:58px"><i style="height:100%"></i></div><span class="dl">T</span></div>
+            <div class="dcol"><div class="bar" style="height:58px"><i style="height:64%"></i></div><span class="dl">W</span></div>
+            <div class="dcol"><div class="bar" style="height:58px"><i style="height:88%"></i></div><span class="dl">T</span></div>
+            <div class="dcol"><div class="bar" style="height:58px"><i style="height:70%"></i></div><span class="dl">F</span></div>
+            <div class="dcol"><div class="bar" style="height:58px"><i style="height:100%"></i></div><span class="dl">S</span></div>
+            <div class="dcol"><div class="bar" style="height:58px"><i style="height:45%"></i></div><span class="dl">S</span></div>
+          </div>
+          <div class="insight">~ <em>Shower + brunch</em> got squeezed 3 times this week. Want <em>15 more minutes</em> for it next week?</div>
+          <div class="review-actions"><button class="primary">Give it more time</button><button>Keep as is</button></div>
+        </div>
+      </div></div>
+      <p class="why"><em>Why:</em> no grades, no streaks, no red days — a count, a shape, and one optional action that writes +minutes back into the Plan (the loop that makes the engine smarter weekly). Surfaces Sunday evening via the avatar badge, then disappears.</p>
+    </div>
+
+    <!-- S7 settings -->
+    <div class="unit">
+      <p class="frame-label"><b>S7</b> · Appearance &amp; notifications</p>
+      <div class="phone"><div class="screen">
+        <div class="status"><span>10:45</span><span>▲ ▒ ▮</span></div>
+        <div class="inner">
+          <div class="adjbar"><div class="ttl">Appearance</div><span style="font-family:var(--mono);font-size:12px;color:var(--dim)">‹ back</span></div>
+          <div class="set-group">Theme</div>
+          <div class="set-card">
+            <div class="set-row">Theme<div class="seg"><span>Light</span><span class="on">Dark</span><span>Auto</span></div></div>
+            <div class="set-row"><div>Text size<div class="set-sub">Everything scales, nothing truncates.</div></div><div class="scale">A<span class="track"><i></i></span>A</div></div>
+          </div>
+          <div class="set-group">Notifications</div>
+          <div class="set-card">
+            <div class="set-row"><div>Heads-up before each block<div class="set-sub">"Gym in 10 — you're all caught up." One per block, that's all ketchup ever sends.</div></div><div class="switch"></div></div>
+            <div class="set-row"><div>Sunday catch-up nudge<div class="set-sub">One ping, Sunday 7 pm.</div></div><div class="switch off"></div></div>
+          </div>
+          <div class="set-group">About</div>
+          <div class="set-card">
+            <div class="set-row">How ketchup works<span style="margin-left:auto;color:var(--dim)">›</span></div>
+            <div class="set-row"><span style="color:var(--dim)">Version</span><span style="margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--dim)">1.0 · made in Pune</span></div>
+          </div>
+        </div>
+      </div></div>
+      <p class="why"><em>Why:</em> the notification promise is a feature, stated in the setting itself: one quiet heads-up, ever. Text-size slider drives textScaleFactor app-wide — layouts must survive 1.3× (test it).</p>
+    </div>
+
+    <!-- S8 onboarding -->
+    <div class="unit">
+      <p class="frame-label"><b>S8</b> · First run — rough out a day</p>
+      <div class="phone"><div class="screen">
+        <div class="status"><span>—</span><span>▲ ▒ ▮</span></div>
+        <div class="inner">
+          <div class="wordmark" style="font-size:32px;padding-top:8px">ketchup<span class="dot">.</span></div>
+          <div class="onb-h">Rough out<br>your day.</div>
+          <p class="onb-p">Times here are <em>-ish times</em> — "9-ish" means 9-ish, and that's fine. Lock the blocks that can't move (◉); ketchup squeezes everything else around them when life happens.</p>
+          <div class="draft"><span class="ti">8-ish</span><span class="nm">Morning focus</span><span class="pin">flex</span></div>
+          <div class="draft"><span class="ti">9-ish</span><span class="nm">Gym</span><span class="pin">flex</span></div>
+          <div class="draft"><span class="ti">2 pm</span><span class="nm">Work</span><span class="pin on">◉ locked</span></div>
+          <div class="draft"><span class="ti">9-ish</span><span class="nm">Wind down</span><span class="pin">flex</span></div>
+          <div class="draft ghost">+ add a block</div>
+          <button class="cta">That's roughly it →</button>
+          <p class="cta-sub">You can fix the details whenever. Or never.</p>
+        </div>
+      </div></div>
+      <p class="why"><em>Why:</em> onboarding sells the worldview in 20 seconds — <b>"8-ish" as a literal time value</b> is the personality and the demo-video hook, fully preserved under the ketchup brand. Three decisions per block max. The CTA promises imperfection; the engine handles the rest.</p>
+    </div>
+
+    <!-- S9 how ketchup works -->
+    <div class="unit">
+      <p class="frame-label"><b>S9</b> · "How ketchup works" (replaces glossary)</p>
+      <div class="phone"><div class="screen">
+        <div class="status"><span>10:46</span><span>▲ ▒ ▮</span></div>
+        <div class="inner">
+          <div class="adjbar"><div class="ttl">How ketchup works</div><span style="font-family:var(--mono);font-size:12px;color:var(--dim)">‹ back</span></div>
+          <div class="teach" style="margin-top:4px"><span class="tl">~</span><span><b style="color:var(--salt)">Falling behind.</b> When a block runs long, the rest of your day slides. ketchup notices and catches you up.</span></div>
+          <div class="teach"><span class="tl">~</span><span><b style="color:var(--salt)">The squeeze.</b> Flexible blocks give up minutes first — never below their minimum.</span></div>
+          <div class="teach"><span class="tl">◉</span><span><b style="color:var(--salt)">Locked.</b> Anchors never move. ketchup plans around them, not through them.</span></div>
+          <div class="teach"><span class="tl">~</span><span><b style="color:var(--salt)">Protect / Drop first.</b> Your way of telling ketchup what matters when time runs out.</span></div>
+          <div class="teach"><span class="tl">~</span><span><b style="color:var(--salt)">Skip today.</b> Removes a block from today only. The weekly plan never changes from here.</span></div>
+          <div class="teach"><span class="tl">~</span><span><b style="color:var(--salt)">No alarms.</b> Mustard means "ketchup adjusted something," never "you failed." There is nothing to fail.</span></div>
+          <p style="font-size:12.5px;color:var(--dim);padding:14px 6px 0">That's the whole manual. Six ideas, one screen.</p>
+        </div>
+      </div></div>
+      <p class="why"><em>Why:</em> the GlossaryScreen + TeachingFlags framework collapse into this one static page — the same six captions users saw inline, in brand voice. "That's the whole manual" is itself a brand statement.</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ================= 4 · ICON + WIDGET ================= -->
+<div class="sec">
+  <div class="sec-head"><span class="n">04</span><h2>App icon &amp; home-screen widget</h2><span class="sub">The icon is a drizzle of ketchup — which happens to be a tilde. The old check-plus-serif-"2" icon is retired.</span></div>
+  <div class="assets">
+    <div style="display:flex;gap:18px;align-items:flex-end">
+      <div class="icon-tile">
+        <svg viewBox="0 0 100 56" xmlns="http://www.w3.org/2000/svg"><path d="M8 38 C 22 6, 40 6, 50 26 S 78 50, 92 18" fill="none" stroke="#D9543E" stroke-width="15" stroke-linecap="round"/></svg>
+      </div>
+      <div class="icon-tile sm">
+        <svg viewBox="0 0 100 56" xmlns="http://www.w3.org/2000/svg"><path d="M8 38 C 22 6, 40 6, 50 26 S 78 50, 92 18" fill="none" stroke="#D9543E" stroke-width="15" stroke-linecap="round"/></svg>
+      </div>
+      <div class="icon-tile sm mono">
+        <svg viewBox="0 0 100 56" xmlns="http://www.w3.org/2000/svg"><path d="M8 38 C 22 6, 40 6, 50 26 S 78 50, 92 18" fill="none" stroke="#15110F" stroke-width="15" stroke-linecap="round"/></svg>
+      </div>
+    </div>
+    <div class="asset-note"><em>Icon:</em> one thick tomato squiggle (the ~), round caps, on flat char — no gradient, no check, no numeral, no tomato-the-fruit literalism. Adaptive foreground = the squiggle alone on transparent; monochrome variant = char squiggle on salt for Android 13+ themed icons. Regenerate via <span style="font-family:var(--mono);color:var(--tomato)">tool/make_icon.py</span> with this exact path.</div>
+    <div class="widget">
+      <div class="w-top"><span class="w-now">● NOW</span><span class="w-tilde">~</span></div>
+      <h4>Shower + brunch</h4>
+      <div class="w-left">18 min left · <i>squeezed −15</i></div>
+      <div class="w-bar"><i></i></div>
+      <div class="w-next">next · <b>~1:19 DSA practice</b> · ◉ Work holds at 2:00</div>
+    </div>
+    <div class="asset-note"><em>Widget (4×2, phase 2):</em> the hero, miniaturized — block name, time left, squeeze delta in mustard, next stop with its ish-mark, anchor reassurance. Same seven tokens. Ship after the Glance blocker is resolved, not before launch.</div>
+  </div>
+</div>
+
+<!-- ================= 5 · IMPLEMENTATION MAP ================= -->
+<div class="sec">
+  <div class="sec-head"><span class="n">05</span><h2>Implementation map — for Claude Code</h2><span class="sub">Supersedes the presentation layer of the 2026-06-08 UX plan and the v1 build in the screenshots. Engine Phases A–D unchanged. Write a fresh plan from this file; keep TDD + the guard tests.</span></div>
+  <div class="map">
+    <div class="mrow head"><span>Surface</span><span>File</span><span>Notes</span></div>
+    <div class="mrow"><span>S1/S2 Today (merged)</span><span class="f">lib/screens/today_screen.dart</span><span class="d"><em>One widget tree</em> replaces the v1 Home + Live pair. States: caughtUp / squeezed / adjusting, driven by ResolvedDay + an isAdjusting flag. Delete the stat tiles and the Live banner — nothing replaces them.</span></div>
+    <div class="mrow"><span>Elastic rail</span><span class="f">lib/widgets/elastic_rail.dart</span><span class="d">Replaces budget_bar + anchor_wall + the v1 per-row progress-bar/⚠/checkbox stack. Spine height ∝ duration (clamp 56–120 dp); variants: normal / squeeze / anchor / skip / done. Tap card = toggle done.</span></div>
+    <div class="mrow"><span>S3 Adjust mode</span><span class="f">(state of today_screen)</span><span class="d">Two-row card layout from S3 — flex rows, no Positioned/Stack overlap, targets ≥ 44 dp. Writes DailyState only; words map to numeric priority via existing PriorityLevel. Session-persistent Undo stack.</span></div>
+    <div class="mrow"><span>S4 Avatar sheet</span><span class="f">lib/widgets/avatar_menu_sheet.dart</span><span class="d">Five items as shown; Sunday badge on the catch-up row.</span></div>
+    <div class="mrow"><span>S5 Plan my week</span><span class="f">lib/screens/week_screen.dart</span><span class="d">Off Home. Day templates are user-named Life-JSON strings — the hardcoded Training/Rest toggle is deleted (guard-test compliant). Inline leaf captions; no toasts.</span></div>
+    <div class="mrow"><span>S6 Sunday catch-up</span><span class="f">lib/screens/catchup_screen.dart</span><span class="d">Consumes WeeklySummary. "Give it more time" writes +idealMinutes to the Plan — the only review→Plan write path.</span></div>
+    <div class="mrow"><span>S7 Settings</span><span class="f">lib/screens/settings_screen.dart</span><span class="d">UiPrefs as planned (default dark). Two notification toggles.</span></div>
+    <div class="mrow"><span>S8 Onboarding</span><span class="f">lib/screens/onboarding_screen.dart</span><span class="d">New. Emits a starter Life-JSON. ish-time display: flexible && minutes==0 → "{h}-ish"; engine-moved estimate → "~" prefix; locked/exact → exact. Shown when no Plan exists.</span></div>
+    <div class="mrow"><span>S9 How ketchup works</span><span class="f">lib/screens/how_it_works_screen.dart</span><span class="d">Static page of the six captions. <em>Replaces glossary_screen.</em></span></div>
+    <div class="mrow"><span>Teach captions</span><span class="f">lib/widgets/teach_caption.dart</span><span class="d">One widget + seen-flags (keep teaching_flags.dart). Max one visible at a time.</span></div>
+    <div class="mrow"><span>Theme</span><span class="f">lib/theme/app_palette.dart</span><span class="d">Same ThemeExtension shape, tokens from §0 (char/raise/raise2/salt/dim/line/tomato/mustard/leaf + dims). Fonts: Bricolage Grotesque + Spline Sans + Spline Sans Mono. <em>Guards: no hardcoded life strings (keep) · no Color literal outside app_palette.dart (new) · no "⚠"/"budget"/"Reflowed"/"engine" string in lib/ (new — enforces the ban list).</em></span></div>
+    <div class="mrow"><span>Content fix</span><span class="f">Life-JSON</span><span class="d">Strip durations from labels: "BIG Project Block (2 hrs)" → label "Big project", durationMinutes 120. "DSA Practice (45 min)" → "DSA practice", 45.</span></div>
+    <div class="mrow"><span>Retired</span><span class="f"><s>now_card · home_screen header/tiles · live_timeline_view · now_hero_card · glossary_screen · budget_bar · anchor_wall · weekly_review_card · week_planner(on-Home)</s></span><span class="d">Delete after migration.</span></div>
+    <div class="mrow"><span>Rename</span><span class="f">strings.xml · pubspec · main.dart</span><span class="d">App label "ketchup" (lowercase in-app; store listing "Ketchup — flexible day planner"). New icon via updated make_icon.py with the squiggle path from §4.</span></div>
+  </div>
+  <p style="margin-top:18px;font-size:13px;color:var(--dim);max-width:860px">Motion (the only three animations): 1) <b style="color:var(--mustard)">the squeeze</b> — a rail segment compresses over 350 ms ease-out while the mustard delta counts up; 2) Done — card tints leaf and collapses into the past-pill; 3) sheet/mode transitions — standard. Respect reduced-motion. Nothing else moves.</p>
+</div>
+
+<footer>ketchup · full visual spec v2 · 2026-06-11 · supersedes the "ish" spec + the presentation layer of 2026-06-08-reminders-2-ux-layer.md · engine (Phases A–D) unchanged</footer>
+</div>
+</body>
+</html>

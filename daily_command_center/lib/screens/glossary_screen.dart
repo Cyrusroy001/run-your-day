@@ -19,11 +19,11 @@ class GlossaryScreen extends StatelessWidget {
     final c = context.c;
     return Scaffold(
       appBar: AppBar(backgroundColor: c.bg, elevation: 0, foregroundColor: c.cream,
-          title: Text('How Reminders works', style: GoogleFonts.fraunces(fontWeight: FontWeight.w800))),
+          title: Text('How Reminders works', style: GoogleFonts.bricolageGrotesque(fontWeight: FontWeight.w800))),
       body: ListView(padding: const EdgeInsets.all(20), children: [
         for (final e in _entries) Padding(padding: const EdgeInsets.only(bottom: 18),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(e[0], style: GoogleFonts.fraunces(fontSize: 17, fontWeight: FontWeight.w700, color: c.cream)),
+            Text(e[0], style: GoogleFonts.bricolageGrotesque(fontSize: 17, fontWeight: FontWeight.w700, color: c.cream)),
             const SizedBox(height: 4),
             Text(e[1], style: TextStyle(fontSize: 13.5, height: 1.5, color: c.muted)),
           ])),

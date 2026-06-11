@@ -62,7 +62,7 @@ class _RemindersAppState extends State<RemindersApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Reminders 2',
+      title: 'ketchup',
       theme: AppPalette.lightTheme,
       darkTheme: AppPalette.darkTheme,
       themeMode: _prefs.themeMode,

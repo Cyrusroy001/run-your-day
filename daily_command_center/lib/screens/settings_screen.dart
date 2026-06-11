@@ -140,11 +140,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return Scaffold(
       appBar: AppBar(backgroundColor: c.bg, elevation: 0, foregroundColor: c.cream,
-          title: Text('Settings', style: GoogleFonts.fraunces(fontWeight: FontWeight.w800))),
+          title: Text('Settings', style: GoogleFonts.bricolageGrotesque(fontWeight: FontWeight.w800))),
       body: ListView(padding: const EdgeInsets.all(20), children: [
         _section(c, 'PROFILE'),
         Text(_name.isEmpty ? '—' : _name,
-            style: GoogleFonts.fraunces(fontSize: 22, fontWeight: FontWeight.w800, color: c.cream)),
+            style: GoogleFonts.bricolageGrotesque(fontSize: 22, fontWeight: FontWeight.w800, color: c.cream)),
         if (_archetype.isNotEmpty)
           Text(_archetype, style: TextStyle(fontSize: 12, color: c.dim)),
         const SizedBox(height: 8),
