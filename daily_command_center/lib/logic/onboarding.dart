@@ -1,4 +1,5 @@
 import '../data/models.dart';
+import '../data/profile_repository.dart';
 import 'planner.dart';
 
 class OnboardingLogic {
@@ -36,5 +37,28 @@ class OnboardingLogic {
       goals: seed.goals,
     );
     return PlannerLogic.setTrainingFrequency(titled, trainingDays);
+  }
+
+  /// Persist a brand-new profile from the onboarding choices and make it active.
+  /// Builds the plan from [seed] (injected so the caller owns the asset/IO read),
+  /// then creates + activates the profile via [repo]. Returns the new id.
+  ///
+  /// This is the single seam both the production finish flow and tests run, so
+  /// they cannot drift apart.
+  static Future<String> commit({
+    required ProfileRepository repo,
+    required Plan seed,
+    required String displayName,
+    required Map<String, String> weekChoices,
+    required int trainingDays,
+  }) async {
+    final plan = buildPlan(
+      seed: seed,
+      displayName: displayName,
+      weekChoices: weekChoices,
+      trainingDays: trainingDays,
+    );
+    final doc = await repo.createProfile(displayName, plan: plan);
+    return doc.id;
   }
 }
