@@ -12,6 +12,7 @@ import '../logic/timeline.dart';
 import '../logic/drift_engine.dart';
 import '../logic/home_now_state.dart';
 import '../theme/app_palette.dart';
+import '../theme/transitions.dart';
 import '../widgets/now_hero_card.dart';
 import '../widgets/week_planner.dart';
 import '../widgets/avatar_menu_sheet.dart';
@@ -77,7 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _openLive(Plan plan) async {
     await Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => LiveTimelineView(plan: plan, todayKey: _todayKey)));
+        fadeThroughRoute(LiveTimelineView(plan: plan, todayKey: _todayKey)));
     // Reload done + state after returning so home card reflects any check-offs.
     if (mounted) _load();
   }
@@ -146,8 +147,8 @@ class _HomeScreenState extends State<HomeScreen> {
           // Switch + log out both return to the login picker (a no-active-profile
           // state); the picker is where the user re-selects or adds a profile.
           onSwitchProfile: () => AppStore.repo.clearActive(),
-          onOpenSettings: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
-          onOpenGlossary: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GlossaryScreen())),
+          onOpenSettings: () => Navigator.of(context).push(fadeThroughRoute(const SettingsScreen())),
+          onOpenGlossary: () => Navigator.of(context).push(fadeThroughRoute(const GlossaryScreen())),
           onLogout: () => AppStore.repo.clearActive()),
         child: CircleAvatar(radius: 19, backgroundColor: c.terraD,
             child: Text(_displayName.isEmpty ? '?' : _displayName[0].toUpperCase(),

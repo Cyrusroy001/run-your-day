@@ -20,7 +20,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     'mon': 'office', 'tue': 'office', 'wed': 'wfh', 'thu': 'office',
     'fri': 'office', 'sat': 'weekend', 'sun': 'weekend_sun',
   };
+  bool _busy = false;
   static const _steps = 3;
+  static const _slide = Duration(milliseconds: 280);
 
   @override
   void dispose() {
@@ -29,15 +31,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _finish() async {
-    // The new profile clones the default profile's plan as its seed blueprint.
-    final seed = (await AppStore.repo.load(ProfileRepository.defaultProfileId)).plan;
-    await OnboardingLogic.commit(
-      repo: AppStore.repo,
-      seed: seed,
-      displayName: widget.displayName,
-      weekChoices: _week,
-      trainingDays: _trainingDays,
-    );
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      // The new profile clones the default profile's plan as its seed blueprint.
+      final seed = (await AppStore.repo.load(ProfileRepository.defaultProfileId)).plan;
+      await OnboardingLogic.commit(
+        repo: AppStore.repo,
+        seed: seed,
+        displayName: widget.displayName,
+        weekChoices: _week,
+        trainingDays: _trainingDays,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _busy = false);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Could not create the profile — please try again.')));
+      return;
+    }
     // Pop is deferred to the next frame so Navigator.of(context) is not called
     // from within an async gap that may have changed the tree.
     if (!mounted) return;
@@ -50,11 +62,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   void _next() {
     if (_index < _steps - 1) {
-      _page.nextPage(duration: const Duration(milliseconds: 280), curve: Curves.easeOut);
+      _page.nextPage(duration: _slide, curve: Curves.easeOut);
     } else {
       _finish();
     }
   }
+
+  void _back() => _page.previousPage(duration: _slide, curve: Curves.easeOut);
 
   @override
   Widget build(BuildContext context) {
@@ -76,15 +90,33 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ],
           )),
           Padding(
-            padding: const EdgeInsets.all(20),
-            child: SizedBox(width: double.infinity, child: FilledButton(
-              style: FilledButton.styleFrom(
-                  backgroundColor: c.terra,
-                  padding: const EdgeInsets.symmetric(vertical: 16)),
-              onPressed: _next,
-              child: Text(_index == _steps - 1 ? 'Create' : 'Next',
-                  style: TextStyle(color: c.bg, fontWeight: FontWeight.w800, fontSize: 16)),
-            )),
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+            child: Row(children: [
+              AnimatedSize(
+                duration: const Duration(milliseconds: 180),
+                child: _index == 0
+                    ? const SizedBox.shrink()
+                    : Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: TextButton(
+                          onPressed: _busy ? null : _back,
+                          child: Text('Back',
+                              style: TextStyle(color: c.muted, fontWeight: FontWeight.w700)),
+                        ),
+                      ),
+              ),
+              Expanded(child: FilledButton(
+                style: FilledButton.styleFrom(
+                    backgroundColor: c.terra,
+                    padding: const EdgeInsets.symmetric(vertical: 16)),
+                onPressed: _busy ? null : _next,
+                child: _busy
+                    ? SizedBox(height: 18, width: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: c.bg))
+                    : Text(_index == _steps - 1 ? 'Create' : 'Next',
+                        style: TextStyle(color: c.bg, fontWeight: FontWeight.w800, fontSize: 16)),
+              )),
+            ]),
           ),
         ]),
       ),

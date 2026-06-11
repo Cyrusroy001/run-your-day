@@ -32,4 +32,24 @@ void main() {
     expect(find.text('Create'), findsOneWidget);
     expect(find.text('Next'), findsNothing);
   });
+
+  testWidgets('Back appears after step 1 and returns to the previous step',
+      (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      theme: ThemeData.dark().copyWith(extensions: const [AppPalette.dark]),
+      home: const OnboardingScreen(displayName: 'Alex'),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Back'), findsNothing); // not on the welcome step
+    await tester.tap(find.text('Next'));
+    await tester.pumpAndSettle();
+    expect(find.text('Your week'), findsOneWidget);
+    expect(find.text('Back'), findsOneWidget);
+
+    await tester.tap(find.text('Back'));
+    await tester.pumpAndSettle();
+    expect(find.text('Welcome, Alex.'), findsOneWidget);
+    expect(find.text('Back'), findsNothing);
+  });
 }

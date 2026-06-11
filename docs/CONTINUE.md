@@ -44,7 +44,7 @@ The **local-profiles/login** work pulls a minimal, local-only slice of #3/#5 for
 
 This branch carries the v3 engine (A–D), the UX layer (U0–U7), the custom-task feature (C1–C11), **and** the local-profiles/login feature. It is the new integration head; `feat/custom-tasks` and `feat/reminders-2-redesign` have no unique commits left to merge.
 
-**Local profiles is functionally complete and green (210 tests).** A first-run app seeds `cyrus`; the login screen is a local profile picker; a new name runs the onboarding flow that clones the seed plan; the avatar menu + Settings switch/log out / manage the active profile. End-to-end: create a profile → use it → log out → switch → log back in.
+**Local profiles is functionally complete and green (211 tests).** A first-run app seeds `cyrus`; the login screen is a local profile picker; a new name runs the onboarding flow that clones the seed plan; the avatar menu + Settings switch/log out / manage the active profile. End-to-end: create a profile → use it → log out → switch → log back in.
 
 | Area | What shipped | Notes |
 |---|---|---|
@@ -55,7 +55,7 @@ This branch carries the v3 engine (A–D), the UX layer (U0–U7), the custom-ta
 | Onboarding | `OnboardingScreen` 3-step flow + `OnboardingLogic.buildPlan`/`commit` | `commit` is the single finish seam (screen + tests) |
 | Home/Settings | avatar menu wired to real profile name + log out / switch; Settings PROFILE/DATA sections (export/import to clipboard, reset plan, clear history, delete) | dart:io mutations covered by repo tests; screens verified fake-async-only |
 
-**Plan deviations (do not "fix"):** Plan **Phase 0** (`ProfileScope` key-prefix + legacy migration) is obsolete — storage is file-per-profile. Plan **Phase 4** (AppShell + navigation **Drawer**) is superseded by the **U6 avatar menu** — there is no drawer. Plan **Phase 6** (visual polish pass) is the only optional remainder. See ADR-019.
+**Plan deviations (do not "fix"):** Plan **Phase 0** (`ProfileScope` key-prefix + legacy migration) is obsolete — storage is file-per-profile. Plan **Phase 4** (AppShell + navigation **Drawer**) is superseded by the **U6 avatar menu** — there is no drawer. Plan **Phase 6** (visual polish) is **done**, adapted to the real architecture: a shared `fadeThroughRoute` transition (`lib/theme/transitions.dart`) on the main pushes, plus an onboarding **Back** affordance + busy/creating state on the final button. See ADR-019.
 
 ### Engine plan — phase status
 
@@ -119,17 +119,13 @@ Runs on the phone (Samsung S21 FE, Android 16 / API 36). Dev loop is wireless AD
 
 ## What to do next
 
-The engine, UX layer, custom-task feature, **and local-profiles/login** are all complete on `feat/local-profiles` (210 tests green). The branch is shippable. Candidate next steps (in rough priority order):
+The engine, UX layer, custom-task feature, **and local-profiles/login** are all complete on `feat/local-profiles` (211 tests green). The branch is shippable. Candidate next steps (in rough priority order):
 
 ### 1. Merge `feat/local-profiles` → `main`
 
 This is now the most complete branch and a strict superset of `feat/custom-tasks`, `feat/reminders-2-redesign`, and `feature/plan-driven-core` (all have 0 unique commits relative to it). It is the single merge candidate.
 
-### 2. (Optional) Local-profiles Phase 6 — visual polish
-
-Plan Phase 6: smooth section transitions, login/onboarding/avatar-menu refinement. Cosmetic only; the feature is functionally done. Skip unless polishing for a release.
-
-### 3. Resume the product roadmap (from the v3 spec)
+### 2. Resume the product roadmap (from the v3 spec)
 
 Profiles pulled a minimal local slice of onboarding forward. The larger arcs remain: **(2)** in-app control panel / Life-JSON editor, **(3)** interview tree, **(4)** AI generation (answers → Claude → validated Life JSON), **(5)** full onboarding flow. `OnboardingLogic.commit` is the seam the real interview/AI will replace.
 

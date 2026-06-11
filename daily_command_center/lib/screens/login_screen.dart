@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../data/profile_repository.dart';
 import '../data/store.dart';
 import '../theme/app_palette.dart';
+import '../theme/transitions.dart';
 import 'onboarding_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -46,8 +47,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final id = ProfileRepository.idFor(name);
     if (_profiles.any((m) => m.id == id)) { await _enter(id); return; }
     if (!mounted) return;
-    await Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => OnboardingScreen(displayName: name)));
+    await Navigator.of(context).push(fadeThroughRoute(OnboardingScreen(displayName: name)));
     if (!mounted) return;
     await _load();
   }
