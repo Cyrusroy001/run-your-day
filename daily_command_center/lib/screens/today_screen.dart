@@ -23,14 +23,14 @@ import '../theme/transitions.dart';
 import '../widgets/elastic_rail.dart';
 import '../widgets/add_custom_task_sheet.dart';
 import '../widgets/sacrifice_picker_sheet.dart';
-import '../widgets/weekly_review_card.dart';
 import '../widgets/promote_blueprint_sheet.dart';
-import '../widgets/teaching_card.dart';
+import '../widgets/teach_caption.dart';
 import '../widgets/avatar_menu_sheet.dart';
-import '../widgets/week_planner.dart';
 import 'live_timeline_view.dart' show RepeatPromptCard;
 import 'settings_screen.dart';
-import 'glossary_screen.dart';
+import 'how_it_works_screen.dart';
+import 'week_screen.dart';
+import 'catchup_screen.dart';
 
 /// The one ketchup surface: Home + Live merged. States are caughtUp / squeezed /
 /// adjusting, driven by the engine's ResolvedDay + an [_adjusting] flag. The hero
@@ -56,7 +56,7 @@ class TodayScreenState extends State<TodayScreen> {
   String? _teachText;
   Timer? _ticker;
   WeeklySummary? _summary;
-  String? _nudge;
+  String? _topSqueezed;
   List<DayAdherence> _last7 = const [];
   List<CustomTask> _pendingRepeatTasks = const [];
   List<PromotionCandidate> _promotionCandidates = const [];
@@ -133,7 +133,7 @@ class TodayScreenState extends State<TodayScreen> {
       _state = state;
       _done = done;
       _summary = WeeklyReview.summarize(events);
-      _nudge = DriftCopy.weeklyNudge(events);
+      _topSqueezed = WeeklyReview.mostSqueezedLabel(events);
       _last7 = last7;
       _pendingRepeatTasks = pending;
       _promotionCandidates = promotions;
@@ -345,6 +345,23 @@ class TodayScreenState extends State<TodayScreen> {
   void _dismissPromotion(PromotionCandidate cand) =>
       setState(() => _promotionCandidates = _promotionCandidates.where((p) => p.label != cand.label).toList());
 
+  /// "Give it more time" from the Sunday catch-up — the only review→Plan write
+  /// path. Adds [mins] to every routine item carrying [label] across templates.
+  Future<void> _giveMoreTime(String label, int mins) async {
+    final plan = _plan;
+    if (plan == null) return;
+    final templates = plan.dayTemplates.map((k, t) => MapEntry(k, t.copyWith(
+        routineStack: t.routineStack
+            .map((r) => r.label == label ? r.copyWith(idealDuration: r.idealDuration + mins) : r)
+            .toList())));
+    final updated = plan.copyWith(dayTemplates: templates);
+    await AppStore.savePlan(updated);
+    if (mounted) setState(() => _plan = updated);
+  }
+
+  @visibleForTesting
+  Future<void> giveMoreTimeForTest(String label, int mins) => _giveMoreTime(label, mins);
+
   // ── teaching ───────────────────────────────────────────────────────────────
   void _maybeTeach(ResolvedDay day) {
     if (_teachText != null) return;
@@ -409,21 +426,16 @@ class TodayScreenState extends State<TodayScreen> {
         _hero(c, day, now),
         _whisper(c, day),
         if (_teachText != null)
-          TeachingCard(
+          TeachCaption(
             text: _teachText!,
-            onGotIt: () => setState(() => _teachText = null),
+            onDismiss: () => setState(() => _teachText = null),
             onWhy: () {
               setState(() => _teachText = null);
-              Navigator.of(context).push(fadeThroughRoute(const GlossaryScreen()));
+              Navigator.of(context).push(fadeThroughRoute(const HowItWorksScreen()));
             }),
         for (final task in _pendingRepeatTasks)
           RepeatPromptCard(task: task,
               onRepeat: (date) => _createRecurringTask(task, date), onSkip: () => _skipRepeatTask(task)),
-        if (_summary != null)
-          WeeklyReviewCard(
-            summary: _summary!, isSunday: _todayKey == 'sun', nudge: _nudge, last7: _last7,
-            promotionCandidates: _promotionCandidates,
-            onPromote: _openPromoteSheet, onDismiss: _dismissPromotion),
         const SizedBox(height: 8),
         ElasticRail(header: 'Rest of today', stops: [
           for (final b in railBlocks)
@@ -462,12 +474,18 @@ class TodayScreenState extends State<TodayScreen> {
             onTap: () => showAvatarMenu(context,
                 name: _displayName.isEmpty ? 'Profile' : _displayName,
                 subtitle: _plan?.meta.lifestyleArchetype ?? '',
-                onPlanWeek: () => Navigator.of(context).push(fadeThroughRoute(_WeekPlannerScreen(
+                onPlanWeek: () => Navigator.of(context).push(fadeThroughRoute(WeekScreen(
                     plan: _plan!, todayKey: _todayKey,
                     onChanged: (p) { AppStore.savePlan(p); setState(() => _plan = p); }))),
+                onCatchup: _summary == null ? null : () => Navigator.of(context).push(fadeThroughRoute(CatchupScreen(
+                    summary: _summary!, last7: _last7, insightLabel: _topSqueezed,
+                    promotionCandidates: _promotionCandidates,
+                    onPromote: _openPromoteSheet, onDismiss: _dismissPromotion,
+                    onGiveMoreTime: _giveMoreTime))),
+                catchupBadge: _todayKey == 'sun',
                 onSwitchProfile: () => AppStore.repo.clearActive(),
                 onOpenSettings: () => Navigator.of(context).push(fadeThroughRoute(const SettingsScreen())),
-                onOpenGlossary: () => Navigator.of(context).push(fadeThroughRoute(const GlossaryScreen())),
+                onOpenGlossary: () => Navigator.of(context).push(fadeThroughRoute(const HowItWorksScreen())),
                 onLogout: () => AppStore.repo.clearActive()),
             child: CircleAvatar(radius: 17, backgroundColor: c.tomato,
                 child: Text(_displayName.isEmpty ? '?' : _displayName[0].toUpperCase(),
@@ -684,32 +702,4 @@ class TodayScreenState extends State<TodayScreen> {
           GestureDetector(onTap: _undo, child: Text('Undo', style: TextStyle(fontSize: 13, color: c.tomato, fontWeight: FontWeight.w600))),
         ]),
       );
-}
-
-/// Temporary host for the existing WeekPlanner until K6 builds week_screen.
-class _WeekPlannerScreen extends StatefulWidget {
-  final Plan plan;
-  final String todayKey;
-  final ValueChanged<Plan> onChanged;
-  const _WeekPlannerScreen({required this.plan, required this.todayKey, required this.onChanged});
-  @override
-  State<_WeekPlannerScreen> createState() => _WeekPlannerScreenState();
-}
-
-class _WeekPlannerScreenState extends State<_WeekPlannerScreen> {
-  late Plan _plan = widget.plan;
-  @override
-  Widget build(BuildContext context) {
-    final c = context.c;
-    return Scaffold(
-      appBar: AppBar(elevation: 0, backgroundColor: c.char, foregroundColor: c.salt,
-          title: Text('Plan my week', style: GoogleFonts.bricolageGrotesque(fontWeight: FontWeight.w700))),
-      body: ListView(children: [
-        WeekPlanner(plan: _plan, todayKey: widget.todayKey, onPlanChanged: (p) {
-          setState(() => _plan = p);
-          widget.onChanged(p);
-        }),
-      ]),
-    );
-  }
 }

@@ -100,4 +100,13 @@ void main() {
     await tester.runAsync(() => st.setLevelForTest(focus, PriorityLevel.dropFirst));
     expect(st.stateForTest.dailyOverrides['focus']!.priority, PriorityLevel.dropFirst.toPriority());
   });
+
+  testWidgets('give-it-more-time adds minutes to the matching routine item', (tester) async {
+    await _pumpToday(tester, now: 7.0);
+    final st = tester.state<TodayScreenState>(find.byType(TodayScreen));
+    final before = st.blocksForTest.firstWhere((b) => b.id == 'dsa').idealMinutes; // seed 45
+    await tester.runAsync(() => st.giveMoreTimeForTest('DSA practice', 15));
+    final after = st.blocksForTest.firstWhere((b) => b.id == 'dsa').idealMinutes;
+    expect(after, before + 15);
+  });
 }

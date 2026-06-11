@@ -6,7 +6,7 @@ Future<void> showAvatarMenu(BuildContext context, {
   required String name, required String subtitle,
   required VoidCallback onSwitchProfile, required VoidCallback onOpenSettings,
   required VoidCallback onOpenGlossary, required VoidCallback onLogout,
-  VoidCallback? onPlanWeek,
+  VoidCallback? onPlanWeek, VoidCallback? onCatchup, bool catchupBadge = false,
 }) {
   final c = context.c;
   return showModalBottomSheet(context: context, backgroundColor: c.panel2,
@@ -24,6 +24,9 @@ Future<void> showAvatarMenu(BuildContext context, {
         const Divider(height: 24),
         if (onPlanWeek != null)
           _item(c, Icons.calendar_today_outlined, 'Plan my week', () { Navigator.pop(context); onPlanWeek(); }),
+        if (onCatchup != null)
+          _item(c, Icons.bar_chart_rounded, 'Sunday catch-up', () { Navigator.pop(context); onCatchup(); },
+              note: catchupBadge ? 'new' : null),
         _item(c, Icons.swap_horiz, 'Switch profile', () { Navigator.pop(context); onSwitchProfile(); }),
         _item(c, Icons.settings_outlined, 'Settings & appearance', () { Navigator.pop(context); onOpenSettings(); }),
         _item(c, Icons.help_outline, 'How ketchup works', () { Navigator.pop(context); onOpenGlossary(); }),
@@ -31,6 +34,13 @@ Future<void> showAvatarMenu(BuildContext context, {
       ]))));
 }
 
-Widget _item(AppPalette c, IconData icon, String label, VoidCallback onTap) =>
-    ListTile(contentPadding: EdgeInsets.zero, leading: Icon(icon, color: c.sky),
-        title: Text(label, style: TextStyle(color: c.cream, fontSize: 14)), onTap: onTap);
+Widget _item(AppPalette c, IconData icon, String label, VoidCallback onTap, {String? note}) =>
+    ListTile(contentPadding: EdgeInsets.zero, leading: Icon(icon, color: c.tomato),
+        title: Text(label, style: TextStyle(color: c.salt, fontSize: 14)),
+        trailing: note == null
+            ? null
+            : Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(color: c.tomatoDim, borderRadius: BorderRadius.circular(99)),
+                child: Text(note, style: TextStyle(color: c.tomato, fontSize: 11, fontWeight: FontWeight.w600))),
+        onTap: onTap);

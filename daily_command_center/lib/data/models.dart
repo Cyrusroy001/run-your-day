@@ -270,6 +270,15 @@ class RoutineItem {
         if (workoutId != null) 'workoutId': workoutId,
         if (goalId != null) 'goalId': goalId,
       };
+
+  RoutineItem copyWith({int? idealDuration, int? minDuration, int? priority}) => RoutineItem(
+        id: id, kind: kind, label: label, desc: desc, start: start,
+        idealDuration: idealDuration ?? this.idealDuration,
+        minDuration: minDuration ?? this.minDuration,
+        priority: priority ?? this.priority,
+        maxDriftMinutes: maxDriftMinutes, cutoffTime: cutoffTime, dropStrategy: dropStrategy,
+        condition: condition, workoutId: workoutId, goalId: goalId,
+      );
 }
 
 class DayTemplate {

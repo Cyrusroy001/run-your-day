@@ -54,6 +54,17 @@ class WeeklyReview {
     );
   }
 
+  /// The label that drifted most this week (any event type) — the catch-up
+  /// screen's "give it more time" insight targets it. Null when nothing drifted.
+  static String? mostSqueezedLabel(List<DriftEvent> events) {
+    if (events.isEmpty) return null;
+    final counts = <String, int>{};
+    for (final e in events) {
+      counts[e.label] = (counts[e.label] ?? 0) + 1;
+    }
+    return counts.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
+  }
+
   static List<String> _byLabel(List<DriftEvent> events, String verb) {
     final counts = <String, int>{};
     for (final e in events) {
