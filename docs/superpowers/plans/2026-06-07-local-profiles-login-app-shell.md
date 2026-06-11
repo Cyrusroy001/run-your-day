@@ -1,5 +1,13 @@
 # Local Profiles, Login & App Shell — Implementation Plan
 
+> **STATUS (2026-06-11): SHIPPED on `feat/local-profiles`, with deviations.** Do not execute this plan top-to-bottom — parts are obsolete. As built (see **ADR-019** and `CONTINUE.md`):
+> - **Phase 0 (`ProfileScope` key-prefix + legacy migration): OBSOLETE.** Storage is **file-per-profile** (`ProfileRepository`/`ProfileDoc`, built in v3 A7). There is no `ProfileScope`; nothing prefixes SharedPreferences keys. Ignore all P0 tasks and any P1 code that assumes prefixing — the real API is `AppStore.repo` + the `activeProfile` notifier.
+> - **Phases 1–3, 5: DONE** against the file API (registry, AuthGate, login picker, onboarding, settings + logout/export/import/reset/clear/delete). Class/method names differ from the snippets below (e.g. `ProfileRepository.createProfile`, `OnboardingLogic.commit`).
+> - **Phase 4 (AppShell + navigation Drawer): SUPERSEDED** by the U6 **avatar menu** (`avatar_menu_sheet.dart`). No drawer, no `AppShell`, no `ComingSoon`/`TodayView` extraction.
+> - **Phase 6 (visual polish): the only optional remainder.**
+>
+> The prose/snippets below are kept as the original design record only.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add a local, on-device multi-profile layer to the Reminders 2 app: a login screen that is a profile picker (no backend), a per-profile data namespace, an onboarding stub for new profiles, a navigation drawer (side panel) that splits the app into focused screens, Settings, and logout — all visually polished.

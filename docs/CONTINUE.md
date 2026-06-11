@@ -1,5 +1,5 @@
 # Continuation Document
-**Last updated:** 2026-06-10 (session 7)
+**Last updated:** 2026-06-11 (session 8)
 
 If you're an AI agent starting fresh on this project, read this first. It tells you exactly where things stand and what to do next without requiring you to re-derive it from the codebase.
 
@@ -22,7 +22,7 @@ The **product direction** is bigger than Cyrus: a reusable, configurable life-ex
 | [`specs/2026-06-07-life-json-v3-drift-engine-design.md`](superpowers/specs/2026-06-07-life-json-v3-drift-engine-design.md) | Life JSON v3 + drift-aware engine (the core/moat) | Approved |
 | [`plans/2026-06-07-life-json-v3-drift-engine.md`](superpowers/plans/2026-06-07-life-json-v3-drift-engine.md) | **Engine plan** for v3 (5 phases A–E, ~30 TDD tasks) | **A–D done; E superseded by UX layer** |
 | [`specs/2026-06-08-reminders-2-ux-design.md`](superpowers/specs/2026-06-08-reminders-2-ux-design.md) + [`plans/2026-06-08-reminders-2-ux-layer.md`](superpowers/plans/2026-06-08-reminders-2-ux-layer.md) | **UX-layer plan** (U0–U7): calm Home, rich Live timeline, Adjust mode, teaching, weekly review, avatar menu, light/dark theme. Mockup: [`specs/2026-06-08-reminders-2-ux-mockup.html`](superpowers/specs/2026-06-08-reminders-2-ux-mockup.html) | **Complete** (U0–U7 done; `feat/reminders-2-redesign`) |
-| [`specs/2026-06-07-local-profiles-login-app-shell-design.md`](superpowers/specs/2026-06-07-local-profiles-login-app-shell-design.md) | Login (local profile picker), per-profile storage, app shell + side panel, onboarding stub | After v3 core + UX layer |
+| [`specs/2026-06-07-local-profiles-login-app-shell-design.md`](superpowers/specs/2026-06-07-local-profiles-login-app-shell-design.md) + [`plans/2026-06-07-local-profiles-login-app-shell.md`](superpowers/plans/2026-06-07-local-profiles-login-app-shell.md) | Login (local profile picker), per-profile storage, onboarding, settings/logout | **Complete** on `feat/local-profiles` (see Current state). Plan Phase 0 obsolete, Phase 4 drawer superseded by avatar menu — see **ADR-019** |
 | [`DECISIONS.md`](DECISIONS.md) | Architectural decision records (ADR-001…019) | Living |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | File map, data flow, storage key map | Living |
 
@@ -38,13 +38,24 @@ The **local-profiles/login** work pulls a minimal, local-only slice of #3/#5 for
 
 ---
 
-## Current state (session 6)
+## Current state (session 8)
 
-### Branch: `feat/reminders-2-redesign`
+### Branch: `feat/local-profiles` (most complete — strict superset of everything below)
 
-**UX layer is complete (U0–U7).** Engine plan phases A–D are committed; Phase E is superseded by UX U4/U5. The D3 interim screen (`today_screen.dart`) is deleted — `WeeklyReviewCard` (U3.1) supersedes it. The branch is ready to merge or continue with the custom-task feature.
+This branch carries the v3 engine (A–D), the UX layer (U0–U7), the custom-task feature (C1–C11), **and** the local-profiles/login feature. It is the new integration head; `feat/custom-tasks` and `feat/reminders-2-redesign` have no unique commits left to merge.
 
-The **next body of work is the UX-layer plan (U0–U8)** — none of its files exist yet. Start at U0 (theme foundation).
+**Local profiles is functionally complete and green (210 tests).** A first-run app seeds `cyrus`; the login screen is a local profile picker; a new name runs the onboarding flow that clones the seed plan; the avatar menu + Settings switch/log out / manage the active profile. End-to-end: create a profile → use it → log out → switch → log back in.
+
+| Area | What shipped | Notes |
+|---|---|---|
+| Storage | `ProfileRepository` (file-per-profile) + `ProfileDoc`, `AppStore.repo` facade, `activeProfile` notifier | Built in v3 **A7** — see **ADR-019** (file-per-profile won; the planned `ProfileScope` key-prefix was never built) |
+| Registry | `ProfileMeta`, `idFor`, create/list/delete, export/import, `clearHistory`/`resetPlan`/`ensureSeeded` | `test/data/profile_*` |
+| Routing | `AuthGate` = `ValueListenableBuilder(activeProfile)` → `LoginScreen` (null) vs `HomeScreen` | `main()` seeds + restores the pointer before `runApp` |
+| Login | `LoginScreen` picker (injected `profileLoader` seam) | tap existing → activate; new name → `OnboardingScreen` |
+| Onboarding | `OnboardingScreen` 3-step flow + `OnboardingLogic.buildPlan`/`commit` | `commit` is the single finish seam (screen + tests) |
+| Home/Settings | avatar menu wired to real profile name + log out / switch; Settings PROFILE/DATA sections (export/import to clipboard, reset plan, clear history, delete) | dart:io mutations covered by repo tests; screens verified fake-async-only |
+
+**Plan deviations (do not "fix"):** Plan **Phase 0** (`ProfileScope` key-prefix + legacy migration) is obsolete — storage is file-per-profile. Plan **Phase 4** (AppShell + navigation **Drawer**) is superseded by the **U6 avatar menu** — there is no drawer. Plan **Phase 6** (visual polish pass) is the only optional remainder. See ADR-019.
 
 ### Engine plan — phase status
 
@@ -108,15 +119,19 @@ Runs on the phone (Samsung S21 FE, Android 16 / API 36). Dev loop is wireless AD
 
 ## What to do next
 
-The engine, UX layer, and custom-task feature are all complete. The branch is in a shippable state. Candidate next steps (in rough priority order):
+The engine, UX layer, custom-task feature, **and local-profiles/login** are all complete on `feat/local-profiles` (210 tests green). The branch is shippable. Candidate next steps (in rough priority order):
 
-### 1. Merge `feat/custom-tasks` → `main`
+### 1. Merge `feat/local-profiles` → `main`
 
-`feat/custom-tasks` is the most complete branch — 63 commits ahead of `main`, and it is a strict superset of `feat/reminders-2-redesign` and `feature/plan-driven-core` (those have 0 unique commits). Green (188 tests). This is the merge candidate; `feat/reminders-2-redesign` no longer needs a separate merge.
+This is now the most complete branch and a strict superset of `feat/custom-tasks`, `feat/reminders-2-redesign`, and `feature/plan-driven-core` (all have 0 unique commits relative to it). It is the single merge candidate.
 
-### 2. Local-profiles/login (sequenced after the above)
+### 2. (Optional) Local-profiles Phase 6 — visual polish
 
-Full profile picker + per-profile storage + onboarding stub. See [`specs/2026-06-07-local-profiles-login-app-shell-design.md`](superpowers/specs/2026-06-07-local-profiles-login-app-shell-design.md) and [`plans/2026-06-07-local-profiles-login-app-shell.md`](superpowers/plans/2026-06-07-local-profiles-login-app-shell.md).
+Plan Phase 6: smooth section transitions, login/onboarding/avatar-menu refinement. Cosmetic only; the feature is functionally done. Skip unless polishing for a release.
+
+### 3. Resume the product roadmap (from the v3 spec)
+
+Profiles pulled a minimal local slice of onboarding forward. The larger arcs remain: **(2)** in-app control panel / Life-JSON editor, **(3)** interview tree, **(4)** AI generation (answers → Claude → validated Life JSON), **(5)** full onboarding flow. `OnboardingLogic.commit` is the seam the real interview/AI will replace.
 
 ---
 
@@ -138,6 +153,8 @@ Custom-task feature (C1–C11) is done on `feat/custom-tasks` — spec [`specs/2
 - **C10–C11** Phase 3 — blueprint promotion: Sunday review surfaces frequent tasks, `PromoteToBlueprintSheet` writes new `RoutineItem`s into the plan (first in-app plan write)
 
 Session 7 follow-ups (also on `feat/custom-tasks`): home-card quick-complete + live progress ring, Android widget redesign (progress bar, done strip, minutes-left), WFH day drops commute / home meal labels.
+
+Local-profiles/login is done on `feat/local-profiles` — spec [`specs/2026-06-07-local-profiles-login-app-shell-design.md`](superpowers/specs/2026-06-07-local-profiles-login-app-shell-design.md), plan [`plans/2026-06-07-local-profiles-login-app-shell.md`](superpowers/plans/2026-06-07-local-profiles-login-app-shell.md). See the table under **Current state** for the per-area breakdown and the plan-deviation notes (Phase 0 obsolete, Phase 4 drawer superseded by the avatar menu).
 
 ---
 
