@@ -101,7 +101,7 @@ class _PromoteSheetState extends State<_PromoteSheet> {
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
         decoration: BoxDecoration(
-          color: c.panel2,
+          color: c.raise2,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
         ),
         child: SafeArea(
@@ -120,7 +120,7 @@ class _PromoteSheetState extends State<_PromoteSheet> {
                   ),
                   const SizedBox(height: 16),
                   Text('Add to your plan',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: c.cream)),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: c.salt)),
                   const SizedBox(height: 4),
                   Text('You did this ${widget.candidate.count}× this week.',
                       style: TextStyle(fontSize: 12.5, color: c.dim)),
@@ -129,10 +129,10 @@ class _PromoteSheetState extends State<_PromoteSheet> {
                   TextField(
                     controller: _labelCtrl,
                     textCapitalization: TextCapitalization.sentences,
-                    style: TextStyle(color: c.cream),
+                    style: TextStyle(color: c.salt),
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: c.panel,
+                      fillColor: c.raise,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                         borderSide: BorderSide.none,
@@ -144,12 +144,12 @@ class _PromoteSheetState extends State<_PromoteSheet> {
                   const SizedBox(height: 20),
 
                   Text('Start time · ${displayTime(_timeString)}',
-                      style: TextStyle(fontSize: 12, color: c.muted, fontWeight: FontWeight.w500)),
+                      style: TextStyle(fontSize: 12, color: c.dim, fontWeight: FontWeight.w500)),
                   const SizedBox(height: 8),
                   _timePicker(c),
                   const SizedBox(height: 20),
 
-                  Text('Duration', style: TextStyle(fontSize: 12, color: c.muted, fontWeight: FontWeight.w500)),
+                  Text('Duration', style: TextStyle(fontSize: 12, color: c.dim, fontWeight: FontWeight.w500)),
                   const SizedBox(height: 8),
                   Wrap(spacing: 8, children: _durations.map((d) {
                     final selected = d == _durationMinutes;
@@ -157,19 +157,19 @@ class _PromoteSheetState extends State<_PromoteSheet> {
                       label: Text('${d}m'),
                       selected: selected,
                       onSelected: (_) => setState(() => _durationMinutes = d),
-                      backgroundColor: c.panel,
-                      selectedColor: c.amberD,
+                      backgroundColor: c.raise,
+                      selectedColor: c.mustardDim,
                       labelStyle: TextStyle(
-                        color: selected ? c.amber : c.muted,
+                        color: selected ? c.mustard : c.dim,
                         fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
                       ),
-                      side: BorderSide(color: selected ? c.amber : Colors.transparent),
+                      side: BorderSide(color: selected ? c.mustard : Colors.transparent),
                       showCheckmark: false,
                     );
                   }).toList()),
                   const SizedBox(height: 20),
 
-                  Text('Apply to', style: TextStyle(fontSize: 12, color: c.muted, fontWeight: FontWeight.w500)),
+                  Text('Apply to', style: TextStyle(fontSize: 12, color: c.dim, fontWeight: FontWeight.w500)),
                   const SizedBox(height: 8),
                   Wrap(spacing: 8, runSpacing: 4, children: [
                     for (final t in widget.templates)
@@ -187,13 +187,13 @@ class _PromoteSheetState extends State<_PromoteSheet> {
                     child: FilledButton(
                       onPressed: canSubmit ? _submit : null,
                       style: FilledButton.styleFrom(
-                        backgroundColor: c.terra,
-                        disabledBackgroundColor: c.panel,
+                        backgroundColor: c.tomato,
+                        disabledBackgroundColor: c.raise,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                       child: Text('Add to plan',
-                          style: TextStyle(fontWeight: FontWeight.w600, color: canSubmit ? c.cream : c.dim)),
+                          style: TextStyle(fontWeight: FontWeight.w600, color: canSubmit ? c.salt : c.dim)),
                     ),
                   ),
                 ],
@@ -211,27 +211,27 @@ class _PromoteSheetState extends State<_PromoteSheet> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration: BoxDecoration(
-            color: selected ? c.terraD : c.panel,
-            border: Border.all(color: selected ? c.terra : c.line),
+            color: selected ? c.tomatoDim : c.raise,
+            border: Border.all(color: selected ? c.tomato : c.line),
             borderRadius: BorderRadius.circular(999),
           ),
           child: Text(label,
               style: TextStyle(
                 fontSize: 12.5,
                 fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-                color: selected ? c.terra : c.muted,
+                color: selected ? c.tomato : c.dim,
               )),
         ),
       );
 
   Widget _timePicker(AppPalette c) => Container(
         height: 80,
-        decoration: BoxDecoration(color: c.panel, borderRadius: BorderRadius.circular(10)),
+        decoration: BoxDecoration(color: c.raise, borderRadius: BorderRadius.circular(10)),
         child: Row(children: [
           Expanded(child: _wheel(c, controller: _hourCtrl, count: 24,
               label: (i) => i.toString().padLeft(2, '0'),
               onChanged: (v) => setState(() => _selectedHour = v))),
-          Text(':', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: c.cream)),
+          Text(':', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: c.salt)),
           Expanded(child: _wheel(c, controller: _minCtrl, count: _minuteOptions.length,
               label: (i) => _minuteOptions[i].toString().padLeft(2, '0'),
               onChanged: (v) => setState(() => _selectedMinuteIdx = v))),
@@ -250,7 +250,7 @@ class _PromoteSheetState extends State<_PromoteSheet> {
         onSelectedItemChanged: onChanged,
         childDelegate: ListWheelChildBuilderDelegate(
           builder: (_, i) => Center(
-            child: Text(label(i), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500, color: c.cream)),
+            child: Text(label(i), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500, color: c.salt)),
           ),
           childCount: count,
         ),

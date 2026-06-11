@@ -122,7 +122,7 @@ class _CatchupScreenState extends State<CatchupScreen> {
                 widget.onGiveMoreTime!(widget.insightLabel!, widget.giveMinutes);
                 setState(() => _gaveTime = true);
               },
-              style: FilledButton.styleFrom(backgroundColor: c.tomato, foregroundColor: const Color(0xFFFFF6F2), shape: const StadiumBorder(), padding: const EdgeInsets.symmetric(vertical: 11)),
+              style: FilledButton.styleFrom(backgroundColor: c.tomato, foregroundColor: c.onAccent, shape: const StadiumBorder(), padding: const EdgeInsets.symmetric(vertical: 11)),
               child: const Text('Give it more time', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
             ),
           ),

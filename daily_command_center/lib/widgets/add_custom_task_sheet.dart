@@ -78,7 +78,7 @@ class _AddCustomTaskSheetState extends State<_AddCustomTaskSheet> {
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
         decoration: BoxDecoration(
-          color: c.panel2,
+          color: c.raise2,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
         ),
         child: SafeArea(
@@ -100,7 +100,7 @@ class _AddCustomTaskSheetState extends State<_AddCustomTaskSheet> {
                 ),
                 const SizedBox(height: 16),
                 Text('Add task', style: TextStyle(
-                  fontSize: 18, fontWeight: FontWeight.w600, color: c.cream)),
+                  fontSize: 18, fontWeight: FontWeight.w600, color: c.salt)),
                 const SizedBox(height: 16),
 
                 // Label field
@@ -108,12 +108,12 @@ class _AddCustomTaskSheetState extends State<_AddCustomTaskSheet> {
                   controller: _labelCtrl,
                   autofocus: true,
                   textCapitalization: TextCapitalization.sentences,
-                  style: TextStyle(color: c.cream),
+                  style: TextStyle(color: c.salt),
                   decoration: InputDecoration(
                     hintText: 'What do you need to do?',
                     hintStyle: TextStyle(color: c.dim),
                     filled: true,
-                    fillColor: c.panel,
+                    fillColor: c.raise,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                       borderSide: BorderSide.none,
@@ -127,7 +127,7 @@ class _AddCustomTaskSheetState extends State<_AddCustomTaskSheet> {
 
                 // Time picker label
                 Text('Start time', style: TextStyle(
-                  fontSize: 12, color: c.muted, fontWeight: FontWeight.w500)),
+                  fontSize: 12, color: c.dim, fontWeight: FontWeight.w500)),
                 const SizedBox(height: 8),
                 _TimePicker(
                   hourCtrl: _hourCtrl,
@@ -141,7 +141,7 @@ class _AddCustomTaskSheetState extends State<_AddCustomTaskSheet> {
 
                 // Duration chips label
                 Text('Duration', style: TextStyle(
-                  fontSize: 12, color: c.muted, fontWeight: FontWeight.w500)),
+                  fontSize: 12, color: c.dim, fontWeight: FontWeight.w500)),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
@@ -151,16 +151,16 @@ class _AddCustomTaskSheetState extends State<_AddCustomTaskSheet> {
                       label: Text('${d}m'),
                       selected: selected,
                       onSelected: (_) => setState(() => _durationMinutes = d),
-                      backgroundColor: c.panel,
-                      selectedColor: c.amberD,
+                      backgroundColor: c.raise,
+                      selectedColor: c.mustardDim,
                       labelStyle: TextStyle(
-                        color: selected ? c.amber : c.muted,
+                        color: selected ? c.mustard : c.dim,
                         fontWeight: selected
                             ? FontWeight.w600
                             : FontWeight.normal,
                       ),
                       side: BorderSide(
-                        color: selected ? c.amber : Colors.transparent),
+                        color: selected ? c.mustard : Colors.transparent),
                       showCheckmark: false,
                     );
                   }).toList(),
@@ -173,8 +173,8 @@ class _AddCustomTaskSheetState extends State<_AddCustomTaskSheet> {
                   child: FilledButton(
                     onPressed: labelEmpty ? null : _submit,
                     style: FilledButton.styleFrom(
-                      backgroundColor: c.terra,
-                      disabledBackgroundColor: c.panel,
+                      backgroundColor: c.tomato,
+                      disabledBackgroundColor: c.raise,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
@@ -182,7 +182,7 @@ class _AddCustomTaskSheetState extends State<_AddCustomTaskSheet> {
                     child: Text('Continue',
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
-                          color: labelEmpty ? c.dim : c.cream,
+                          color: labelEmpty ? c.dim : c.salt,
                         )),
                   ),
                 ),
@@ -218,7 +218,7 @@ class _TimePicker extends StatelessWidget {
     return Container(
       height: 80,
       decoration: BoxDecoration(
-        color: c.panel,
+        color: c.raise,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
@@ -231,7 +231,7 @@ class _TimePicker extends StatelessWidget {
             onChanged: onHourChanged,
           )),
           Text(':', style: TextStyle(
-            fontSize: 22, fontWeight: FontWeight.w600, color: c.cream)),
+            fontSize: 22, fontWeight: FontWeight.w600, color: c.salt)),
           Expanded(child: _Wheel(
             controller: minCtrl,
             count: minuteOptions.length,
@@ -272,7 +272,7 @@ class _Wheel extends StatelessWidget {
           child: Text(label(i), style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w500,
-            color: palette.cream,
+            color: palette.salt,
           )),
         ),
         childCount: count,

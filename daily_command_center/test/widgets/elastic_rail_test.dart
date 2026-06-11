@@ -44,7 +44,7 @@ void main() {
     await t.pumpWidget(_host(const ElasticRail(stops: [
       RailStop(time: '8:00', label: 'Wake', variant: RailVariant.done, durationMinutes: 30),
     ])));
-    final box = t.widget<Container>(find.byKey(const Key('rail-card-0'))).decoration as BoxDecoration;
+    final box = t.widget<AnimatedContainer>(find.byKey(const Key('rail-card-0'))).decoration as BoxDecoration;
     expect(box.color, AppPalette.dark.leafDim);
   });
 

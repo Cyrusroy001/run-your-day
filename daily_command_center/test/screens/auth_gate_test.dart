@@ -9,7 +9,7 @@ import 'package:daily_command_center/data/profile_repository.dart';
 import 'package:daily_command_center/data/store.dart';
 import 'package:daily_command_center/screens/auth_gate.dart';
 import 'package:daily_command_center/screens/login_screen.dart';
-import 'package:daily_command_center/screens/home_screen.dart';
+import 'package:daily_command_center/screens/today_screen.dart';
 
 late Plan _plan;
 late Directory _tmp;
@@ -36,17 +36,17 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: AuthGate()));
     await tester.pump();
     expect(find.byType(LoginScreen), findsOneWidget);
-    expect(find.byType(HomeScreen), findsNothing);
+    expect(find.byType(TodayScreen), findsNothing);
   });
 
-  testWidgets('non-null active profile → HomeScreen', (tester) async {
+  testWidgets('non-null active profile → TodayScreen', (tester) async {
     activeProfile.value = 'cyrus';
     await tester.pumpWidget(MaterialApp(
-      // id unused — HomeScreen reads activeProfile notifier directly
-      home: AuthGate(homeBuilder: (_) => HomeScreen(debugPlan: _plan)),
+      // id unused — TodayScreen reads activeProfile notifier directly
+      home: AuthGate(homeBuilder: (_) => TodayScreen(debugPlan: _plan)),
     ));
     await tester.pump();
-    expect(find.byType(HomeScreen), findsOneWidget);
+    expect(find.byType(TodayScreen), findsOneWidget);
     expect(find.byType(LoginScreen), findsNothing);
   });
 }

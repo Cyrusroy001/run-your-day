@@ -10,6 +10,7 @@ import 'package:google_fonts/google_fonts.dart';
 class AppPalette extends ThemeExtension<AppPalette> {
   final Color char, raise, raise2, salt, dim, line;
   final Color tomato, tomatoDim, mustard, mustardDim, leaf, leafDim;
+  final Color onAccent; // text/icon color on tomato (warm off-white, both themes)
 
   const AppPalette({
     required this.char, required this.raise, required this.raise2,
@@ -17,6 +18,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
     required this.tomato, required this.tomatoDim,
     required this.mustard, required this.mustardDim,
     required this.leaf, required this.leafDim,
+    required this.onAccent,
   });
 
   static const dark = AppPalette(
@@ -25,6 +27,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
     tomato: Color(0xFFD9543E), tomatoDim: Color(0x29D9543E),
     mustard: Color(0xFFDCA03F), mustardDim: Color(0x24DCA03F),
     leaf: Color(0xFF7FB46A), leafDim: Color(0x267FB46A),
+    onAccent: Color(0xFFFFF6F2),
   );
 
   static const light = AppPalette(
@@ -33,24 +36,8 @@ class AppPalette extends ThemeExtension<AppPalette> {
     tomato: Color(0xFFB5402C), tomatoDim: Color(0x1AB5402C),
     mustard: Color(0xFFA1701F), mustardDim: Color(0x1FA1701F),
     leaf: Color(0xFF4E7F3A), leafDim: Color(0x1C4E7F3A),
+    onAccent: Color(0xFFFFF6F2),
   );
-
-  // ---- TEMP migration aliases (old Reminders-2 token names → ketchup) ----
-  // Lets pre-rebrand widgets keep compiling and instantly pick up ketchup
-  // colors during the K1–K7 migration. Removed in K8; the guard test + the
-  // analyzer then flag any straggler. Do NOT use these in new code.
-  Color get bg => char;
-  Color get panel => raise;
-  Color get panel2 => raise2;
-  Color get cream => salt;
-  Color get muted => dim;
-  Color get terra => tomato;
-  Color get terraD => tomatoDim;
-  Color get moss => leaf;
-  Color get mossD => leafDim;
-  Color get amber => mustard;
-  Color get amberD => mustardDim;
-  Color get sky => tomato; // blue is banned (R3) — map the old accent to brand
 
   static ThemeData get darkTheme => _theme(dark, Brightness.dark);
   static ThemeData get lightTheme => _theme(light, Brightness.light);

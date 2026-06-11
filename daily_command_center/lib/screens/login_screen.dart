@@ -56,21 +56,21 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final c = context.c;
     return Scaffold(
-      backgroundColor: c.bg,
+      backgroundColor: c.char,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 28),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             const SizedBox(height: 64),
             Text('ketchup.',
-                style: GoogleFonts.bricolageGrotesque(fontSize: 40, fontWeight: FontWeight.w800, color: c.cream, height: 1.0, letterSpacing: -1)),
+                style: GoogleFonts.bricolageGrotesque(fontSize: 40, fontWeight: FontWeight.w800, color: c.salt, height: 1.0, letterSpacing: -1)),
             const SizedBox(height: 8),
             Text("Who's running the day?",
-                style: GoogleFonts.bricolageGrotesque(fontSize: 16, fontStyle: FontStyle.italic, color: c.muted)),
+                style: GoogleFonts.bricolageGrotesque(fontSize: 16, fontStyle: FontStyle.italic, color: c.dim)),
             const SizedBox(height: 32),
             Expanded(
               child: _loading
-                  ? Center(child: CircularProgressIndicator(color: c.terra))
+                  ? Center(child: CircularProgressIndicator(color: c.tomato))
                   : ListView(children: [
                       if (_profiles.isEmpty)
                         Padding(padding: const EdgeInsets.symmetric(vertical: 24),
@@ -100,7 +100,7 @@ class _ProfileTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Material(
-        color: c.panel,
+        color: c.raise,
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
@@ -108,13 +108,13 @@ class _ProfileTile extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(children: [
-              CircleAvatar(radius: 24, backgroundColor: c.terra,
-                  child: Text(initial, style: TextStyle(color: c.bg, fontWeight: FontWeight.w800, fontSize: 20))),
+              CircleAvatar(radius: 24, backgroundColor: c.tomato,
+                  child: Text(initial, style: TextStyle(color: c.char, fontWeight: FontWeight.w800, fontSize: 20))),
               const SizedBox(width: 16),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(meta.displayName, style: TextStyle(color: c.cream, fontSize: 17, fontWeight: FontWeight.w700)),
+                Text(meta.displayName, style: TextStyle(color: c.salt, fontSize: 17, fontWeight: FontWeight.w700)),
                 if (meta.archetype.isNotEmpty)
-                  Text(meta.archetype, style: TextStyle(color: c.muted, fontSize: 12)),
+                  Text(meta.archetype, style: TextStyle(color: c.dim, fontSize: 12)),
               ])),
               Icon(Icons.chevron_right, color: c.dim),
             ]),
@@ -138,16 +138,16 @@ class _NewProfileField extends StatelessWidget {
       decoration: BoxDecoration(border: Border.all(color: c.line), borderRadius: BorderRadius.circular(16)),
       child: Row(children: [
         const SizedBox(width: 8),
-        Icon(Icons.add, color: c.moss),
+        Icon(Icons.add, color: c.leaf),
         const SizedBox(width: 8),
         Expanded(child: TextField(
           controller: controller,
-          style: TextStyle(color: c.cream),
+          style: TextStyle(color: c.salt),
           decoration: InputDecoration(border: InputBorder.none, hintText: 'New profile name',
               hintStyle: TextStyle(color: c.dim)),
           onSubmitted: (_) => onSubmit(),
         )),
-        TextButton(onPressed: onSubmit, child: Text('Continue', style: TextStyle(color: c.terra))),
+        TextButton(onPressed: onSubmit, child: Text('Continue', style: TextStyle(color: c.tomato))),
       ]),
     );
   }

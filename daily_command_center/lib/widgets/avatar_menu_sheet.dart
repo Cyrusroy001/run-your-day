@@ -9,15 +9,15 @@ Future<void> showAvatarMenu(BuildContext context, {
   VoidCallback? onPlanWeek, VoidCallback? onCatchup, bool catchupBadge = false,
 }) {
   final c = context.c;
-  return showModalBottomSheet(context: context, backgroundColor: c.panel2,
+  return showModalBottomSheet(context: context, backgroundColor: c.raise2,
     shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(22))),
     builder: (_) => SafeArea(child: Padding(padding: const EdgeInsets.fromLTRB(16, 16, 16, 26),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          CircleAvatar(backgroundColor: c.terra, child: Text(name.isNotEmpty ? name[0] : '?', style: const TextStyle(color: Colors.white))),
+          CircleAvatar(backgroundColor: c.tomato, child: Text(name.isNotEmpty ? name[0] : '?', style: TextStyle(color: c.onAccent))),
           const SizedBox(width: 12),
           Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(name, style: GoogleFonts.bricolageGrotesque(fontSize: 18, color: c.cream)),
+            Text(name, style: GoogleFonts.bricolageGrotesque(fontSize: 18, color: c.salt)),
             Text(subtitle, style: TextStyle(fontSize: 11, color: c.dim)),
           ]),
         ]),

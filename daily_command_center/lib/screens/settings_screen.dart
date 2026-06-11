@@ -5,7 +5,7 @@ import '../main.dart';
 import '../data/store.dart';
 import '../data/ui_prefs.dart';
 import '../theme/app_palette.dart';
-import 'glossary_screen.dart';
+import 'how_it_works_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -44,14 +44,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: c.panel,
-        title: Text(title, style: TextStyle(color: c.cream)),
-        content: Text(body, style: TextStyle(color: c.muted)),
+        backgroundColor: c.raise,
+        title: Text(title, style: TextStyle(color: c.salt)),
+        content: Text(body, style: TextStyle(color: c.dim)),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false),
               child: Text('Cancel', style: TextStyle(color: c.dim))),
           TextButton(onPressed: () => Navigator.pop(context, true),
-              child: Text(confirm, style: TextStyle(color: destructive ? c.terra : c.sky))),
+              child: Text(confirm, style: TextStyle(color: destructive ? c.tomato : c.tomato))),
         ],
       ),
     );
@@ -89,19 +89,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final blob = await showDialog<String>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: c.panel,
-        title: Text('Import profile', style: TextStyle(color: c.cream)),
+        backgroundColor: c.raise,
+        title: Text('Import profile', style: TextStyle(color: c.salt)),
         content: TextField(
           controller: ctrl,
           maxLines: 6,
-          style: TextStyle(color: c.cream, fontSize: 12),
+          style: TextStyle(color: c.salt, fontSize: 12),
           decoration: const InputDecoration(hintText: 'Paste an exported profile JSON'),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context),
               child: Text('Cancel', style: TextStyle(color: c.dim))),
           TextButton(onPressed: () => Navigator.pop(context, ctrl.text),
-              child: Text('Import', style: TextStyle(color: c.sky))),
+              child: Text('Import', style: TextStyle(color: c.tomato))),
         ],
       ),
     );
@@ -139,12 +139,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     void setScale(double s) => appState?.updatePrefs(prefs.copyWith(textScale: s));
 
     return Scaffold(
-      appBar: AppBar(backgroundColor: c.bg, elevation: 0, foregroundColor: c.cream,
+      appBar: AppBar(backgroundColor: c.char, elevation: 0, foregroundColor: c.salt,
           title: Text('Settings', style: GoogleFonts.bricolageGrotesque(fontWeight: FontWeight.w800))),
       body: ListView(padding: const EdgeInsets.all(20), children: [
         _section(c, 'PROFILE'),
         Text(_name.isEmpty ? '—' : _name,
-            style: GoogleFonts.bricolageGrotesque(fontSize: 22, fontWeight: FontWeight.w800, color: c.cream)),
+            style: GoogleFonts.bricolageGrotesque(fontSize: 22, fontWeight: FontWeight.w800, color: c.salt)),
         if (_archetype.isNotEmpty)
           Text(_archetype, style: TextStyle(fontSize: 12, color: c.dim)),
         const SizedBox(height: 8),
@@ -177,10 +177,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(height: 12),
         const Divider(),
         ListTile(contentPadding: EdgeInsets.zero,
-            title: Text('How Reminders works', style: TextStyle(color: c.cream)),
+            title: Text('How Reminders works', style: TextStyle(color: c.salt)),
             trailing: Icon(Icons.chevron_right, color: c.dim),
             onTap: () => Navigator.of(context)
-                .push(MaterialPageRoute(builder: (_) => const GlossaryScreen()))),
+                .push(MaterialPageRoute(builder: (_) => const HowItWorksScreen()))),
       ]),
     );
   }
@@ -188,15 +188,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _section(AppPalette c, String label) => Padding(
         padding: const EdgeInsets.only(bottom: 10),
         child: Text(label,
-            style: TextStyle(fontSize: 11, letterSpacing: 1, color: c.sky, fontWeight: FontWeight.w600)),
+            style: TextStyle(fontSize: 11, letterSpacing: 1, color: c.tomato, fontWeight: FontWeight.w600)),
       );
 
   Widget _action(AppPalette c, IconData icon, String label, VoidCallback onTap,
           {bool danger = false}) =>
       ListTile(
         contentPadding: EdgeInsets.zero,
-        leading: Icon(icon, color: danger ? c.terra : c.sky),
-        title: Text(label, style: TextStyle(color: danger ? c.terra : c.cream)),
+        leading: Icon(icon, color: danger ? c.tomato : c.tomato),
+        title: Text(label, style: TextStyle(color: danger ? c.tomato : c.salt)),
         onTap: onTap,
       );
 }

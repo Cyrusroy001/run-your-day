@@ -74,7 +74,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     final c = context.c;
     return Scaffold(
-      backgroundColor: c.bg,
+      backgroundColor: c.char,
       body: SafeArea(
         child: Column(children: [
           const SizedBox(height: 16),
@@ -101,20 +101,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         child: TextButton(
                           onPressed: _busy ? null : _back,
                           child: Text('Back',
-                              style: TextStyle(color: c.muted, fontWeight: FontWeight.w700)),
+                              style: TextStyle(color: c.dim, fontWeight: FontWeight.w700)),
                         ),
                       ),
               ),
               Expanded(child: FilledButton(
                 style: FilledButton.styleFrom(
-                    backgroundColor: c.terra,
+                    backgroundColor: c.tomato,
                     padding: const EdgeInsets.symmetric(vertical: 16)),
                 onPressed: _busy ? null : _next,
                 child: _busy
                     ? SizedBox(height: 18, width: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: c.bg))
+                        child: CircularProgressIndicator(strokeWidth: 2, color: c.char))
                     : Text(_index == _steps - 1 ? 'Create' : 'Next',
-                        style: TextStyle(color: c.bg, fontWeight: FontWeight.w800, fontSize: 16)),
+                        style: TextStyle(color: c.char, fontWeight: FontWeight.w800, fontSize: 16)),
               )),
             ]),
           ),
@@ -137,7 +137,7 @@ class _ProgressDots extends StatelessWidget {
           width: i == index ? 22 : 8, height: 8,
           margin: const EdgeInsets.symmetric(horizontal: 3),
           decoration: BoxDecoration(
-              color: i == index ? c.terra : c.line,
+              color: i == index ? c.tomato : c.line,
               borderRadius: BorderRadius.circular(4)),
         ),
     ]);
@@ -158,12 +158,12 @@ class _Welcome extends StatelessWidget {
           children: [
         Text('Welcome, $name.',
             style: GoogleFonts.bricolageGrotesque(
-                fontSize: 32, fontWeight: FontWeight.w900, color: c.cream)),
+                fontSize: 32, fontWeight: FontWeight.w900, color: c.salt)),
         const SizedBox(height: 12),
         Text(
           "We'll set up a starting routine you can run from day one. "
           "You can fine-tune everything later.",
-          style: TextStyle(color: c.muted, fontSize: 15, height: 1.5),
+          style: TextStyle(color: c.dim, fontSize: 15, height: 1.5),
         ),
       ]),
     );
@@ -183,9 +183,9 @@ class _WeekStep extends StatelessWidget {
     return ListView(padding: const EdgeInsets.all(24), children: [
       Text('Your week',
           style: GoogleFonts.bricolageGrotesque(
-              fontSize: 24, fontWeight: FontWeight.w900, color: c.cream)),
+              fontSize: 24, fontWeight: FontWeight.w900, color: c.salt)),
       const SizedBox(height: 4),
-      Text('Pick the shape of each weekday.', style: TextStyle(color: c.muted)),
+      Text('Pick the shape of each weekday.', style: TextStyle(color: c.dim)),
       const SizedBox(height: 16),
       for (final d in days)
         Padding(
@@ -195,10 +195,10 @@ class _WeekStep extends StatelessWidget {
                   width: 44,
                   child: Text(d.toUpperCase(),
                       style: TextStyle(
-                          color: c.cream, fontWeight: FontWeight.w700))),
+                          color: c.salt, fontWeight: FontWeight.w700))),
               const SizedBox(width: 8),
               if (d == 'sat' || d == 'sun')
-                Chip(label: const Text('Weekend'), backgroundColor: c.panel)
+                Chip(label: const Text('Weekend'), backgroundColor: c.raise)
               else
                 for (final t in const ['office', 'wfh'])
                   Padding(
@@ -228,22 +228,22 @@ class _TrainingStep extends StatelessWidget {
             children: [
           Text('Training days',
               style: GoogleFonts.bricolageGrotesque(
-                  fontSize: 24, fontWeight: FontWeight.w900, color: c.cream)),
+                  fontSize: 24, fontWeight: FontWeight.w900, color: c.salt)),
           const SizedBox(height: 4),
           Text("How many days a week do you want to train?",
-              style: TextStyle(color: c.muted)),
+              style: TextStyle(color: c.dim)),
           const SizedBox(height: 24),
           Text('$days days',
               style: GoogleFonts.bricolageGrotesque(
                   fontSize: 36,
                   fontWeight: FontWeight.w900,
-                  color: c.terra)),
+                  color: c.tomato)),
           Slider(
               value: days.toDouble(),
               min: 1,
               max: 6,
               divisions: 5,
-              activeColor: c.terra,
+              activeColor: c.tomato,
               onChanged: (v) => onChange(v.round())),
         ]));
   }

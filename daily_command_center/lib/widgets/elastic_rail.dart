@@ -52,6 +52,12 @@ class ElasticRail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.c;
+    // The two ketchup motions live here: the squeeze (a stop's height animates
+    // as its duration compresses) and Done (the card tints leaf). Honour
+    // reduced-motion by collapsing the duration to zero.
+    final motion = (MediaQuery.maybeOf(context)?.disableAnimations ?? false)
+        ? Duration.zero
+        : const Duration(milliseconds: 320);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       if (header != null)
         Padding(
@@ -60,19 +66,24 @@ class ElasticRail extends StatelessWidget {
               style: TextStyle(
                   fontSize: 11, letterSpacing: 1.4, color: c.dim, fontWeight: FontWeight.w600)),
         ),
-      for (var i = 0; i < stops.length; i++) _stop(c, stops[i], i),
+      for (var i = 0; i < stops.length; i++) _stop(c, motion, stops[i], i),
     ]);
   }
 
-  Widget _stop(AppPalette c, RailStop s, int i) {
+  Widget _stop(AppPalette c, Duration motion, RailStop s, int i) {
     // Spine/stop height is proportional to duration but acts as a MINIMUM —
     // short blocks grow to fit their content instead of clipping (IntrinsicHeight
-    // makes the spine match the card's height either way).
+    // makes the spine match the card's height either way). AnimatedSize makes a
+    // squeeze (a drop in duration) compress the segment over 320 ms.
     final h = spineHeight(s.durationMinutes);
     final faded = s.variant == RailVariant.skip;
     return Opacity(
       opacity: faded ? 0.45 : 1,
-      child: IntrinsicHeight(
+      child: AnimatedSize(
+        duration: motion,
+        curve: Curves.easeOut,
+        alignment: Alignment.topCenter,
+        child: IntrinsicHeight(
         child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           SizedBox(
             width: 50,
@@ -96,17 +107,20 @@ class ElasticRail extends StatelessWidget {
           Expanded(
             child: ConstrainedBox(
               constraints: BoxConstraints(minHeight: h),
-              child: _card(c, s, i),
+              child: _card(c, motion, s, i),
             ),
           ),
         ]),
+        ),
       ),
     );
   }
 
-  Widget _card(AppPalette c, RailStop s, int i) {
+  Widget _card(AppPalette c, Duration motion, RailStop s, int i) {
     final box = _cardDecoration(c, s.variant);
-    final card = Container(
+    final card = AnimatedContainer(
+      duration: motion,
+      curve: Curves.easeOut,
       key: Key('rail-card-$i'),
       margin: const EdgeInsets.symmetric(vertical: 5),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),

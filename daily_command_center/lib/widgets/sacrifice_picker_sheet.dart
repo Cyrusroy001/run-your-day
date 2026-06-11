@@ -41,7 +41,7 @@ class _SacrificePickerSheet extends StatelessWidget {
       expand: false,
       builder: (_, scrollCtrl) => Container(
         decoration: BoxDecoration(
-          color: c.panel2,
+          color: c.raise2,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
         ),
         child: Column(
@@ -67,11 +67,11 @@ class _SacrificePickerSheet extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Make room for', style: TextStyle(
-                    fontSize: 12, color: c.muted,
+                    fontSize: 12, color: c.dim,
                     fontWeight: FontWeight.w500)),
                   const SizedBox(height: 2),
                   Text('"$taskLabel"', style: TextStyle(
-                    fontSize: 18, fontWeight: FontWeight.w600, color: c.cream),
+                    fontSize: 18, fontWeight: FontWeight.w600, color: c.salt),
                     maxLines: 1, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 6),
                   Text('Drop one of these to fit it in:',
@@ -123,10 +123,10 @@ class _OfferTile extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: c.panel,
+        color: c.raise,
         borderRadius: BorderRadius.circular(12),
         border: offer.isRecommended
-            ? Border.all(color: c.amber.withValues(alpha: 0.6), width: 1.5)
+            ? Border.all(color: c.mustard.withValues(alpha: 0.6), width: 1.5)
             : null,
       ),
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
@@ -138,17 +138,17 @@ class _OfferTile extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                 decoration: BoxDecoration(
-                  color: c.amberD,
+                  color: c.mustardDim,
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text('Recommended', style: TextStyle(
                   fontSize: 10, fontWeight: FontWeight.w700,
-                  color: c.amber, letterSpacing: 0.3)),
+                  color: c.mustard, letterSpacing: 0.3)),
               ),
               const SizedBox(width: 8),
             ],
             Text('Frees ${offer.freedMinutes} min',
-                style: TextStyle(fontSize: 12, color: c.muted)),
+                style: TextStyle(fontSize: 12, color: c.dim)),
           ]),
           const SizedBox(height: 8),
           // Drop labels
@@ -157,11 +157,11 @@ class _OfferTile extends StatelessWidget {
             children: dropLabels.map((label) => Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: c.panel2,
+                color: c.raise2,
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(label, style: TextStyle(
-                fontSize: 13, fontWeight: FontWeight.w500, color: c.cream)),
+                fontSize: 13, fontWeight: FontWeight.w500, color: c.salt)),
             )).toList(),
           ),
           const SizedBox(height: 12),
@@ -170,13 +170,13 @@ class _OfferTile extends StatelessWidget {
             child: FilledButton(
               onPressed: onConfirm,
               style: FilledButton.styleFrom(
-                backgroundColor: offer.isRecommended ? c.terra : c.panel2,
+                backgroundColor: offer.isRecommended ? c.tomato : c.raise2,
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8)),
               ),
               child: Text('Drop it', style: TextStyle(
-                color: offer.isRecommended ? c.cream : c.muted,
+                color: offer.isRecommended ? c.salt : c.dim,
                 fontWeight: FontWeight.w600, fontSize: 13)),
             ),
           ),

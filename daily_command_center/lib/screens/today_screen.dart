@@ -26,7 +26,7 @@ import '../widgets/sacrifice_picker_sheet.dart';
 import '../widgets/promote_blueprint_sheet.dart';
 import '../widgets/teach_caption.dart';
 import '../widgets/avatar_menu_sheet.dart';
-import 'live_timeline_view.dart' show RepeatPromptCard;
+import '../widgets/repeat_prompt_card.dart';
 import 'settings_screen.dart';
 import 'how_it_works_screen.dart';
 import 'week_screen.dart';
@@ -402,7 +402,7 @@ class TodayScreenState extends State<TodayScreen> {
           ? null
           : FloatingActionButton(
               heroTag: 'add_custom_task', onPressed: _openAddCustomTask,
-              backgroundColor: c.tomato, foregroundColor: const Color(0xFFFFF6F2),
+              backgroundColor: c.tomato, foregroundColor: c.onAccent,
               child: const Icon(Icons.add)),
     );
   }
@@ -490,7 +490,7 @@ class TodayScreenState extends State<TodayScreen> {
             child: CircleAvatar(radius: 17, backgroundColor: c.tomato,
                 child: Text(_displayName.isEmpty ? '?' : _displayName[0].toUpperCase(),
                     style: GoogleFonts.bricolageGrotesque(
-                        color: const Color(0xFFFFF6F2), fontWeight: FontWeight.w800, fontSize: 14))),
+                        color: c.onAccent, fontWeight: FontWeight.w800, fontSize: 14))),
           ),
         ]),
       );
@@ -550,7 +550,7 @@ class TodayScreenState extends State<TodayScreen> {
             final b = day.blocks.firstWhere((x) => x.signature == now.currentSignature);
             _toggle(b);
           },
-          style: FilledButton.styleFrom(backgroundColor: c.tomato, foregroundColor: const Color(0xFFFFF6F2),
+          style: FilledButton.styleFrom(backgroundColor: c.tomato, foregroundColor: c.onAccent,
               shape: const StadiumBorder(), padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10)),
           child: const Text('Done', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5)),
         ),
@@ -598,7 +598,7 @@ class TodayScreenState extends State<TodayScreen> {
           const Spacer(),
           FilledButton(
             onPressed: () => setState(() => _adjusting = false),
-            style: FilledButton.styleFrom(backgroundColor: c.tomato, foregroundColor: const Color(0xFFFFF6F2),
+            style: FilledButton.styleFrom(backgroundColor: c.tomato, foregroundColor: c.onAccent,
                 shape: const StadiumBorder(), padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8)),
             child: const Text('Done', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5)),
           ),
