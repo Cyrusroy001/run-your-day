@@ -6,6 +6,7 @@ Future<void> showAvatarMenu(BuildContext context, {
   required String name, required String subtitle,
   required VoidCallback onSwitchProfile, required VoidCallback onOpenSettings,
   required VoidCallback onOpenGlossary, required VoidCallback onLogout,
+  VoidCallback? onPlanWeek,
 }) {
   final c = context.c;
   return showModalBottomSheet(context: context, backgroundColor: c.panel2,
@@ -21,9 +22,11 @@ Future<void> showAvatarMenu(BuildContext context, {
           ]),
         ]),
         const Divider(height: 24),
+        if (onPlanWeek != null)
+          _item(c, Icons.calendar_today_outlined, 'Plan my week', () { Navigator.pop(context); onPlanWeek(); }),
         _item(c, Icons.swap_horiz, 'Switch profile', () { Navigator.pop(context); onSwitchProfile(); }),
         _item(c, Icons.settings_outlined, 'Settings & appearance', () { Navigator.pop(context); onOpenSettings(); }),
-        _item(c, Icons.help_outline, 'How Reminders works', () { Navigator.pop(context); onOpenGlossary(); }),
+        _item(c, Icons.help_outline, 'How ketchup works', () { Navigator.pop(context); onOpenGlossary(); }),
         _item(c, Icons.logout, 'Log out', () { Navigator.pop(context); onLogout(); }),
       ]))));
 }

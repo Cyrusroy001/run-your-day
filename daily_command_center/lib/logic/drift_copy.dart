@@ -41,6 +41,23 @@ class DriftCopy {
     return '$behind${_and(dropped)} dropped to protect your evening.';
   }
 
+  /// True when nothing has been squeezed or dropped — the calm "caught up" state.
+  static bool isCaughtUp(ResolvedDay day) =>
+      !day.blocks.any((b) => b.isCompacted || b.isDropped);
+
+  /// Ketchup-voice hero whisper — always one sentence (never null). Calm state
+  /// says caught up; otherwise ketchup takes responsibility ("I squeezed …") and
+  /// hands the user the win (the protected anchor held). Names only the latest
+  /// squeeze + the anchor — the rail shows the rest (spec R2).
+  static String ketchupWhisper(ResolvedDay day) {
+    final squeezed = day.blocks.where((b) => b.isCompacted).map((b) => b.label).toList();
+    final dropped = day.blocks.where((b) => b.isDropped).map((b) => b.label).toList();
+    if (squeezed.isEmpty && dropped.isEmpty) return "All caught up. The plan’s holding.";
+    final anchor = _firstHardAnchorLabel(day) ?? 'what matters';
+    if (squeezed.isNotEmpty) return 'I squeezed ${_and(squeezed)}. $anchor is untouched.';
+    return '${_and(dropped)} skipped today — protecting your evening.';
+  }
+
   static String teachCompaction({required String itemLabel, required int minutes, required String anchorLabel}) =>
       'I trimmed $itemLabel by ${minutes}m so your $anchorLabel still starts on time. Budgets flex; anchors don’t.';
 

@@ -274,7 +274,7 @@ class LiveTimelineViewState extends State<LiveTimelineView> {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
       children: [
         for (final task in _pendingRepeatTasks)
-          _RepeatPromptCard(
+          RepeatPromptCard(
             task: task,
             onRepeat: (date) => _createRecurringTask(task, date),
             onSkip: () => _skipRepeatTask(task),
@@ -714,12 +714,13 @@ class LiveTimelineViewState extends State<LiveTimelineView> {
 
 // ── Repeat prompt card ────────────────────────────────────────────────────────
 
-class _RepeatPromptCard extends StatelessWidget {
+class RepeatPromptCard extends StatelessWidget {
   final CustomTask task;
   final void Function(String dateIso) onRepeat;
   final VoidCallback onSkip;
 
-  const _RepeatPromptCard({
+  const RepeatPromptCard({
+    super.key,
     required this.task,
     required this.onRepeat,
     required this.onSkip,
