@@ -25,9 +25,9 @@ void main() {
       '9:45|meal|Break + snack|false|',
       '10:00|train|Train — Full Body B|true|B',
       '11:00|meal|Shower + brunch|false|',
-      '11:30|dsa|DSA Practice (45 min)|false|',
-      '1:50|work|Walk to office (10 min)|false|',
-      '2:00|work|Work — 2:00 to 8:00|false|',
+      '11:30|dsa|DSA practice|false|',
+      '1:50|work|Walk to office|false|',
+      '2:00|work|Work|false|',
       '3:00|meal|Lunch at office|false|',
       '5:00|meal|Light snack at office|false|',
       '8:30|meal|Dinner|false|',
@@ -44,10 +44,10 @@ void main() {
       '8:30|focus|Deep Focus — AI Building|false|',
       '9:45|meal|Break + snack|false|',
       '10:00|dsa|Extra Study Block|false|',
-      '11:30|dsa|DSA Practice (45 min)|false|',
+      '11:30|dsa|DSA practice|false|',
       '11:30|meal|Brunch — big protein meal|false|',
-      '1:50|work|Walk to office (10 min)|false|',
-      '2:00|work|Work — 2:00 to 8:00|false|',
+      '1:50|work|Walk to office|false|',
+      '2:00|work|Work|false|',
       '3:00|meal|Lunch at office|false|',
       '5:00|meal|Light snack at office|false|',
       '8:30|meal|Dinner|false|',
@@ -72,8 +72,8 @@ void main() {
     final sun = _sig(TimelineAssembler.assembleDay(plan, 'weekend_sun', 'sun', training: true));
     expect(sat.firstWhere((s) => s.contains('|train|')), '11:00|train|Train — Bench + Push|true|BENCH');
     expect(sun.firstWhere((s) => s.contains('|train|')), '11:00|train|Train — Treadmill + Core|true|CARDIO');
-    expect(sun.any((s) => s.contains('WEEKLY REVIEW')), true);
-    expect(sat.any((s) => s.contains('WEEKLY REVIEW')), false);
+    expect(sun.any((s) => s.contains('Weekly review')), true);
+    expect(sat.any((s) => s.contains('Weekly review')), false);
   });
 
   test('condition filtering: train shows only on training days', () {
