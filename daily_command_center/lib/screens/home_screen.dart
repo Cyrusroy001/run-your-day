@@ -31,6 +31,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   Plan? _plan;
+  String _displayName = '';
   DailyState _state = const DailyState(date: '');
   Set<String> _done = {};
   static const _days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
@@ -55,12 +56,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _load() async {
     if (widget.debugPlan != null) return; // tests inject the plan directly
-    final plan = await AppStore.loadPlan();
+    final doc = await AppStore.repo.loadActive();
     final state = await StateStore.loadState(DateTime.now());
     final done = await AdherenceStore.loadDone(DateTime.now());
     if (!mounted) return;
-    setState(() { _plan = plan; _state = state; _done = done; });
-    AppStore.writeWidgetData(plan, _todayKey).ignore();
+    setState(() { _plan = doc.plan; _displayName = doc.displayName; _state = state; _done = done; });
+    AppStore.writeWidgetData(doc.plan, _todayKey).ignore();
   }
 
   List<Block> _assemble(Plan plan) {
@@ -138,13 +139,19 @@ class _HomeScreenState extends State<HomeScreen> {
         Text('Run the day.', style: GoogleFonts.fraunces(fontSize: 34, fontWeight: FontWeight.w900, color: c.cream, height: .95)),
       ])),
       GestureDetector(
-        onTap: () => showAvatarMenu(context, name: 'Cyrus', subtitle: _plan?.meta.lifestyleArchetype ?? '',
-          onSwitchProfile: () {}, // wired to the profiles spec later
+        key: const Key('avatar-menu-button'),
+        onTap: () => showAvatarMenu(context,
+          name: _displayName.isEmpty ? 'Profile' : _displayName,
+          subtitle: _plan?.meta.lifestyleArchetype ?? '',
+          // Switch + log out both return to the login picker (a no-active-profile
+          // state); the picker is where the user re-selects or adds a profile.
+          onSwitchProfile: () => AppStore.repo.clearActive(),
           onOpenSettings: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
           onOpenGlossary: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GlossaryScreen())),
-          onLogout: () {}),
+          onLogout: () => AppStore.repo.clearActive()),
         child: CircleAvatar(radius: 19, backgroundColor: c.terraD,
-            child: Text('C', style: TextStyle(color: c.terra, fontWeight: FontWeight.w700))),
+            child: Text(_displayName.isEmpty ? '?' : _displayName[0].toUpperCase(),
+                style: TextStyle(color: c.terra, fontWeight: FontWeight.w700))),
       ),
     ]),
   );

@@ -26,8 +26,10 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     _tmp = Directory.systemTemp.createTempSync('home_screen_test');
     AppStore.repo = ProfileRepository(baseDir: _tmp);
+    activeProfile.value = null;
   });
   tearDown(() {
+    activeProfile.value = null;
     try {
       _tmp.deleteSync(recursive: true);
     } on FileSystemException {
@@ -50,5 +52,26 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400)); // route transition
     expect(find.byType(LiveTimelineView), findsOneWidget);
+  });
+
+  testWidgets('logging out from the avatar menu clears the active profile',
+      (tester) async {
+    tester.view.physicalSize = const Size(1200, 3000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    activeProfile.value = 'cyrus';
+    await tester.pumpWidget(
+        MaterialApp(theme: AppPalette.darkTheme, home: HomeScreen(debugPlan: _plan)));
+    await tester.pump();
+
+    await tester.tap(find.byKey(const Key('avatar-menu-button')));
+    await tester.pumpAndSettle();
+    expect(find.text('Log out'), findsOneWidget);
+
+    await tester.tap(find.text('Log out'));
+    await tester.pumpAndSettle();
+
+    expect(activeProfile.value, isNull); // flips AuthGate back to the login picker
   });
 }

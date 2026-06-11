@@ -6,6 +6,7 @@ import 'package:daily_command_center/data/store.dart';
 import 'package:daily_command_center/data/profile_repository.dart';
 import 'package:daily_command_center/main.dart';
 import 'package:daily_command_center/screens/settings_screen.dart';
+import 'package:daily_command_center/theme/app_palette.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -15,8 +16,10 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     tmp = Directory.systemTemp.createTempSync('settings_test');
     AppStore.repo = ProfileRepository(baseDir: tmp);
+    activeProfile.value = null;
   });
   tearDown(() {
+    activeProfile.value = null;
     try {
       tmp.deleteSync(recursive: true);
     } on FileSystemException {
@@ -41,5 +44,18 @@ void main() {
 
     final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
     expect(app.themeMode, ThemeMode.light);
+  });
+
+  testWidgets('PROFILE log out action clears the active profile', (tester) async {
+    activeProfile.value = 'cyrus';
+    await tester.pumpWidget(
+        MaterialApp(theme: AppPalette.darkTheme, home: const SettingsScreen()));
+    await tester.pump();
+
+    expect(find.text('Log out / switch profile'), findsOneWidget);
+    await tester.tap(find.text('Log out / switch profile'));
+    await tester.pump();
+
+    expect(activeProfile.value, isNull); // AuthGate routes back to the login picker
   });
 }
