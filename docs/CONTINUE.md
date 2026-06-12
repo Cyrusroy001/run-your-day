@@ -108,51 +108,14 @@ This branch carries the v3 engine (A–D), the UX layer (U0–U7), the custom-ta
 | D3 | Weekly-summary card on Today screen | ✅ committed (`4da84d7`; **interim — superseded by `WeeklyReviewCard` in U3.1; `today_screen.dart` deleted in U7.2**) |
 | E (E1–E5) | Interactive sandbox (drag/swipe/priority/undo) | ❌ **superseded** by UX U4/U5 (Adjust mode in `LiveTimelineView`) — do not build |
 
-### v3 Phase A — what was built
+The A11 plan-driven cutover (workouts/timeline gutted into `Plan`), the file-per-profile storage
+layout (`ProfileDoc`), and the seed/golden setup are documented in **ARCHITECTURE.md** + ADR-011…019.
 
-| Task | What | Tests |
-|---|---|---|
-| A1 | `assets/seed_plan.json` — full v3 blueprint for Cyrus | Asset registered in pubspec |
-| A2–A6 | Complete v3 model layer: `Plan`, `DayTemplate`/`Anchor`/`RoutineItem`, `WorkoutDef`/`ExerciseDef`/`Progression`, `WeekEntry`, `DailyState`/`DriftEvent`/`ItemOverride`, extended `Block` + `displayTime()` | 21 tests |
-| A9 | `PlanValidator` — referential integrity checks (templateId in week ∈ dayTemplates, workoutId ∈ workouts, etc.) | seed passes, error cases tested |
-| A10 | `TimelineAssembler.assembleDay()` — data-driven from Plan; golden test byte-identical to the old hardcoded timeline | golden test (all 4 templates) |
-| A7 | **File-per-profile `ProfileRepository`** + `ProfileDoc` (Plan + states + logs + done + adherence in one JSON file) + `AppStore` facade | 4 tests, multi-profile isolation |
-| A8 | `StateStore` — DailyState + drift log via ProfileRepository | 5 tests |
-| A11 | **Full app cutover** — all screens/widgets wired to `Plan`; dead code deleted | 62 tests total |
+### App + widget status
 
-### A11 cutover — what was deleted / replaced
-
-- `lib/logic/workouts.dart` — deleted (workouts live in `Plan.workouts` from seed JSON)
-- `lib/logic/timeline.dart` — stripped to `buildTimes()` + `nowDecimal()` only; `buildTimeline()` and all its hardcoded block constants gone
-- `models.dart` — `DaySchedule` enum, `DayPlan` class, `WeekPlan` typedef removed
-- `AdherenceStore` — no longer uses SharedPreferences; routes through `AppStore.repo` (file-per-profile)
-- `PlannerLogic` — now operates on `Plan`/`WeekEntry`; API is `applyBestSpacing(Plan)`, `toggleTraining(Plan, day)`, `toggleSchedule(Plan, day)`
-- All screens/widgets (`HomeScreen`, `TodayScreen`, `NowCard`, `WeekPlanner`) — accept `Plan`, call `TimelineAssembler.assembleDay`
-
-### Storage architecture (implemented)
-
-**File-per-profile:** `<appDocuments>/profiles/<id>.json` holds a `ProfileDoc`:
-
-```text
-ProfileDoc {
-  id, displayName, plan: Plan,
-  states: Map<'yyyy-MM-dd', DailyState>,   // drift log lives here
-  logs: Map<workoutKey, List<WorkoutLog>>,
-  done: Map<'yyyy-MM-dd', List<String>>,   // block signatures
-  adherence: Map<'yyyy-MM-dd', {done, total}>
-}
-```
-Active profile id is a global pointer in SharedPreferences. `AppStore.repo` is injectable (swap for temp dir in tests). Default profile `cyrus` is seeded from `assets/seed_plan.json` on first launch.
-
-### App status — WORKING
-
-Runs on the phone (Samsung S21 FE, Android 16 / API 36). Dev loop is wireless ADB + `flutter run` (below).
-
-### Android widget — WORKING (was broken; fixed in session 3)
-
-**Root cause was fixed:** `NowWidgetProvider.kt` was reading from `FlutterSharedPreferences` (`flutter.*` prefix) when it should read from `HomeWidgetPreferences` (raw keys) via `HomeWidgetPlugin.getData(context)`. Widget now shows live data.
-
-**15-minute refresh:** WorkManager drives actual 15-min periodic refresh (`callbackDispatcher` in `main.dart`). The XML `updatePeriodMillis` is 1800000 (30 min, the Android floor) as a fallback; WorkManager is the real driver.
+Runs on the phone (Samsung S21 FE, Android 16 / API 36). Dev loop = wireless ADB + `flutter run`.
+The home-screen widget reads pushed now-state via `HomeWidgetPlugin.getData` (raw keys), refreshed
+~15 min by WorkManager; it was **re-themed to ketchup in session 9** and is in v1 (pending device QA).
 
 ---
 
@@ -184,24 +147,12 @@ will replace.
 
 ### Completed work (for reference)
 
-All UX-layer tasks are done:
-- **U0** `UiPrefs` + `AppPalette` ThemeExtension + `RemindersApp` rewrite
-- **U1** `PriorityLevel`, `DriftCopy`, `HomeNowState`
-- **U2** `BudgetBar`, `AnchorWall`
-- **U3** `LiveTimelineView` (read-only), `WeeklyReviewCard`
-- **U4/U5** Adjust mode (`_adjusting`, reorder, remove-for-today, priority chips, Undo) + `TeachingCard`
-- **U6** `NowHeroCard`, `AvatarMenuSheet`, `GlossaryScreen`, `SettingsScreen`, `HomeScreen` rebuild, `WeekPlanner` migration
-- **U7** guard test, retire `now_card.dart`/`today_screen.dart`/`AppColors`, docs
-
-Custom-task feature (C1–C11) is done on `feat/custom-tasks` — spec [`specs/2026-06-09-custom-tasks-design.md`](superpowers/specs/2026-06-09-custom-tasks-design.md), plan [`plans/2026-06-09-custom-tasks.md`](superpowers/plans/2026-06-09-custom-tasks.md):
-
-- **C1–C6** Phase 1 — single-day injection: `CustomTask` model, assembler fold at priority 0, `CustomTaskFitter` sacrifice ranking, `AddCustomTaskSheet`, `SacrificePickerSheet`, FAB + amber row wiring
-- **C7–C9** Phase 2 — recurrence: `RecurringCustomTask` + `RecurringStore`, assembler fold, repeat-prompt card (+1/+2/+3/+7)
-- **C10–C11** Phase 3 — blueprint promotion: Sunday review surfaces frequent tasks, `PromoteToBlueprintSheet` writes new `RoutineItem`s into the plan (first in-app plan write)
-
-Session 7 follow-ups (also on `feat/custom-tasks`): home-card quick-complete + live progress ring, Android widget redesign (progress bar, done strip, minutes-left), WFH day drops commute / home meal labels.
-
-Local-profiles/login is done on `feat/local-profiles` — spec [`specs/2026-06-07-local-profiles-login-app-shell-design.md`](superpowers/specs/2026-06-07-local-profiles-login-app-shell-design.md), plan [`plans/2026-06-07-local-profiles-login-app-shell.md`](superpowers/plans/2026-06-07-local-profiles-login-app-shell.md). See the table under **Current state** for the per-area breakdown and the plan-deviation notes (Phase 0 obsolete, Phase 4 drawer superseded by the avatar menu).
+Foundation under the ketchup rebrand (all on `feat/ketchup-v1`'s history; many UX widgets named
+here were since retired in K8):
+- **UX layer U0–U7** — the calm Today / rich timeline / Adjust mode / weekly review / avatar menu /
+  light-dark theme (the presentation layer ketchup v2 superseded). Specs/plans: `2026-06-08-reminders-2-ux-*`.
+- **Custom tasks C1–C11** — single-day injection, recurrence, blueprint promotion. `2026-06-09-custom-tasks*`.
+- **Local profiles** — file-per-profile, login picker, onboarding stub, settings. `2026-06-07-local-profiles*`.
 
 ---
 
