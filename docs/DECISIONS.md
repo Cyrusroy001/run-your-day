@@ -252,3 +252,40 @@ outside the palette, or surface stat tiles / "Reflowed" / warning icons — the 
 
 **Supersedes:** the presentation layer of the 2026-06-08 UX plan (U0–U7) and ADR-020's exact token
 set (the AppPalette *shape* from ADR-020 stays; the token *names/values* are now ketchup's).
+
+---
+
+## ADR-022 — The garden redesign (v1.1): ripeness = time, 3 tabs, generality invariant
+
+**Decision (session 10, 2026-06-12):** Replace the tomato-condiment presentation with the **garden**
+system per [`specs/2026-06-12-ketchup-v1.1-garden-redesign-design.md`](superpowers/specs/2026-06-12-ketchup-v1.1-garden-redesign-design.md),
+after first real-device QA (signed v1 APK on the S21 FE — where the **widget rendered, unblocking
+ADR-010**). Engine/storage untouched. Key choices:
+
+- **Ripeness = time.** Blocks are fruit on today's vine: unripe green → ripening → nearly (apricot)
+  → **ripe red = NOW (the only red on screen)** → overripe/jammy (missed → squeeze ingredients) →
+  picked (done; calyx stays). Completing = **Pick ✓**; primary action color is vine green.
+- **3 tabs** (Today · Timeline · Week). Today = sun-arc live card + hero + glance cards. Timeline =
+  the living vine, climbing upward, **basket at the bottom** (morning folds beneath it; jammy
+  past blocks offer *pick late*), Adjust in the header. Week = the **allotment** (7 plots + detail
+  card; today = tint only, no glyph).
+- **The pantry replaces percentages.** Each day bottles `DayKetchup` (quantity = picked/trackable;
+  quality = first press / good batch / rough batch from squeezes·drops·late picks), persisted in the
+  profile doc. Sunday review = 7 jars; Home's week card = mini jar-shelf.
+- **Ambient sun-clock.** Home + widget grounds tint with local time (dawn→cream→golden→dusk→night
+  stars); **light means time, never drift** — drift shows as vine tension + jammy fruit. Day-done =
+  stars + a green bud for tomorrow, **pure metaphor (no task names/times)**.
+- **Widget = painted arc:** app pre-renders the arc card as an image (native text on top, ~2× size);
+  native-only "ripe card" is the fallback if One UI misbehaves.
+- **Generality invariant (the moat clause):** no lifestyle constants in any widget — templates,
+  modifiers (+ rule-generated captions), anchors, labels, waking window all come from the Life JSON.
+  **Goals are 0..N tracks**; surfaces degrade at 0 and scale at N. Office/WFH/Train/Rest is data.
+
+**Why:** QA verdict was "moody, aggressive red, timeline too long, week page unchanged, widget too
+plain" — and the fix Cyrus chose is the metaphor the name always implied: overripe tomatoes are what
+ketchup is made from, so drift becomes ingredients, not alarm. The generality clause keeps every new
+surface honest against the schema moat before onboarding/AI lands.
+
+**Do not** hardcode lifestyle labels in widgets, use ripe red for anything but NOW, recolor the sky
+for drift, or show tomorrow's plan in the night state. ADR-021's guards stay (hex ban, jargon ban);
+its tomato-token *semantics* are superseded by the ripeness ramp.

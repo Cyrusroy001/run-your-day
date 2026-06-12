@@ -1,5 +1,5 @@
 # Continuation Document
-**Last updated:** 2026-06-12 (session 9 — ketchup v1 rebrand)
+**Last updated:** 2026-06-12 (session 10 — v1 shipped to device; v1.1 garden redesign specced)
 
 If you're an AI agent starting fresh on this project, read this first. It tells you exactly where things stand and what to do next without requiring you to re-derive it from the codebase.
 
@@ -13,16 +13,28 @@ The **product direction** is bigger than Cyrus: a reusable, configurable life-ex
 
 ---
 
-## ⭐ Current focus (session 9 — ketchup v1, branch `feat/ketchup-v1`)
+## ⭐ Current focus (session 10 — ketchup v1.1 "the garden", branch `feat/ketchup-v1`)
 
-We are shipping **v1 for Cyrus only**: the ketchup presentation-layer rebrand on top of the
-complete v3 engine, delivered as a signed release APK. Spec:
+**v1 SHIPPED 2026-06-12:** signed release APK (keystore `C:/Users/Cyrus/ketchup-release.jks` +
+`android/key.properties`) installed on the S21 FE and QA'd by Cyrus. **The widget renders on
+One UI / Android 16 — ADR-010's blocker is gone.** K-notify + K-ship are done.
+
+**Now: v1.1 — the garden redesign**, from first real-device feedback. Spec (approved):
+[`specs/2026-06-12-ketchup-v1.1-garden-redesign-design.md`](superpowers/specs/2026-06-12-ketchup-v1.1-garden-redesign-design.md);
+decision: **ADR-022**. In one line: ripeness = time (garden palette, vine timeline climbing upward
+with a basket, sun-arc Home, allotment Week, pantry jars instead of percentages, painted-arc widget,
+ambient sun-clock, night = bud metaphor) + the **generality invariant** (no lifestyle constants;
+goals are 0..N tracks). Engine/storage/golden untouched.
+
+**Next step: write the implementation plan** (writing-plans skill) from the spec, then execute.
+
+### Done before this (session 9, v1)
+
+The full UI rebrand **K0–K8 + K-notify + K-ship is DONE and green** (192 tests at K8).
+`feat/ketchup-v1` is branched off `feat/local-profiles` and is the integration head. Spec:
 [`specs/2026-06-11-ketchup-full-visual-spec-v2.html`](superpowers/specs/2026-06-11-ketchup-full-visual-spec-v2.html);
 plan: [`plans/2026-06-12-ketchup-v1-rebrand.md`](superpowers/plans/2026-06-12-ketchup-v1-rebrand.md);
 decision: **ADR-021**.
-
-**The whole UI rebrand (K0–K8) is DONE and green (192 tests).** `feat/ketchup-v1` is branched off
-`feat/local-profiles` and is the new integration head.
 
 | Phase | Done | What |
 |---|---|---|
@@ -58,7 +70,8 @@ deferred. Delivery target = a **signed release APK** on the S21 FE.
 | [`plans/2026-06-07-life-json-v3-drift-engine.md`](superpowers/plans/2026-06-07-life-json-v3-drift-engine.md) | **Engine plan** for v3 (5 phases A–E, ~30 TDD tasks) | **A–D done; E superseded by UX layer** |
 | [`specs/2026-06-08-reminders-2-ux-design.md`](superpowers/specs/2026-06-08-reminders-2-ux-design.md) + [`plans/2026-06-08-reminders-2-ux-layer.md`](superpowers/plans/2026-06-08-reminders-2-ux-layer.md) | **UX-layer plan** (U0–U7): calm Home, rich Live timeline, Adjust mode, teaching, weekly review, avatar menu, light/dark theme. Mockup: [`specs/2026-06-08-reminders-2-ux-mockup.html`](superpowers/specs/2026-06-08-reminders-2-ux-mockup.html) | **Complete** (U0–U7 done; `feat/reminders-2-redesign`) |
 | [`specs/2026-06-07-local-profiles-login-app-shell-design.md`](superpowers/specs/2026-06-07-local-profiles-login-app-shell-design.md) + [`plans/2026-06-07-local-profiles-login-app-shell.md`](superpowers/plans/2026-06-07-local-profiles-login-app-shell.md) | Login (local profile picker), per-profile storage, onboarding, settings/logout | **Complete** on `feat/local-profiles` (see Current state). Plan Phase 0 obsolete, Phase 4 drawer superseded by avatar menu — see **ADR-019** |
-| [`specs/2026-06-11-ketchup-full-visual-spec-v2.html`](superpowers/specs/2026-06-11-ketchup-full-visual-spec-v2.html) + [`plans/2026-06-12-ketchup-v1-rebrand.md`](superpowers/plans/2026-06-12-ketchup-v1-rebrand.md) | **Ketchup v1 rebrand** (K0–K8 + K-notify/K-ship): brand, merged Today, elastic rail, catch-up | **K0–K8 done** on `feat/ketchup-v1`; K-notify/K-ship next. See **ADR-021** |
+| [`specs/2026-06-11-ketchup-full-visual-spec-v2.html`](superpowers/specs/2026-06-11-ketchup-full-visual-spec-v2.html) + [`plans/2026-06-12-ketchup-v1-rebrand.md`](superpowers/plans/2026-06-12-ketchup-v1-rebrand.md) | **Ketchup v1 rebrand** (K0–K8 + K-notify/K-ship): brand, merged Today, elastic rail, catch-up | **Shipped** (signed APK on device 2026-06-12). See **ADR-021** |
+| [`specs/2026-06-12-ketchup-v1.1-garden-redesign-design.md`](superpowers/specs/2026-06-12-ketchup-v1.1-garden-redesign-design.md) | **Ketchup v1.1 "the garden"**: ripeness palette, 3 tabs, vine+basket Timeline, sun-arc Today, allotment Week, pantry jars, painted widget, generality invariant | **Spec approved**; implementation plan next. See **ADR-022** |
 | [`DECISIONS.md`](DECISIONS.md) | Architectural decision records (ADR-001…021) | Living |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | File map, data flow, storage key map | Living |
 
@@ -115,28 +128,23 @@ layout (`ProfileDoc`), and the seed/golden setup are documented in **ARCHITECTUR
 
 Runs on the phone (Samsung S21 FE, Android 16 / API 36). Dev loop = wireless ADB + `flutter run`.
 The home-screen widget reads pushed now-state via `HomeWidgetPlugin.getData` (raw keys), refreshed
-~15 min by WorkManager; it was **re-themed to ketchup in session 9** and is in v1 (pending device QA).
+~15 min by WorkManager; it was re-themed in session 9 and **confirmed rendering on-device in
+session 10** (ADR-010 unblocked). v1.1 upgrades it to the painted-arc design (ADR-022).
 
 ---
 
 ## What to do next
 
-See **⭐ Current focus (session 9)** above — the immediate work is **K-notify** then **K-ship** to
-close out ketchup v1. After that:
+See **⭐ Current focus (session 10)** above — the immediate work is the **v1.1 garden redesign**:
+write the implementation plan from the approved spec (ADR-022), then execute. After that:
 
 ### 1. Merge `feat/ketchup-v1` → `main`
 
 `feat/ketchup-v1` is the new integration head — a strict superset of `feat/local-profiles` (which was
 itself a superset of `feat/custom-tasks` / `feat/reminders-2-redesign` / `feature/plan-driven-core`).
-Merge it once K-notify + K-ship land.
+Merge once v1.1 lands (v1 is already shipped on device from this branch).
 
-### 2. Un-defer the Android widget (first post-v1 task)
-
-The redesigned ketchup widget (spec §4 "phase 2") was deferred for v1. The blocker is the Samsung
-One UI / Android 16 RemoteViews rejection (ADR-010, root cause unconfirmed) — likely needs a Glance
-migration or step-by-step RemoteViews bisection. Current widget code is left untouched.
-
-### 3. Resume the product roadmap (from the v3 spec)
+### 2. Resume the product roadmap (from the v3 spec)
 
 The larger "for other people" arcs remain, all deferred for v1: **(2)** in-app control panel /
 Life-JSON editor, **(3)** interview tree, **(4)** AI generation (answers → Claude → validated Life
@@ -187,7 +195,7 @@ Firewall rule for adb is already in place. Run tests: `flutter test` (from `dail
 
 ## Active blockers / constraints
 
-1. **Disk space tight** (~4.6 GB free on C:). NDK was removed from the build (ADR-006) to avoid a ~1.5 GB download. Free space before adding any package with native code.
+1. **Disk space tight** (~3.65 GB free on C: after the 2026-06-12 clean rebuild). NDK was removed from the build (ADR-006) to avoid a ~1.5 GB download. Free space before adding any package with native code or iterating release builds.
 2. **HTML file is stale** — `daily-command-center.html` at the project root is the old version. Do not edit it for new features.
 
 ---
