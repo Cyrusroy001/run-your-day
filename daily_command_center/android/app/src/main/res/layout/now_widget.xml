@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- ketchup home-screen widget: the hero, miniaturized. char ground, tomato NOW
+     + ~ tilde, salt block name, tomato progress, dim next. No stat tiles. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_background"
     android:orientation="vertical"
-    android:padding="14dp">
+    android:padding="16dp">
 
-    <!-- Top row: badge + day label + done count -->
+    <!-- Top row: ● NOW (left) · ~ (right) -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -17,87 +19,70 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentStart="true"
-            android:text="▶ RIGHT NOW"
-            android:textColor="#FF6B4A"
-            android:textSize="8sp"
+            android:text="● NOW"
+            android:textColor="#D9543E"
+            android:textSize="9sp"
             android:textStyle="bold"
             android:letterSpacing="0.12" />
 
         <TextView
-            android:id="@+id/widget_day"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:textColor="#88FFFFFF"
-            android:textSize="8sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.08"
-            android:text="" />
-
-        <TextView
-            android:id="@+id/widget_done"
+            android:id="@+id/widget_tilde"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
-            android:textColor="#5BA854"
-            android:textSize="8sp"
-            android:textStyle="bold"
-            android:text="" />
+            android:text="~"
+            android:textColor="#D9543E"
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
     </RelativeLayout>
 
-    <!-- Current task label -->
+    <!-- Current block name -->
     <TextView
         android:id="@+id/widget_title"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_marginTop="6dp"
-        android:textColor="#F5F0E8"
-        android:textSize="17sp"
+        android:layout_marginTop="8dp"
+        android:textColor="#F0ECE6"
+        android:textSize="19sp"
         android:textStyle="bold"
         android:maxLines="2"
         android:ellipsize="end"
         android:gravity="center_vertical"
         android:text="Loading…" />
 
-    <!-- Progress bar -->
+    <!-- Minutes left -->
+    <TextView
+        android:id="@+id/widget_time_left"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="6dp"
+        android:textColor="#D9543E"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:text="" />
+
+    <!-- Progress -->
     <ProgressBar
         android:id="@+id/widget_progress"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
         android:layout_height="4dp"
-        android:layout_marginBottom="6dp"
+        android:layout_marginBottom="8dp"
         android:progressDrawable="@drawable/widget_progress_drawable"
         android:max="100"
         android:progress="0" />
 
-    <!-- Bottom row: minutes left + next task -->
-    <RelativeLayout
+    <!-- Next stop -->
+    <TextView
+        android:id="@+id/widget_next"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <TextView
-            android:id="@+id/widget_time_left"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:textColor="#FF6B4A"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            android:text="" />
-
-        <TextView
-            android:id="@+id/widget_next"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:textColor="#66FFFFFF"
-            android:textSize="9sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:text="" />
-
-    </RelativeLayout>
+        android:layout_height="wrap_content"
+        android:textColor="#9A8E83"
+        android:textSize="10sp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:text="" />
 
 </LinearLayout>

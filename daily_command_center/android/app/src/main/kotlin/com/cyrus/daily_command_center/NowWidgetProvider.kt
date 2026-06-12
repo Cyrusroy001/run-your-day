@@ -25,36 +25,29 @@ class NowWidgetProvider : AppWidgetProvider() {
             val prefs = HomeWidgetPlugin.getData(context)
             val currentAction  = prefs.getString("currentAction", "Loading…") ?: "Loading…"
             val nextAction     = prefs.getString("nextAction", "") ?: ""
-            val dayLabel       = prefs.getString("dayLabel", "") ?: ""
             val progressPct    = prefs.getInt("progressPct", 0)
             val minutesLeft    = prefs.getInt("minutesLeft", 0)
             val budgetMinutes  = prefs.getInt("budgetMinutes", 0)
-            val doneCount      = prefs.getInt("doneCount", 0)
-            val totalCount     = prefs.getInt("totalCount", 0)
 
             val views = RemoteViews(context.packageName, R.layout.now_widget)
 
-            // Top row
-            views.setTextViewText(R.id.widget_day, dayLabel.uppercase())
-            views.setTextViewText(
-                R.id.widget_done,
-                if (totalCount > 0) "$doneCount/$totalCount done" else ""
-            )
-
-            // Current task
+            // Current block name (● NOW · ~ are static in the layout — no stat tiles)
             views.setTextViewText(R.id.widget_title, currentAction)
 
-            // Progress bar
+            // Progress
             views.setProgressBar(R.id.widget_progress, 100, progressPct, false)
 
-            // Time left (only when there's an active block with a budget)
+            // Minutes left (only with an active, budgeted block)
             views.setTextViewText(
                 R.id.widget_time_left,
                 if (budgetMinutes > 0 && minutesLeft > 0) "${minutesLeft}m left" else ""
             )
 
-            // Next task
-            views.setTextViewText(R.id.widget_next, nextAction)
+            // Next stop
+            views.setTextViewText(
+                R.id.widget_next,
+                if (nextAction.isNotEmpty()) "next · $nextAction" else ""
+            )
 
             // Tap opens the app
             val intent = Intent(context, MainActivity::class.java).apply {
