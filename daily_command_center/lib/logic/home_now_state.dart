@@ -1,4 +1,3 @@
-import '../data/models.dart';
 import 'drift_engine.dart';
 import 'drift_copy.dart';
 

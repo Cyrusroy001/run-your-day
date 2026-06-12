@@ -53,7 +53,7 @@ void main() {
     });
 
     test('round-trips through toJson/fromJson with addedItems', () {
-      final state = DailyState(date: '2026-06-09', addedItems: [task]);
+      const state = DailyState(date: '2026-06-09', addedItems: [task]);
       final json = state.toJson();
       final restored = DailyState.fromJson(json);
       expect(restored.addedItems, hasLength(1));

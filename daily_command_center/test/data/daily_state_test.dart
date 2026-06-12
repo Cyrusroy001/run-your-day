@@ -12,7 +12,7 @@ void main() {
   });
 
   test('DailyState carries overrides and drift events', () {
-    final ds = DailyState(
+    const ds = DailyState(
       date: '2026-06-08',
       deletedItems: const ['snack'],
       dailySequence: const ['wake', 'focus', 'train'],

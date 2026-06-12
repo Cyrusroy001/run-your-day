@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:daily_command_center/data/models.dart';
 import 'package:daily_command_center/logic/drift_engine.dart';
 
-Block _item(String id, double start, {int ideal = 30, int min = 20, int prio = 3}) =>
+Block _item(String id, double start, {int ideal = 30, int prio = 3}) =>
     Block(time: id, cls: 'focus', label: id, id: id, estStart: start, durationMinutes: ideal, idealMinutes: ideal, priority: prio);
 
 Block _anchor(String id, double start, {bool hard = true}) =>
@@ -100,7 +100,7 @@ void main() {
 
   // C1: cutoffTime breach
   test('cutoffTime breach kills the item and emits a killed event', () {
-    final train = Block(
+    const train = Block(
       time: 'train', cls: 'train', label: 'Train', id: 'train', isTrain: true,
       seedStart: 18.5, estStart: 20.5, durationMinutes: 60, idealMinutes: 60, minMinutes: 40, priority: 3,
       cutoffDecimal: 20.0, dropStrategy: 'kill_and_notify',
@@ -112,7 +112,7 @@ void main() {
   });
 
   test('no breach when estStart is before the cutoff', () {
-    final train = Block(
+    const train = Block(
       time: 'train', cls: 'train', label: 'Train', id: 'train', isTrain: true,
       seedStart: 10.0, estStart: 10.0, durationMinutes: 60, idealMinutes: 60, minMinutes: 40, priority: 3,
       cutoffDecimal: 20.0, dropStrategy: 'kill_and_notify',
@@ -124,7 +124,7 @@ void main() {
 
   // C2: maxDriftMinutes breach
   test('maxDriftMinutes breach kills when drift exceeds the ceiling', () {
-    final focus = Block(
+    const focus = Block(
       time: 'focus', cls: 'focus', label: 'Deep Focus', id: 'focus',
       seedStart: 8.5, estStart: 8.5, durationMinutes: 75, idealMinutes: 75, minMinutes: 45, priority: 2,
       maxDriftMinutes: 60, dropStrategy: 'kill_and_notify',

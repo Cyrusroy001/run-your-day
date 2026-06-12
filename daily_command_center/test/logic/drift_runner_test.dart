@@ -18,7 +18,7 @@ void main() {
   });
   tearDown(() => tmp.deleteSync(recursive: true));
 
-  Block _train() => const Block(
+  Block train() => const Block(
         time: 'train', cls: 'train', label: 'Train', id: 'train', isTrain: true,
         seedStart: 18.5, estStart: 20.5, durationMinutes: 60, idealMinutes: 60,
         minMinutes: 40, priority: 3,
@@ -30,14 +30,14 @@ void main() {
     final fired = <String>[];
     final runner = DriftRunner(notify: (t, b) async => fired.add(t));
 
-    final r1 = await runner.run([_train()], now: 20.5, done: {}, day: day);
+    final r1 = await runner.run([train()], now: 20.5, done: {}, day: day);
     expect(r1.blocks.first.status, BlockStatus.dropped);
     expect(fired.length, 1);
     final logged = (await StateStore.loadState(day)).driftLog;
     expect(logged.where((e) => e.event == 'killed' && e.itemId == 'train').length, 1);
 
     // Re-run same minute: no new notification, no duplicate log entry.
-    await runner.run([_train()], now: 20.6, done: {}, day: day);
+    await runner.run([train()], now: 20.6, done: {}, day: day);
     expect(fired.length, 1);
     final logged2 = (await StateStore.loadState(day)).driftLog;
     expect(logged2.where((e) => e.event == 'killed' && e.itemId == 'train').length, 1);
@@ -54,7 +54,7 @@ void main() {
       seedStart: 8.5, estStart: 8.5, durationMinutes: 75, idealMinutes: 75,
       minMinutes: 45, priority: 2,
     );
-    final anchor = const Block(
+    const anchor = Block(
       time: 'work', cls: 'work', label: 'Work', id: 'work',
       estStart: 9.0, isAnchor: true, hardAnchor: true,
     );

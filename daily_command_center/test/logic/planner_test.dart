@@ -3,16 +3,16 @@ import 'package:daily_command_center/data/models.dart';
 import 'package:daily_command_center/logic/planner.dart';
 
 // Minimal in-memory Plan with all four template ids present.
-Plan _minPlan() => Plan(
+Plan _minPlan() => const Plan(
       schemaVersion: 3,
-      meta: const PlanMeta(),
-      dayTemplates: const {
+      meta: PlanMeta(),
+      dayTemplates: {
         'office':      DayTemplate(label: 'Office',      colorKey: 'terra',  anchors: [], routineStack: []),
         'wfh':         DayTemplate(label: 'WFH',         colorKey: 'sky',    anchors: [], routineStack: []),
         'weekend':     DayTemplate(label: 'Weekend',     colorKey: 'amber',  anchors: [], routineStack: []),
         'weekend_sun': DayTemplate(label: 'Weekend Sun', colorKey: 'amber',  anchors: [], routineStack: []),
       },
-      week: const {
+      week: {
         'mon': WeekEntry(templateId: 'office',      training: true),
         'tue': WeekEntry(templateId: 'office',      training: false),
         'wed': WeekEntry(templateId: 'wfh',         training: true),
@@ -21,11 +21,11 @@ Plan _minPlan() => Plan(
         'sat': WeekEntry(templateId: 'weekend',     training: false),
         'sun': WeekEntry(templateId: 'weekend_sun', training: true),
       },
-      weekEditor: const WeekEditorConfig(),
-      training: const TrainingRules(frequencyPerWeek: 4, avoidConsecutive: true, rotation: ['A', 'B']),
-      workouts: const {},
-      nutrition: const NutritionConfig(),
-      goals: const [],
+      weekEditor: WeekEditorConfig(),
+      training: TrainingRules(frequencyPerWeek: 4, avoidConsecutive: true, rotation: ['A', 'B']),
+      workouts: {},
+      nutrition: NutritionConfig(),
+      goals: [],
     );
 
 void main() {

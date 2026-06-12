@@ -31,7 +31,7 @@ void main() {
   });
 
   test('peek line shows planned vs now + budget', () {
-    final blk = Block(time: '9:05', cls: 'meal', label: 'Brunch', id: 'brunch',
+    const blk = Block(time: '9:05', cls: 'meal', label: 'Brunch', id: 'brunch',
         seedStart: 11.0, estStart: 11.17, idealMinutes: 45, durationMinutes: 30);
     expect(DriftCopy.peek(blk, anchorLabel: 'Work'),
         'planned 11:00 · now 11:10 · budget 45→30m (to hold Work)');

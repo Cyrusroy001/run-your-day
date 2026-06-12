@@ -18,7 +18,7 @@ void main() {
       id: 'custom_1', label: 'Call mom', startTime: '19:30',
       durationMinutes: 45, date: '2026-06-09',
     );
-    final state = DailyState(date: '2026-06-09', addedItems: [task]);
+    const state = DailyState(date: '2026-06-09', addedItems: [task]);
     final blocks = TimelineAssembler.assembleDay(
       _plan, 'office', 'mon', training: false, state: state);
 
@@ -36,7 +36,7 @@ void main() {
       id: 'custom_2', label: 'Gym check-in', startTime: '07:30',
       durationMinutes: 30, date: '2026-06-09',
     );
-    final state = DailyState(date: '2026-06-09', addedItems: [task]);
+    const state = DailyState(date: '2026-06-09', addedItems: [task]);
     final blocks = TimelineAssembler.assembleDay(
       _plan, 'office', 'mon', training: false, state: state);
 
@@ -49,7 +49,7 @@ void main() {
       id: 'custom_3', label: 'Wrong day', startTime: '10:00',
       durationMinutes: 30, date: '2026-06-10', // different date
     );
-    final state = DailyState(date: '2026-06-09', addedItems: [task]);
+    const state = DailyState(date: '2026-06-09', addedItems: [task]);
     final blocks = TimelineAssembler.assembleDay(
       _plan, 'office', 'mon', training: false, state: state);
 
@@ -70,7 +70,7 @@ void main() {
   test('multiple custom tasks are all included and sorted by start time', () {
     const t1 = CustomTask(id: 'c1', label: 'Task A', startTime: '15:00', durationMinutes: 30, date: '2026-06-09');
     const t2 = CustomTask(id: 'c2', label: 'Task B', startTime: '09:00', durationMinutes: 30, date: '2026-06-09');
-    final state = DailyState(date: '2026-06-09', addedItems: [t1, t2]);
+    const state = DailyState(date: '2026-06-09', addedItems: [t1, t2]);
     final blocks = TimelineAssembler.assembleDay(
       _plan, 'office', 'mon', training: false, state: state);
 

@@ -105,7 +105,7 @@ void main() {
     );
     final blocks = TimelineAssembler.assembleDay(
       _plan, 'office', 'mon', training: false,
-      state: DailyState(date: today, addedItems: [custom]),
+      state: const DailyState(date: today, addedItems: [custom]),
       recurringTasks: [recur],
     );
 

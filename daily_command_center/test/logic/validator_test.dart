@@ -21,16 +21,16 @@ void main() {
   });
 }
 
-Plan _minimalPlan() => Plan(
+Plan _minimalPlan() => const Plan(
       schemaVersion: 3,
-      meta: const PlanMeta(),
+      meta: PlanMeta(),
       dayTemplates: {
-        'office': const DayTemplate(label: 'Office', colorKey: 'terra', anchors: [], routineStack: []),
+        'office': DayTemplate(label: 'Office', colorKey: 'terra', anchors: [], routineStack: []),
       },
-      week: {'mon': const WeekEntry(templateId: 'office', training: false)},
-      weekEditor: const WeekEditorConfig(),
-      training: const TrainingRules(frequencyPerWeek: 4, avoidConsecutive: true, rotation: []),
-      workouts: const {},
-      nutrition: const NutritionConfig(),
-      goals: const [],
+      week: {'mon': WeekEntry(templateId: 'office', training: false)},
+      weekEditor: WeekEditorConfig(),
+      training: TrainingRules(frequencyPerWeek: 4, avoidConsecutive: true, rotation: []),
+      workouts: {},
+      nutrition: NutritionConfig(),
+      goals: [],
     );

@@ -124,7 +124,7 @@ class DriftEngine {
     Set<int> dropped = const {},
   }) {
     final out = <Block>[];
-    final buffer = transitionBufferMinutes / 60.0;
+    const buffer = transitionBufferMinutes / 60.0;
     final activeIdx = _findActive(blocks, done, dropped);
     double cursor = 0;
     bool started = false;
