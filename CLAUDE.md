@@ -4,21 +4,24 @@ Project context for Claude Code. Read this first before editing anything.
 
 ## Key documentation (read for any non-trivial task)
 
-- [`docs/CONTINUE.md`](docs/CONTINUE.md) — current implementation state, what's done, what's next, active blockers
-- [`docs/DECISIONS.md`](docs/DECISIONS.md) — architectural decision records; explains the "why" behind choices that might otherwise look wrong
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — file map, data flow diagrams, SharedPreferences key map
-- [`docs/superpowers/specs/2026-06-05-widget-app-design.md`](docs/superpowers/specs/2026-06-05-widget-app-design.md) — full design spec for the Flutter app
-- [`docs/superpowers/plans/2026-06-05-flutter-widget-app.md`](docs/superpowers/plans/2026-06-05-flutter-widget-app.md) — implementation plan (all 12 tasks)
+- [`docs/CONTINUE.md`](docs/CONTINUE.md) — current implementation state, what's done, what's next, active blockers. **Read this first.**
+- [`docs/DECISIONS.md`](docs/DECISIONS.md) — architectural decision records (ADR-001…021); explains the "why" behind choices that might otherwise look wrong
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — current Flutter file map, data flow, storage layout
+- [`docs/superpowers/specs/2026-06-11-ketchup-full-visual-spec-v2.html`](docs/superpowers/specs/2026-06-11-ketchup-full-visual-spec-v2.html) + [`docs/superpowers/plans/2026-06-12-ketchup-v1-rebrand.md`](docs/superpowers/plans/2026-06-12-ketchup-v1-rebrand.md) — **the current design**: the ketchup v1 rebrand (K0–K8 done on `feat/ketchup-v1`)
+- Earlier specs/plans (v3 engine, UX layer, profiles, custom tasks) live under `docs/superpowers/` and are listed in CONTINUE.md's spec/plan stack.
 
-**The active codebase is `daily_command_center/` (Flutter app). `daily-command-center.html` is the old HTML version — do not edit it for new features.**
+**The active codebase is `daily_command_center/` (Flutter app), now branded `ketchup`. `daily-command-center.html` is the old HTML version — do not edit it for new features. The "How the file is structured" / "Key JS pieces" sections below describe that legacy HTML file; for the Flutter app's structure see ARCHITECTURE.md.**
 
 ---
 
 ## What this is
 
-The project is transitioning from a single-file HTML dashboard to a Flutter Android app.
-The Flutter app (`daily_command_center/`) replaces `daily-command-center.html` and adds
-a native Android home screen widget. Phase 1 is complete. See `docs/CONTINUE.md` for status.
+The project moved from a single-file HTML dashboard to a Flutter Android app, now branded
+**ketchup** — "the day planner that catches you up." It is driven by a rich **Life JSON** plan and a
+drift-aware engine: when you fall behind, ketchup *squeezes* the flexible parts of the day and
+protects the locked ones. The whole ketchup UI rebrand (K0–K8) is done on `feat/ketchup-v1`; v1 ships
+for Cyrus only as a release APK (the Android widget + the interview/AI stack are deferred). See
+`docs/CONTINUE.md` for live status and `docs/ARCHITECTURE.md` for the file map.
 
 The original HTML file combined three things in one screen:
 

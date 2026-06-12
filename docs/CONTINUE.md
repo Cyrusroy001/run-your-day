@@ -1,5 +1,5 @@
 # Continuation Document
-**Last updated:** 2026-06-11 (session 8)
+**Last updated:** 2026-06-12 (session 9 — ketchup v1 rebrand)
 
 If you're an AI agent starting fresh on this project, read this first. It tells you exactly where things stand and what to do next without requiring you to re-derive it from the codebase.
 
@@ -7,9 +7,44 @@ If you're an AI agent starting fresh on this project, read this first. It tells 
 
 ## What this project is
 
-A Flutter Android app (`daily_command_center/`), branded **Reminders 2**, that replaced a single HTML file (`daily-command-center.html`). It is Cyrus's personal daily dashboard: a live "Right now" card, a week planner with intelligent training-day spacing, per-day adherence tracking, and an Android home screen widget.
+A Flutter Android app (`daily_command_center/`), now branded **ketchup** — "the day planner that catches you up." It replaced a single HTML file (`daily-command-center.html`). It is Cyrus's personal daily dashboard: one merged "Today" surface (an enlarged NOW hero + an elastic timeline rail that visibly *squeezes* when you fall behind), a week planner with intelligent training-day spacing, per-day adherence tracking, and a Sunday catch-up review. (An Android home-screen widget exists but is deferred — see below.)
 
 The **product direction** is bigger than Cyrus: a reusable, configurable life-execution app driven by a rich **Life JSON** schema (the moat), with AI-synthesized routines and an eventual conversational onboarding interview. See the roadmap below.
+
+---
+
+## ⭐ Current focus (session 9 — ketchup v1, branch `feat/ketchup-v1`)
+
+We are shipping **v1 for Cyrus only**: the ketchup presentation-layer rebrand on top of the
+complete v3 engine, delivered as a signed release APK. Spec:
+[`specs/2026-06-11-ketchup-full-visual-spec-v2.html`](superpowers/specs/2026-06-11-ketchup-full-visual-spec-v2.html);
+plan: [`plans/2026-06-12-ketchup-v1-rebrand.md`](superpowers/plans/2026-06-12-ketchup-v1-rebrand.md);
+decision: **ADR-021**.
+
+**The whole UI rebrand (K0–K8) is DONE and green (192 tests).** `feat/ketchup-v1` is branched off
+`feat/local-profiles` and is the new integration head.
+
+| Phase | Done | What |
+|---|---|---|
+| K0 | `d7a299b` | ketchup palette tokens, Bricolage Grotesque fonts, app label "ketchup", squiggle icon |
+| K1 | `bd64d38` | stripped durations from seed labels (golden re-baselined) |
+| K2 | `bd64d38` | `lib/widgets/elastic_rail.dart` — the signature rail (spine ∝ duration; squeeze/anchor/skip/done) |
+| K3+K4 | `0a19ccc` | `lib/screens/today_screen.dart` = merged Home+Live + adjust mode (two-row cards) |
+| K5+K6+K7 | `d47d1c1` | teach_caption + how_it_works_screen; week_screen; catchup_screen (Sunday review) |
+| K8 | `0aa598a` | retired the v1 surfaces, migrated tokens off the temp aliases, guard tests, motion |
+
+**Scope (locked with Cyrus, 2026-06-12):** the Android **widget is deferred past v1** (broken on
+Samsung One UI / Android 16, unconfirmed root cause — ADR-010; ketchup spec gates the new widget to
+"phase 2"). The **interview / AI-gen / full onboarding / in-app editor / refinement** stack is all
+deferred. Delivery target = a **signed release APK** on the S21 FE.
+
+**Remaining for v1:**
+1. **K-notify** — wire the one opt-in heads-up per block + the Sunday nudge onto the existing
+   `NotificationService` (channel plumbing from ADR-014 already exists; just needs scheduling + the
+   two Settings toggles wired).
+2. **K-ship** — create a release keystore (`key.properties`, replace the debug-signing TODO in
+   `android/app/build.gradle.kts`), `flutter build apk --release`, install + real-device QA (drift
+   across a real day, profile switch, light/dark/auto, 1.3× text, reduced-motion).
 
 ---
 
@@ -23,7 +58,8 @@ The **product direction** is bigger than Cyrus: a reusable, configurable life-ex
 | [`plans/2026-06-07-life-json-v3-drift-engine.md`](superpowers/plans/2026-06-07-life-json-v3-drift-engine.md) | **Engine plan** for v3 (5 phases A–E, ~30 TDD tasks) | **A–D done; E superseded by UX layer** |
 | [`specs/2026-06-08-reminders-2-ux-design.md`](superpowers/specs/2026-06-08-reminders-2-ux-design.md) + [`plans/2026-06-08-reminders-2-ux-layer.md`](superpowers/plans/2026-06-08-reminders-2-ux-layer.md) | **UX-layer plan** (U0–U7): calm Home, rich Live timeline, Adjust mode, teaching, weekly review, avatar menu, light/dark theme. Mockup: [`specs/2026-06-08-reminders-2-ux-mockup.html`](superpowers/specs/2026-06-08-reminders-2-ux-mockup.html) | **Complete** (U0–U7 done; `feat/reminders-2-redesign`) |
 | [`specs/2026-06-07-local-profiles-login-app-shell-design.md`](superpowers/specs/2026-06-07-local-profiles-login-app-shell-design.md) + [`plans/2026-06-07-local-profiles-login-app-shell.md`](superpowers/plans/2026-06-07-local-profiles-login-app-shell.md) | Login (local profile picker), per-profile storage, onboarding, settings/logout | **Complete** on `feat/local-profiles` (see Current state). Plan Phase 0 obsolete, Phase 4 drawer superseded by avatar menu — see **ADR-019** |
-| [`DECISIONS.md`](DECISIONS.md) | Architectural decision records (ADR-001…019) | Living |
+| [`specs/2026-06-11-ketchup-full-visual-spec-v2.html`](superpowers/specs/2026-06-11-ketchup-full-visual-spec-v2.html) + [`plans/2026-06-12-ketchup-v1-rebrand.md`](superpowers/plans/2026-06-12-ketchup-v1-rebrand.md) | **Ketchup v1 rebrand** (K0–K8 + K-notify/K-ship): brand, merged Today, elastic rail, catch-up | **K0–K8 done** on `feat/ketchup-v1`; K-notify/K-ship next. See **ADR-021** |
+| [`DECISIONS.md`](DECISIONS.md) | Architectural decision records (ADR-001…021) | Living |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | File map, data flow, storage key map | Living |
 
 ### Roadmap (from the v3 spec)
@@ -38,9 +74,12 @@ The **local-profiles/login** work pulls a minimal, local-only slice of #3/#5 for
 
 ---
 
-## Current state (session 8)
+## Current state (session 8 — historical; superseded by the session-9 focus block above)
 
-### Branch: `feat/local-profiles` (most complete — strict superset of everything below)
+> `feat/ketchup-v1` (session 9) is now the integration head and a superset of `feat/local-profiles`.
+> The detail below documents the engine/UX/profiles foundation the ketchup rebrand sits on.
+
+### Branch: `feat/local-profiles` (the foundation `feat/ketchup-v1` branched from)
 
 This branch carries the v3 engine (A–D), the UX layer (U0–U7), the custom-task feature (C1–C11), **and** the local-profiles/login feature. It is the new integration head; `feat/custom-tasks` and `feat/reminders-2-redesign` have no unique commits left to merge.
 
@@ -119,15 +158,27 @@ Runs on the phone (Samsung S21 FE, Android 16 / API 36). Dev loop is wireless AD
 
 ## What to do next
 
-The engine, UX layer, custom-task feature, **and local-profiles/login** are all complete on `feat/local-profiles` (211 tests green). The branch is shippable. Candidate next steps (in rough priority order):
+See **⭐ Current focus (session 9)** above — the immediate work is **K-notify** then **K-ship** to
+close out ketchup v1. After that:
 
-### 1. Merge `feat/local-profiles` → `main`
+### 1. Merge `feat/ketchup-v1` → `main`
 
-This is now the most complete branch and a strict superset of `feat/custom-tasks`, `feat/reminders-2-redesign`, and `feature/plan-driven-core` (all have 0 unique commits relative to it). It is the single merge candidate.
+`feat/ketchup-v1` is the new integration head — a strict superset of `feat/local-profiles` (which was
+itself a superset of `feat/custom-tasks` / `feat/reminders-2-redesign` / `feature/plan-driven-core`).
+Merge it once K-notify + K-ship land.
 
-### 2. Resume the product roadmap (from the v3 spec)
+### 2. Un-defer the Android widget (first post-v1 task)
 
-Profiles pulled a minimal local slice of onboarding forward. The larger arcs remain: **(2)** in-app control panel / Life-JSON editor, **(3)** interview tree, **(4)** AI generation (answers → Claude → validated Life JSON), **(5)** full onboarding flow. `OnboardingLogic.commit` is the seam the real interview/AI will replace.
+The redesigned ketchup widget (spec §4 "phase 2") was deferred for v1. The blocker is the Samsung
+One UI / Android 16 RemoteViews rejection (ADR-010, root cause unconfirmed) — likely needs a Glance
+migration or step-by-step RemoteViews bisection. Current widget code is left untouched.
+
+### 3. Resume the product roadmap (from the v3 spec)
+
+The larger "for other people" arcs remain, all deferred for v1: **(2)** in-app control panel /
+Life-JSON editor, **(3)** interview tree, **(4)** AI generation (answers → Claude → validated Life
+JSON), **(5)** full onboarding flow. `OnboardingLogic.commit` is still the seam the real interview/AI
+will replace.
 
 ---
 

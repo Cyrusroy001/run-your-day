@@ -212,3 +212,43 @@ Read this before proposing architectural changes.
 **What this means for the plan doc:** [`2026-06-07-local-profiles-login-app-shell.md`](superpowers/plans/2026-06-07-local-profiles-login-app-shell.md) Phase 0 (`ProfileScope`, key routing, legacy migration) is **obsolete** — skip it; the storage already isolates by file. Phases 1–3 (registry, AuthGate, login, onboarding) and 5 (settings + logout) shipped against the file API. Phase 4 (AppShell + navigation **Drawer**) is **superseded by the U6 avatar-menu** (`avatar_menu_sheet.dart` → switch/settings/glossary/logout); there is no drawer.
 
 **Do not** reintroduce `ProfileScope`/key-prefixing or route profile data through SharedPreferences — all profile data lives in `profiles/<id>.json` via `ProfileRepository`. Only the active-profile pointer and the `flutter.*` widget keys stay in SharedPreferences (the widget shows the active profile's now-state).
+
+---
+
+## ADR-021 — Ketchup rebrand: one Today surface, condiment palette, v1 scope
+
+**Decision (session 9, 2026-06-12):** Rebrand the app to **ketchup** and rebuild the presentation
+layer per [`specs/2026-06-11-ketchup-full-visual-spec-v2.html`](superpowers/specs/2026-06-11-ketchup-full-visual-spec-v2.html)
+(plan: [`plans/2026-06-12-ketchup-v1-rebrand.md`](superpowers/plans/2026-06-12-ketchup-v1-rebrand.md)),
+on branch `feat/ketchup-v1`. The engine (Phases A–D) and storage are unchanged. Key choices:
+
+- **One surface for today.** `today_screen.dart` merges the old Home card + Live timeline into a
+  single widget tree (states caughtUp/squeezed/adjusting). The v1 Home/Live pair — which rendered the
+  drift summary twice — is deleted, not refactored. The "squeeze" (`elastic_rail.dart`: spine length ∝
+  duration + dashed mustard delta) is the signature and the differentiator.
+- **Condiment palette + new type.** `AppPalette` tokens become `char/raise/raise2/salt/dim/line` +
+  `tomato`(brand·now·action, *never* a warning) / `mustard`(the only caution) / `leaf`(done) +
+  `onAccent`. Fonts: Bricolage Grotesque (display) + Spline Sans (body) + Spline Sans Mono (data).
+  No alarm-red anywhere. The Reminders-2 token aliases used as a migration bridge were deleted in K8.
+- **Ban list enforced by tests.** New guards (`test/guard/ketchup_guards_test.dart`): no `Color(0x…)`
+  literal outside `app_palette.dart`; no `⚠`/`Reflowed`/`budget`/`engine` jargon on UI code lines.
+  Stat tiles, the "Reflowed" pill, warning triangles, and the header slogan are gone.
+- **Content fix.** Durations were stripped from Life-JSON labels ("BIG Project Block (2 hrs)" →
+  "Big project"); durations live as data and render in the rail sub-line.
+
+**v1 scope (locked with Cyrus):** ship **for Cyrus only** as a **signed release APK**. The Android
+**widget is deferred** (broken — ADR-010; spec gates the new widget to "phase 2"). The
+**interview / AI-generation / full onboarding / in-app Life-JSON editor / continual-refinement** stack
+is all deferred; `OnboardingLogic.commit` stays the seam. The one feedback-loop hook kept from the
+spec is the Sunday catch-up's "Give it more time" (the only review→Plan write path).
+
+**Why:** the v1 build *was* the screenshots the spec's ban list reacts against (guilt counters, system
+jargon, six accents, duplicated drift summaries). Merging the surfaces makes duplication impossible;
+the condiment palette + the squeeze motion carry the personality without ornament. Scoping to Cyrus +
+APK keeps v1 finishable now and de-risks the big "for other people" arcs for later.
+
+**Do not** re-split Today into Home+Live, reintroduce the deleted widgets, add `Color(0x…)` literals
+outside the palette, or surface stat tiles / "Reflowed" / warning icons — the guards will fail.
+
+**Supersedes:** the presentation layer of the 2026-06-08 UX plan (U0–U7) and ADR-020's exact token
+set (the AppPalette *shape* from ADR-020 stays; the token *names/values* are now ketchup's).

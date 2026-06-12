@@ -1,6 +1,7 @@
 # Architecture Overview
 
 Quick reference for navigating the codebase. Read before asking "where does X live?"
+Current as of session 9 (ketchup v1 rebrand). The app is branded **ketchup**.
 
 ---
 
@@ -8,134 +9,140 @@ Quick reference for navigating the codebase. Read before asking "where does X li
 
 ```
 ┌─────────────────────────────────┐
-│        Flutter App              │  User opens app → reads/writes plan
-│  (lib/ — Dart)                  │  Computes now-state → pushes to SharedPrefs
+│        Flutter App              │  User opens app → loads active profile's Plan
+│  (lib/ — Dart)                  │  → assembles + drift-resolves today → renders;
+│                                 │  pushes now-state to home_widget prefs
 └────────────────┬────────────────┘
                  │ home_widget → HomeWidgetPreferences (raw keys)
 ┌────────────────▼────────────────┐
-│     Android Home Screen Widget  │  Reads SharedPrefs every 30 min
-│  (android/ — Kotlin)            │  via HomeWidgetPlugin.getData; ~15 min (WorkManager)
-└─────────────────────────────────┘
+│   Android Home Screen Widget    │  Reads the pushed now-state on refresh.
+│  (android/ — Kotlin)            │  DEFERRED for v1 (broken on Samsung One UI /
+└─────────────────────────────────┘  Android 16 — ADR-010). Code left untouched.
 ```
 
 ---
 
 ## Flutter app layers
 
-### Data (`lib/data/`)
+### Data (`lib/data/`) — persistence + platform I/O
 
 | File | What it owns |
 |---|---|
-| `models.dart` | All data types: `Block` (incl. `isTrackable` + `signature` getters), `DayPlan`, `DaySchedule`, `WorkoutLog`, `WeekPlan` |
-| `store.dart` | Plan + workout-log I/O via SharedPreferences; writes widget data via `home_widget` |
-| `adherence_store.dart` | Per-day done-set + adherence summary: `loadDone`/`saveDone`, `writeAdherence`, `last7`, `weeklyAverage` |
+| `models.dart` | All data types: `Block` (+ `isTrackable`/`signature`/`isCompacted`/`isDropped`), v3 `Plan`/`DayTemplate`/`Anchor`/`RoutineItem` (+ `copyWith`), `WorkoutDef`/`ExerciseDef`/`Progression`, `WeekEntry`, `DailyState`/`DriftEvent`/`ItemOverride`, `CustomTask`/`RecurringCustomTask`, `displayTime()` |
+| `profile_repository.dart` | **File-per-profile** store: `ProfileRepository` (dir, create/list/delete, `ensureSeeded`, reset/clear, export/import) + `ProfileDoc`; `activeProfile` `ValueNotifier` + active-id pointer |
+| `store.dart` | `AppStore` facade over the active `ProfileDoc` (`loadActive`/`savePlan`/`saveLogs`); writes widget data via `home_widget` (try-catch — ADR-009); `AppStore.repo` is injectable for tests |
+| `state_store.dart` | `DailyState` (+ drift log) load/save and recent-window queries via `ProfileRepository` |
+| `adherence_store.dart` | Per-day done-set + adherence summary: `loadDone`/`saveDone`, `writeAdherence`, `last7` |
+| `recurring_store.dart` | `RecurringCustomTask` persistence (C7) |
+| `teaching_flags.dart` | One-time "seen" flags for inline teach captions (R5) |
+| `notifications.dart` | `NotificationService` — Android channel + scheduling (circuit-breaker fire from ADR-014; the v1 opt-in heads-up gets wired here in **K-notify**) |
+| `ui_prefs.dart` | `UiPrefs` (themeMode + textScale), loaded in `main()`, owned by `RemindersApp` |
 
 ### Logic (`lib/logic/`) — pure Dart, no Flutter, fully testable
 
 | File | What it owns |
 |---|---|
-| `workouts.dart` | `workouts` constant — the 4 workout definitions (A, B, BENCH, CARDIO) with exercises and cues |
-| `timeline.dart` | `buildTimeline(day, plan)` → ordered block list; `buildTimes(blocks)` → 24h decimals; `nowDecimal()` → current time |
-| `planner.dart` | `PlannerLogic` — spacing algorithm (brute-force C(7,4)=35), `toggleTraining`, `toggleSchedule`, `defaultWeek` |
+| `assembler.dart` | `TimelineAssembler.assembleDay()` — the **only** place blocks are built from a Plan (folds anchors + routine + custom tasks, applies DailyState). Golden test is the canonical check |
+| `timeline.dart` | `buildTimes()` (24h decimals, monotonic + PM disambiguation) + `nowDecimal()` |
+| `drift_engine.dart` | `DriftEngine.computeDay()` → `ResolvedDay`: est-start cascade, compaction, jettison, two-way elasticity, circuit-breakers |
+| `drift_copy.dart` | Drift copy. Ketchup voice: `ketchupWhisper()` / `isCaughtUp()` (the one-sentence whisper); plus teach strings, `weeklyNudge` |
+| `home_now_state.dart` | `HomeNowState.from()` — current/next block + progress for the hero |
+| `priority_level.dart` | `PriorityLevel` (Protect/Normal/Drop first) ↔ numeric priority |
+| `weekly_review.dart` | `WeeklyReview.summarize()` (`WeeklySummary`), `promotionCandidates()`, `mostSqueezedLabel()` |
+| `custom_task_fitter.dart` | `CustomTaskFitter` — slack + sacrifice offers for ad-hoc task injection (C-series) |
+| `blueprint_promotion.dart` | `BlueprintPromotion.promote()` — writes a recurring custom task into the Plan |
+| `planner.dart` | `PlannerLogic` — week spacing (4 training days, no consecutive), `toggleTraining`/`toggleSchedule` |
+| `validator.dart` | `PlanValidator` — referential integrity of a Plan |
+| `onboarding.dart` | `OnboardingLogic.buildPlan`/`commit` — the seam the future interview/AI replaces |
+| `drift_runner.dart` | Background drift evaluation + notification fire (ADR-014) |
 
-### UI (`lib/widgets/`, `lib/screens/`)
+### Theme (`lib/theme/`)
 
 | File | What it owns |
 |---|---|
-| `widgets/now_card.dart` | `NowCard` — stateful, self-refreshing (1 min timer). Shows current/next block; green "done" state; "View all ›" + "Mark done" (`doneToday`, `onViewAll`, `onToggleDone`). |
-| `widgets/week_planner.dart` | `WeekPlanner` — one-row-per-day layout: schedule chip (Office/WFH/Weekend) + Train/Rest switch (calls `PlannerLogic`); inline caption (replaces SnackBar). |
-| `screens/today_screen.dart` | `TodayScreen` — full-day tickable checklist + 7-day adherence strip. Pushed from NowCard's "View all". |
-| `screens/home_screen.dart` | `HomeScreen` — loads plan + today's done-set, owns `_doneToday`, assembles NowCard + WeekPlanner, wires toggle/navigation |
-| `main.dart` | App entry, `ThemeData`, `AppColors` constants |
+| `app_palette.dart` | `AppPalette` (`ThemeExtension`) — **ketchup tokens**: `char/raise/raise2/salt/dim/line` + `tomato/tomatoDim/mustard/mustardDim/leaf/leafDim` + `onAccent`. Access via `context.c`. Dark default + light. The temp Reminders-2 aliases were removed in K8 — guard test forbids new `Color(0x…)` literals here-outside (ADR-020/021) |
+| `transitions.dart` | `fadeThroughRoute` — shared page transition |
+
+### UI (`lib/screens/`, `lib/widgets/`)
+
+| File | What it owns |
+|---|---|
+| `screens/today_screen.dart` | **The one ketchup surface** (Home + Live merged). States caughtUp/squeezed/adjusting. Header (date+avatar) → past-pill → NOW hero → whisper → teach caption → repeat prompts → ElasticRail → ADJUST. Adjust mode = two-row cards (reorder/skip/priority + persistent Undo). FAB = add custom task. The AuthGate home |
+| `widgets/elastic_rail.dart` | `ElasticRail` + `RailStop` — the signature rail: spine height ∝ duration (clamp 56–120), variants normal/squeeze/anchor/skip/done, tap-to-done, AnimatedSize/AnimatedContainer motion |
+| `screens/week_screen.dart` | "Plan my week" (off Home; hosts `WeekPlanner`) |
+| `screens/catchup_screen.dart` | Sunday catch-up (S6): bars + summary + "Give it more time" (only review→Plan write) + promotions |
+| `screens/how_it_works_screen.dart` | "How ketchup works" — the six static captions (replaced the old glossary) |
+| `screens/settings_screen.dart` | Appearance (theme seg + text-size), notification toggles, profile/data actions |
+| `screens/onboarding_screen.dart` | 3-step onboarding stub (clones the seed plan) |
+| `screens/login_screen.dart` | Local profile picker |
+| `screens/auth_gate.dart` | `ValueListenableBuilder(activeProfile)` → `LoginScreen` (null) vs `TodayScreen` |
+| `widgets/avatar_menu_sheet.dart` | Avatar sheet: Plan my week / Sunday catch-up (Sunday badge) / settings / how-it-works / switch / log out |
+| `widgets/teach_caption.dart` | One inline ketchup teach caption (seen-flag gated) |
+| `widgets/repeat_prompt_card.dart` | "Repeat {task}?" prompt (extracted from the retired live view in K8) |
+| `widgets/{add_custom_task,sacrifice_picker,promote_blueprint}_sheet.dart` | Custom-task add / sacrifice picker / blueprint promotion sheets |
+| `widgets/week_planner.dart` | One-row-per-day planner (schedule chip + train/rest), hosted by `week_screen` |
+| `main.dart` | App entry; `RemindersApp` (MaterialApp, light/dark theme, textScale clamp); WorkManager widget-refresh registration |
+
+> **Retired in K8** (deleted): `home_screen`, `live_timeline_view`, `glossary_screen`, `now_hero_card`, `budget_bar`, `anchor_wall`, `weekly_review_card`, `teaching_card`, and `lib/logic/workouts.dart` (workouts live in `Plan.workouts`). `AppColors` was replaced by `AppPalette` (ADR-020).
 
 ---
 
-## Android widget layer (`android/`)
+## Storage: file-per-profile (ADR-019)
 
-```
-android/app/src/main/
-├── kotlin/com/cyrus/daily_command_center/
-│   ├── MainActivity.kt          ← Flutter activity (auto-generated)
-│   └── NowWidgetProvider.kt     ← AppWidgetProvider: reads SharedPrefs, builds RemoteViews
-├── res/
-│   ├── drawable/widget_background.xml   ← flat terracotta (#D9663D) — gradient+corners REMOVED (see ADR-010)
-│   ├── layout/now_widget.xml            ← STRIPPED: label + title + next TextViews only (no ProgressBar)
-│   ├── xml/now_widget_info.xml          ← size (4×2), update interval (30 min)
-│   └── values/strings.xml               ← app_name, widget_description
-└── AndroidManifest.xml          ← widget receiver registered here
+`<appDocuments>/profiles/<id>.json` holds a `ProfileDoc`:
+
+```text
+ProfileDoc { id, displayName, plan: Plan,
+  states: Map<'yyyy-MM-dd', DailyState>,   // drift log lives here
+  logs: Map<workoutKey, List<WorkoutLog>>,
+  done: Map<'yyyy-MM-dd', List<signature>>,
+  adherence: Map<'yyyy-MM-dd', {done,total}>,
+  recurringTasks, skippedRepeatIds }
 ```
 
-> **Widget status: BROKEN on Samsung One UI / Android 16.** The layout was stripped to minimum to diagnose a Samsung launcher rejection issue. See CONTINUE.md and ADR-010 for full context before modifying widget files.
+Only two things live in **SharedPreferences**: the active-profile pointer (`activeProfileId`) and
+the four **widget** keys, which `home_widget` writes as **raw** keys (no `flutter.` prefix) into its
+own `HomeWidgetPreferences` file, read by `NowWidgetProvider.kt` via `HomeWidgetPlugin.getData`.
+The seed `assets/seed_plan.json` is the source of truth for the default `cyrus` profile (golden test
+fails if the timeline changes).
 
 ---
 
-## Data flow: plan change
+## Data flow
 
+**App open / Today render**
 ```
-User taps training dot
-  → WeekPlanner calls PlannerLogic.toggleTraining(plan, day)
-  → Returns new WeekPlan (always 4 days, no consecutive)
-  → WeekPlanner calls onPlanChanged(newPlan, message?)
-  → HomeScreen._updatePlan saves to SharedPreferences
-  → HomeScreen calls AppStore.writeWidgetData(plan, todayKey)
-  → home_widget writes raw keys into its HomeWidgetPreferences file
-  → Android widget reads on next refresh (~15 min via WorkManager, or app open)
+AuthGate (activeProfile) → TodayScreen._load (active ProfileDoc → Plan + DailyState + done)
+  → TimelineAssembler.assembleDay(plan, …, state)        // the only block source
+  → DriftEngine.computeDay(now)                           // ResolvedDay (est-start, squeezes, drops)
+  → HomeNowState.from() drives the hero; ResolvedDay→RailStop drives the ElasticRail
+  → 30s ticker re-renders so progress/minutes-left stay live
 ```
 
-## Data flow: app open / now-card refresh
-
-```
-App opens
-  → HomeScreen.initState loads plan from SharedPreferences
-  → NowCard receives plan, computes timeline via buildTimeline()
-  → buildTimes() resolves time strings → 24h decimals
-  → nowDecimal() reads device clock
-  → NowCard finds current block, next block, progress %
-  → NowCard renders gradient card
-  → Timer fires every minute → setState → re-render
-```
-
----
-
-## SharedPreferences key map
-
-| Key | Type | Written by | Read by |
-|---|---|---|---|
-| `weekPlan` | String (JSON) | `AppStore.savePlan` | `AppStore.loadPlan` |
-| `log_A`, `log_B`, `log_BENCH`, `log_CARDIO` | String (JSON array) | `AppStore.saveLogs` | `AppStore.loadLogs` |
-| `done_<yyyy-MM-dd>` | String (JSON array of block signatures) | `AdherenceStore.saveDone` | `AdherenceStore.loadDone` |
-| `adherence_<yyyy-MM-dd>` | String (JSON `{done,total}`) | `AdherenceStore.writeAdherence` | `AdherenceStore.last7` |
-| `currentAction` | String | `AppStore.writeWidgetData` | `NowWidgetProvider.kt` |
-| `nextAction` | String | `AppStore.writeWidgetData` | `NowWidgetProvider.kt` |
-| `dayLabel` | String | `AppStore.writeWidgetData` | `NowWidgetProvider.kt` |
-| `progressPct` | Int | `AppStore.writeWidgetData` | `NowWidgetProvider.kt` (read but unused — widget_progress view removed) |
-
-⚠️ The four widget keys above live in a **different file** from the rest of this table. `home_widget` writes them as **raw** keys (no `flutter.` prefix) into its own `HomeWidgetPreferences` file, and `NowWidgetProvider.kt` reads them via `HomeWidgetPlugin.getData(context)`. The other keys are the app's normal `shared_preferences` store (which *does* use a `flutter.` prefix internally, in `FlutterSharedPreferences`). The widget is refreshed ~every 15 min by a WorkManager periodic task (`main.dart`), plus on app open.
+**User interactions (today only)** — tap a rail card / hero Done → `_toggle` (done-set + adherence).
+Adjust mode (reorder / skip / priority) and custom-task add write **DailyState only**; the Plan stays
+pristine (ADR-015). The single review→Plan write is the catch-up's "Give it more time".
 
 ---
 
 ## Test coverage
 
-| Test file | What it tests |
-|---|---|
-| `test/data/models_test.dart` | DayPlan/WorkoutLog serialization roundtrips |
-| `test/logic/workouts_test.dart` | All 4 workout keys defined, each has title/why/exercises |
-| `test/logic/timeline_test.dart` | buildTimes PM disambiguation, monotonicity, workout assignment per day type |
-| `test/logic/planner_test.dart` | defaultWeek has 4 days/no consecutive, toggleTraining invariants, toggleSchedule flip |
-| `test/data/adherence_store_test.dart` | done-set roundtrip, adherence write, `last7` averaging that ignores missing days |
-| `test/widgets/now_card_test.dart` | NowCard renders; green "done" vs "Mark done" state |
-| `test/widgets/week_planner_test.dart` | row-per-day layout, schedule chip cycle, train/rest switch, inline caption |
-| `test/screens/today_screen_test.dart` | checklist renders, passive blocks faded/no checkbox, current block highlighted |
+`flutter test` (run from `daily_command_center/`). 192 tests, green.
 
-Run all: `flutter test`
+| Area | Examples |
+|---|---|
+| `test/logic/` | golden timeline, drift engine/runner, weekly review, drift copy, planner, validator, custom-task fitter, assembler |
+| `test/data/` | models roundtrips, profile/state/adherence stores, custom/daily-state |
+| `test/screens/` | `today_screen` (hero + rail + adjust + give-more-time), `catchup_screen`, `auth_gate`, login, onboarding, settings |
+| `test/widgets/` | `elastic_rail`, week planner, custom-task/sacrifice/promote sheets |
+| `test/theme/` | `app_palette` (token values) |
+| `test/guard/` | no hardcoded life strings; **no Color literal outside app_palette**; **no ⚠/Reflowed/budget/engine jargon on UI lines** (ADR-021) |
 
 ---
 
-## Planned layers (designed, not yet built)
+## Key invariants (do not break)
 
-Two approved directions will reshape the data layer. Read their specs/ADRs before building:
-
-- **Local profiles + login + app shell** ([spec](superpowers/specs/2026-06-07-local-profiles-login-app-shell-design.md), ADR-018/019). An `AuthGate` root chooses `LoginScreen` (local profile picker) vs `AppShell` (Scaffold + navigation drawer). Persistence moves to **one JSON file per profile** (`profiles/<id>.json`) fronted by a new `ProfileRepository`; `AppStore`/`AdherenceStore` read/write through the active profile. New profiles run an onboarding stub. The Today monolith splits into drawer destinations (Today / Full Timeline / Week Planner / + placeholders / Settings / Logout).
-- **Life JSON v3 drift engine** ([spec](superpowers/specs/2026-06-07-life-json-v3-drift-engine-design.md), [plan](superpowers/plans/2026-06-07-life-json-v3-drift-engine.md), ADR-011…017). Content moves out of Dart into `assets/seed_plan.json`; `timeline.dart` becomes a data-driven assembler; a `DriftEngine` adds dual-time, compaction, and circuit-breakers. State splits into an immutable `activePlan` + ephemeral `state_<date>`/`driftLog` (ADR-015).
-
-The two compose: per-profile files become the container for the engine's `activePlan` + `state_<date>` + `driftLog` (ADR-019). Whichever ships second namespaces its storage per active profile.
+See CONTINUE.md "Key invariants" for the full list. The load-bearing ones: file-per-profile storage;
+`TimelineAssembler` is the only block source (golden test is the net); `buildTimes` monotonic + PM
+disambiguation; adherence counts trackable blocks only (`cls != 'work' && cls != 'chill'`); all color
+via `context.c` tokens (guarded); `writeWidgetData` stays try-catch.
