@@ -9,6 +9,10 @@ import '../data/state_store.dart';
 import '../data/adherence_store.dart';
 import '../data/recurring_store.dart';
 import '../data/teaching_flags.dart';
+import '../data/ui_prefs.dart';
+import '../data/notifications.dart';
+import '../logic/heads_up.dart';
+import '../main.dart' show RemindersApp;
 import '../logic/assembler.dart';
 import '../logic/timeline.dart';
 import '../logic/drift_engine.dart';
@@ -57,6 +61,7 @@ class TodayScreenState extends State<TodayScreen> {
   Timer? _ticker;
   WeeklySummary? _summary;
   String? _topSqueezed;
+  String? _notifKey; // de-dupes heads-up rescheduling across rebuilds/ticks
   List<DayAdherence> _last7 = const [];
   List<CustomTask> _pendingRepeatTasks = const [];
   List<PromotionCandidate> _promotionCandidates = const [];
@@ -384,6 +389,23 @@ class TodayScreenState extends State<TodayScreen> {
     }
   }
 
+  /// Reschedule today's opt-in heads-ups when the plan/state/pref changes. Runs
+  /// only in the real app (tests inject debugPlan and have no notification
+  /// platform channel). Empty list = a clean cancel when the toggle is off.
+  void _maybeScheduleHeadsUps(BuildContext context, ResolvedDay day) {
+    if (widget.debugPlan != null) return;
+    final prefs = RemindersApp.of(context)?.prefs ?? const UiPrefs();
+    final caughtUp = DriftCopy.isCaughtUp(day);
+    final sigs = day.blocks.map((b) => b.signature).join(',');
+    final key = '${prefs.headsUp}|$caughtUp|$sigs';
+    if (key == _notifKey) return;
+    _notifKey = key;
+    final ups = prefs.headsUp
+        ? planHeadsUps(blocks: day.blocks, now: DateTime.now(), caughtUp: caughtUp)
+        : const <HeadsUp>[];
+    NotificationService.scheduleHeadsUps(ups);
+  }
+
   // ── build ──────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
@@ -392,6 +414,7 @@ class TodayScreenState extends State<TodayScreen> {
     if (plan == null) return Scaffold(body: Center(child: CircularProgressIndicator(color: c.tomato)));
     final day = _resolve(plan);
     final now = HomeNowState.from(day, now: _now(), done: _done);
+    _maybeScheduleHeadsUps(context, day);
 
     return Scaffold(
       body: SafeArea(

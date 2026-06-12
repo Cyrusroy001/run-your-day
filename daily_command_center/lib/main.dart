@@ -33,6 +33,7 @@ void main() async {
     existingWorkPolicy: ExistingPeriodicWorkPolicy.update,
   );
   final prefs = await UiPrefs.load();
+  await NotificationService.scheduleSundayNudge(prefs.sundayNudge);
   await AppStore.repo.ensureSeeded();
   activeProfile.value = await AppStore.repo.activeProfileIdOrNull();
   runApp(RemindersApp(prefs: prefs));

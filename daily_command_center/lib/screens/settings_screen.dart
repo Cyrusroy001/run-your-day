@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../main.dart';
 import '../data/store.dart';
 import '../data/ui_prefs.dart';
+import '../data/notifications.dart';
 import '../theme/app_palette.dart';
 import 'how_it_works_screen.dart';
 
@@ -165,6 +166,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _section(c, 'TEXT SIZE'),
         Slider(value: prefs.textScale, min: 0.9, max: 1.4, divisions: 5,
             label: '${prefs.textScale}x', onChanged: setScale),
+
+        const SizedBox(height: 16),
+        _section(c, 'NOTIFICATIONS'),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          value: prefs.headsUp,
+          activeThumbColor: c.leaf,
+          title: Text('Heads-up before each block', style: TextStyle(color: c.salt, fontSize: 14)),
+          subtitle: Text("“Gym in 10 — you're all caught up.” One per block, that's all ketchup sends.",
+              style: TextStyle(color: c.dim, fontSize: 12)),
+          onChanged: (v) => appState?.updatePrefs(prefs.copyWith(headsUp: v)),
+        ),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          value: prefs.sundayNudge,
+          activeThumbColor: c.leaf,
+          title: Text('Sunday catch-up nudge', style: TextStyle(color: c.salt, fontSize: 14)),
+          subtitle: Text('One ping, Sunday 7 pm.', style: TextStyle(color: c.dim, fontSize: 12)),
+          onChanged: (v) {
+            appState?.updatePrefs(prefs.copyWith(sundayNudge: v));
+            NotificationService.scheduleSundayNudge(v);
+          },
+        ),
 
         const SizedBox(height: 12),
         _section(c, 'DATA'),
