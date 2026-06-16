@@ -27,6 +27,7 @@ class ProfileDoc {
   final Map<String, Map<String, int>> adherence; // 'yyyy-MM-dd' -> {done,total}
   final List<RecurringCustomTask> recurringTasks;
   final List<String> skippedRepeatIds; // custom task IDs the user declined to repeat
+  final Map<String, DayKetchup> ketchup; // 'yyyy-MM-dd' -> pantry record (ADR-022 §6)
 
   const ProfileDoc({
     required this.id,
@@ -38,6 +39,7 @@ class ProfileDoc {
     this.adherence = const {},
     this.recurringTasks = const [],
     this.skippedRepeatIds = const [],
+    this.ketchup = const {},
   });
 
   factory ProfileDoc.fromJson(Map<String, dynamic> j) => ProfileDoc(
@@ -58,6 +60,8 @@ class ProfileDoc {
         skippedRepeatIds: ((j['skippedRepeatIds'] ?? const []) as List)
             .map((e) => e as String)
             .toList(),
+        ketchup: ((j['ketchup'] ?? const {}) as Map<String, dynamic>)
+            .map((k, v) => MapEntry(k, DayKetchup.fromJson(v as Map<String, dynamic>))),
       );
 
   Map<String, dynamic> toJson() => {
@@ -70,6 +74,7 @@ class ProfileDoc {
         'adherence': adherence,
         'recurringTasks': recurringTasks.map((t) => t.toJson()).toList(),
         'skippedRepeatIds': skippedRepeatIds,
+        'ketchup': ketchup.map((k, v) => MapEntry(k, v.toJson())),
       };
 
   ProfileDoc copyWith({
@@ -81,6 +86,7 @@ class ProfileDoc {
     Map<String, Map<String, int>>? adherence,
     List<RecurringCustomTask>? recurringTasks,
     List<String>? skippedRepeatIds,
+    Map<String, DayKetchup>? ketchup,
   }) =>
       ProfileDoc(
         id: id,
@@ -92,6 +98,7 @@ class ProfileDoc {
         adherence: adherence ?? this.adherence,
         recurringTasks: recurringTasks ?? this.recurringTasks,
         skippedRepeatIds: skippedRepeatIds ?? this.skippedRepeatIds,
+        ketchup: ketchup ?? this.ketchup,
       );
 }
 

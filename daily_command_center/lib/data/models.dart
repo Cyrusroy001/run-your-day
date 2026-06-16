@@ -514,6 +514,47 @@ class DriftEvent {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// The pantry (ADR-022 §6): one bottled record per day. Quantity = picked of
+// trackable (the existing adherence definition); quality = batch grade from
+// the day's drift. Copy stays generic — never goal-specific.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum BatchGrade { firstPress, goodBatch, roughBatch }
+
+class DayKetchup {
+  final String date; // yyyy-MM-dd
+  final int picked, trackable, squeezes, drops, latePicks;
+  const DayKetchup({
+    required this.date, required this.picked, required this.trackable,
+    required this.squeezes, required this.drops, required this.latePicks,
+  });
+
+  /// first press: clean day. good batch: ≤2 squeezes, no drops. else rough.
+  BatchGrade get grade {
+    if (squeezes == 0 && drops == 0 && latePicks == 0) return BatchGrade.firstPress;
+    if (squeezes <= 2 && drops == 0) return BatchGrade.goodBatch;
+    return BatchGrade.roughBatch;
+  }
+
+  /// Jar fill 0..1.
+  double get fill => trackable <= 0 ? 0 : (picked / trackable).clamp(0.0, 1.0);
+
+  factory DayKetchup.fromJson(Map<String, dynamic> j) => DayKetchup(
+        date: j['date'] as String,
+        picked: ((j['picked'] ?? 0) as num).toInt(),
+        trackable: ((j['trackable'] ?? 0) as num).toInt(),
+        squeezes: ((j['squeezes'] ?? 0) as num).toInt(),
+        drops: ((j['drops'] ?? 0) as num).toInt(),
+        latePicks: ((j['latePicks'] ?? 0) as num).toInt(),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'date': date, 'picked': picked, 'trackable': trackable,
+        'squeezes': squeezes, 'drops': drops, 'latePicks': latePicks,
+      };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Custom task — an ad-hoc block injected into a single day by the user.
 // Persisted inside DailyState.addedItems; assembled at priority 0.
 // ─────────────────────────────────────────────────────────────────────────────

@@ -46,4 +46,25 @@ void main() {
     expect(decoded['id'], 'cyrus');
     expect(decoded['plan'], isA<Map>());
   });
+
+  test('DayKetchup grades + ProfileDoc.ketchup roundtrip', () async {
+    const first = DayKetchup(date: '2026-06-13', picked: 5, trackable: 6,
+        squeezes: 0, drops: 0, latePicks: 0);
+    const good = DayKetchup(date: '2026-06-13', picked: 5, trackable: 6,
+        squeezes: 2, drops: 0, latePicks: 1);
+    const rough = DayKetchup(date: '2026-06-13', picked: 2, trackable: 6,
+        squeezes: 3, drops: 1, latePicks: 0);
+    expect(first.grade, BatchGrade.firstPress);
+    expect(good.grade, BatchGrade.goodBatch);
+    expect(rough.grade, BatchGrade.roughBatch);
+    expect(first.fill, closeTo(5 / 6, 0.001));
+
+    await AppStore.repo.createProfile('Cyrus');
+    final plan = (await AppStore.repo.loadActive()).plan;
+    final doc = ProfileDoc(id: 'p', displayName: 'P', plan: plan,
+        ketchup: const {'2026-06-13': good});
+    final back = ProfileDoc.fromJson(doc.toJson());
+    expect(back.ketchup['2026-06-13']!.latePicks, 1);
+    expect(back.ketchup['2026-06-13']!.grade, BatchGrade.goodBatch);
+  });
 }
