@@ -7,9 +7,9 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  test('defaults to dark + 1.0 scale', () async {
+  test('defaults to light + 1.0 scale', () async {
     final p = await UiPrefs.load();
-    expect(p.themeMode, ThemeMode.dark);
+    expect(p.themeMode, ThemeMode.light);
     expect(p.textScale, 1.0);
   });
 

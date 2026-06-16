@@ -7,7 +7,7 @@ class UiPrefs {
   final bool headsUp;      // opt-in heads-up before each block
   final bool sundayNudge;  // weekly Sunday catch-up reminder
   const UiPrefs({
-    this.themeMode = ThemeMode.dark,
+    this.themeMode = ThemeMode.light,
     this.textScale = 1.0,
     this.headsUp = false,
     this.sundayNudge = false,
@@ -21,9 +21,9 @@ class UiPrefs {
   static Future<UiPrefs> load() async {
     final prefs = await SharedPreferences.getInstance();
     final mode = switch (prefs.getString(_modeKey)) {
-      'light' => ThemeMode.light,
+      'dark' => ThemeMode.dark,
       'system' => ThemeMode.system,
-      _ => ThemeMode.dark,
+      _ => ThemeMode.light,
     };
     return UiPrefs(
       themeMode: mode,

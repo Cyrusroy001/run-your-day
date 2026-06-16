@@ -15,9 +15,9 @@ from PIL import Image, ImageDraw
 import os
 
 SIZE = 1024
-TOMATO = (217, 84, 62)    # D9543E
-CHAR = (21, 17, 15)       # 15110F  flat dark roast
-SALT = (240, 236, 230)    # F0ECE6  monochrome themed layer
+TOMATO = (200, 82, 60)    # C8523C  ripe (ADR-022 garden palette)
+CHAR = (245, 239, 227)    # F5EFE3  cream
+SALT = (46, 39, 24)       # 2E2718  ink — monochrome themed layer
 
 os.makedirs('assets/icon', exist_ok=True)
 
