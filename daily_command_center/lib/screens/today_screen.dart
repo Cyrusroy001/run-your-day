@@ -19,13 +19,11 @@ import '../logic/timeline.dart';
 import '../logic/drift_engine.dart';
 import '../logic/drift_copy.dart';
 import '../logic/home_now_state.dart';
-import '../logic/custom_task_fitter.dart';
 import '../logic/weekly_review.dart';
 import '../logic/blueprint_promotion.dart';
 import '../theme/app_palette.dart';
 import '../theme/transitions.dart';
-import '../widgets/add_custom_task_sheet.dart';
-import '../widgets/sacrifice_picker_sheet.dart';
+import '../widgets/add_task_fab.dart';
 import '../widgets/promote_blueprint_sheet.dart';
 import '../widgets/teach_caption.dart';
 import '../widgets/avatar_menu_sheet.dart';
@@ -53,6 +51,7 @@ class TodayScreenState extends State<TodayScreen> {
   DailyState _state = const DailyState(date: '');
   Set<String> _done = {};
   String? _teachText;
+  String? _undoMsg; // inline 'no room' caption from AddTaskFab
   Timer? _ticker;
   WeeklySummary? _summary;
   String? _topSqueezed;
@@ -175,29 +174,7 @@ class TodayScreenState extends State<TodayScreen> {
   }
 
   // ── custom tasks ───────────────────────────────────────────────────────────
-  void _openAddCustomTask() => showAddCustomTaskSheet(context, onSubmit: _addCustomTask);
-
-  Future<void> _addCustomTask(String label, String time, int durationMinutes) async {
-    final plan = _plan;
-    final entry = plan?.week[_todayKey];
-    if (plan == null || entry == null) return;
-    final assembled = _assemble(plan);
-    final task = CustomTask(
-      id: 'custom_${DateTime.now().millisecondsSinceEpoch}',
-      label: label, startTime: time, durationMinutes: durationMinutes, date: _state.date);
-    if (CustomTaskFitter.compactionSlack(assembled) >= durationMinutes) {
-      await _insertCustomTask(task, drop: const []);
-      return;
-    }
-    final offers = CustomTaskFitter.computeOffers(assembled, durationMinutes);
-    if (offers.isEmpty) return;
-    if (!mounted) return;
-    showSacrificePickerSheet(context, offers: offers, taskLabel: label,
-        onConfirm: (offer) => _insertCustomTask(task, drop: offer.drop));
-  }
-
-  Future<void> _insertCustomTask(CustomTask task, {required List<Block> drop}) async {
-    final dropIds = drop.map((b) => b.id).whereType<String>().toList();
+  Future<void> _commitAdd(CustomTask task, List<String> dropIds) async {
     final next = _state.copyWith(
         addedItems: [..._state.addedItems, task], deletedItems: [..._state.deletedItems, ...dropIds]);
     setState(() => _state = next);
@@ -317,10 +294,11 @@ class TodayScreenState extends State<TodayScreen> {
         bottom: false,
         child: _todayBody(c, day, now),
       ),
-      floatingActionButton: FloatingActionButton(
-          heroTag: 'add_custom_task', onPressed: _openAddCustomTask,
-          backgroundColor: c.vine, foregroundColor: c.onAccent,
-          child: const Icon(Icons.add)),
+      floatingActionButton: AddTaskFab(
+          dateIso: _state.date,
+          assembled: () => _assemble(_plan!),
+          onCommit: (task, dropIds) => _commitAdd(task, dropIds),
+          onMessage: (m) => setState(() => _undoMsg = m)),
     );
   }
 
@@ -334,6 +312,7 @@ class TodayScreenState extends State<TodayScreen> {
         _header(c),
         _hero(c, day, now),
         _whisper(c, day),
+        if (_undoMsg != null) _undoCaption(c),
         if (_teachText != null)
           TeachCaption(
             text: _teachText!,
@@ -455,4 +434,17 @@ class TodayScreenState extends State<TodayScreen> {
       ]),
     );
   }
+
+  Widget _undoCaption(AppPalette c) => Padding(
+        padding: const EdgeInsets.fromLTRB(6, 0, 6, 4),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(child: Text(_undoMsg!,
+              style: TextStyle(fontSize: 12.5, height: 1.4, color: c.dim))),
+          GestureDetector(
+            onTap: () => setState(() => _undoMsg = null),
+            child: Padding(padding: const EdgeInsets.only(left: 8),
+                child: Text('✕', style: TextStyle(fontSize: 12.5, color: c.dim))),
+          ),
+        ]),
+      );
 }

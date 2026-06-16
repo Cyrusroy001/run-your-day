@@ -10,12 +10,10 @@ import '../data/day_actions.dart';
 import '../logic/assembler.dart';
 import '../logic/timeline.dart';
 import '../logic/drift_engine.dart';
-import '../logic/custom_task_fitter.dart';
 import '../logic/priority_level.dart';
 import '../theme/app_palette.dart';
 import '../widgets/elastic_rail.dart';
-import '../widgets/add_custom_task_sheet.dart';
-import '../widgets/sacrifice_picker_sheet.dart';
+import '../widgets/add_task_fab.dart';
 
 /// The timeline rail + Adjust mode, split out of Today (G4.2). Pure move — the
 /// vine look lands in G6. Today keeps its own read-only "rest of today" rail;
@@ -215,36 +213,9 @@ class TimelineScreenState extends State<TimelineScreen> {
   Future<void> setLevelForTest(Block b, PriorityLevel lvl) => _setLevel(b, lvl);
 
   // ── custom tasks ───────────────────────────────────────────────────────────
-  void _openAddCustomTask() => showAddCustomTaskSheet(context, onSubmit: _addCustomTask);
-
-  Future<void> _addCustomTask(String label, String time, int durationMinutes) async {
-    final plan = _plan;
-    final entry = plan?.week[_todayKey];
-    if (plan == null || entry == null) return;
-    final assembled = _assemble(plan);
-    final task = CustomTask(
-      id: 'custom_${DateTime.now().millisecondsSinceEpoch}',
-      label: label, startTime: time, durationMinutes: durationMinutes, date: _state.date);
-    if (CustomTaskFitter.compactionSlack(assembled) >= durationMinutes) {
-      await _insertCustomTask(task, drop: const []);
-      return;
-    }
-    final offers = CustomTaskFitter.computeOffers(assembled, durationMinutes);
-    if (offers.isEmpty) {
-      if (mounted) setState(() => _undoMsg = 'No room today — try a shorter task');
-      return;
-    }
-    if (!mounted) return;
-    showSacrificePickerSheet(context, offers: offers, taskLabel: label,
-        onConfirm: (offer) => _insertCustomTask(task, drop: offer.drop));
-  }
-
-  Future<void> _insertCustomTask(CustomTask task, {required List<Block> drop}) async {
-    final dropIds = drop.map((b) => b.id).whereType<String>().toList();
-    await _commit(
+  Future<void> _commitAdd(CustomTask task, List<String> dropIds) => _commit(
       _state.copyWith(addedItems: [..._state.addedItems, task], deletedItems: [..._state.deletedItems, ...dropIds]),
       '"${task.label}" added');
-  }
 
   // ── build ──────────────────────────────────────────────────────────────────
   @override
@@ -261,10 +232,11 @@ class TimelineScreenState extends State<TimelineScreen> {
       ),
       floatingActionButton: _adjusting
           ? null
-          : FloatingActionButton(
-              heroTag: 'add_custom_task', onPressed: _openAddCustomTask,
-              backgroundColor: c.vine, foregroundColor: c.onAccent,
-              child: const Icon(Icons.add)),
+          : AddTaskFab(
+              dateIso: _state.date,
+              assembled: () => _assemble(_plan!),
+              onCommit: (task, dropIds) => _commitAdd(task, dropIds),
+              onMessage: (m) => setState(() => _undoMsg = m)),
     );
   }
 
