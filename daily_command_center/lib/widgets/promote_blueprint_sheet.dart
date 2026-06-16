@@ -158,12 +158,12 @@ class _PromoteSheetState extends State<_PromoteSheet> {
                       selected: selected,
                       onSelected: (_) => setState(() => _durationMinutes = d),
                       backgroundColor: c.raise,
-                      selectedColor: c.mustardDim,
+                      selectedColor: c.vineDim,
                       labelStyle: TextStyle(
-                        color: selected ? c.mustard : c.dim,
+                        color: selected ? c.vine : c.dim,
                         fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
                       ),
-                      side: BorderSide(color: selected ? c.mustard : Colors.transparent),
+                      side: BorderSide(color: selected ? c.vine : Colors.transparent),
                       showCheckmark: false,
                     );
                   }).toList()),
@@ -187,7 +187,7 @@ class _PromoteSheetState extends State<_PromoteSheet> {
                     child: FilledButton(
                       onPressed: canSubmit ? _submit : null,
                       style: FilledButton.styleFrom(
-                        backgroundColor: c.tomato,
+                        backgroundColor: c.vine,
                         disabledBackgroundColor: c.raise,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -211,15 +211,15 @@ class _PromoteSheetState extends State<_PromoteSheet> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration: BoxDecoration(
-            color: selected ? c.tomatoDim : c.raise,
-            border: Border.all(color: selected ? c.tomato : c.line),
+            color: selected ? c.vineDim : c.raise,
+            border: Border.all(color: selected ? c.vine : c.line),
             borderRadius: BorderRadius.circular(999),
           ),
           child: Text(label,
               style: TextStyle(
                 fontSize: 12.5,
                 fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-                color: selected ? c.tomato : c.dim,
+                color: selected ? c.vine : c.dim,
               )),
         ),
       );

@@ -411,7 +411,7 @@ class TodayScreenState extends State<TodayScreen> {
   Widget build(BuildContext context) {
     final c = context.c;
     final plan = _plan;
-    if (plan == null) return Scaffold(body: Center(child: CircularProgressIndicator(color: c.tomato)));
+    if (plan == null) return Scaffold(body: Center(child: CircularProgressIndicator(color: c.vine)));
     final day = _resolve(plan);
     final now = HomeNowState.from(day, now: _now(), done: _done);
     _maybeScheduleHeadsUps(context, day);
@@ -425,7 +425,7 @@ class TodayScreenState extends State<TodayScreen> {
           ? null
           : FloatingActionButton(
               heroTag: 'add_custom_task', onPressed: _openAddCustomTask,
-              backgroundColor: c.tomato, foregroundColor: c.onAccent,
+              backgroundColor: c.vine, foregroundColor: c.onAccent,
               child: const Icon(Icons.add)),
     );
   }
@@ -510,7 +510,7 @@ class TodayScreenState extends State<TodayScreen> {
                 onOpenSettings: () => Navigator.of(context).push(fadeThroughRoute(const SettingsScreen())),
                 onOpenGlossary: () => Navigator.of(context).push(fadeThroughRoute(const HowItWorksScreen())),
                 onLogout: () => AppStore.repo.clearActive()),
-            child: CircleAvatar(radius: 17, backgroundColor: c.tomato,
+            child: CircleAvatar(radius: 17, backgroundColor: c.vine,
                 child: Text(_displayName.isEmpty ? '?' : _displayName[0].toUpperCase(),
                     style: GoogleFonts.bricolageGrotesque(
                         color: c.onAccent, fontWeight: FontWeight.w800, fontSize: 14))),
@@ -525,7 +525,7 @@ class TodayScreenState extends State<TodayScreen> {
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: c.line, style: BorderStyle.solid)),
         child: Row(children: [
-          Text('✓✓', style: TextStyle(color: c.leaf, fontSize: 13)),
+          Text('✓✓', style: TextStyle(color: c.vine, fontSize: 13)),
           const SizedBox(width: 10),
           Expanded(
             child: Text('Earlier done — ${done.map((b) => b.label).join(', ')}',
@@ -558,11 +558,11 @@ class TodayScreenState extends State<TodayScreen> {
       const SizedBox(height: 10),
       Text(now.currentLabel, style: GoogleFonts.bricolageGrotesque(fontSize: 32, fontWeight: FontWeight.w800, height: 1.02, letterSpacing: -0.5, color: c.salt)),
       const SizedBox(height: 12),
-      caughtUp ? _chip(c, '✓ all caught up', c.leaf, c.leafDim) : _chip(c, '~ squeezed', c.mustard, c.mustardDim),
+      caughtUp ? _chip(c, '✓ all caught up', c.vine, c.vineDim) : _chip(c, '~ squeezed', c.jammyText, c.jammyDim),
       const SizedBox(height: 12),
       ClipRRect(borderRadius: BorderRadius.circular(3),
         child: LinearProgressIndicator(value: now.progress, minHeight: 3,
-            backgroundColor: c.line, valueColor: AlwaysStoppedAnimation(c.tomato))),
+            backgroundColor: c.line, valueColor: AlwaysStoppedAnimation(c.vine))),
       const SizedBox(height: 12),
       Row(children: [
         Text('${now.minutesLeft} min', style: GoogleFonts.splineSansMono(fontSize: 12.5, color: c.salt, fontWeight: FontWeight.w500)),
@@ -573,7 +573,7 @@ class TodayScreenState extends State<TodayScreen> {
             final b = day.blocks.firstWhere((x) => x.signature == now.currentSignature);
             _toggle(b);
           },
-          style: FilledButton.styleFrom(backgroundColor: c.tomato, foregroundColor: c.onAccent,
+          style: FilledButton.styleFrom(backgroundColor: c.vine, foregroundColor: c.onAccent,
               shape: const StadiumBorder(), padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10)),
           child: const Text('Done', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5)),
         ),
@@ -587,9 +587,9 @@ class TodayScreenState extends State<TodayScreen> {
         child: child);
 
   Widget _nowPill(AppPalette c) => Row(mainAxisSize: MainAxisSize.min, children: [
-        Container(width: 7, height: 7, decoration: BoxDecoration(color: c.tomato, shape: BoxShape.circle)),
+        Container(width: 7, height: 7, decoration: BoxDecoration(color: c.ripe, shape: BoxShape.circle)),
         const SizedBox(width: 7),
-        Text('NOW', style: GoogleFonts.splineSansMono(fontSize: 11, letterSpacing: 1.4, color: c.tomato)),
+        Text('NOW', style: GoogleFonts.splineSansMono(fontSize: 11, letterSpacing: 1.4, color: c.ripe)),
       ]);
 
   Widget _chip(AppPalette c, String text, Color fg, Color bg) => Container(
@@ -603,7 +603,7 @@ class TodayScreenState extends State<TodayScreen> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(6, 14, 6, 4),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('~', style: GoogleFonts.splineSansMono(fontSize: 14, color: calm ? c.leaf : c.mustard)),
+        Text('~', style: GoogleFonts.splineSansMono(fontSize: 14, color: calm ? c.vine : c.jammyText)),
         const SizedBox(width: 10),
         Expanded(child: Text(DriftCopy.ketchupWhisper(day),
             style: TextStyle(fontSize: 13.5, height: 1.4, color: c.dim))),
@@ -621,7 +621,7 @@ class TodayScreenState extends State<TodayScreen> {
           const Spacer(),
           FilledButton(
             onPressed: () => setState(() => _adjusting = false),
-            style: FilledButton.styleFrom(backgroundColor: c.tomato, foregroundColor: c.onAccent,
+            style: FilledButton.styleFrom(backgroundColor: c.vine, foregroundColor: c.onAccent,
                 shape: const StadiumBorder(), padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8)),
             child: const Text('Done', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5)),
           ),
@@ -693,8 +693,8 @@ class TodayScreenState extends State<TodayScreen> {
     Widget seg(PriorityLevel lvl, String label) {
       final on = lvl == cur;
       final warn = lvl == PriorityLevel.dropFirst;
-      final fg = !on ? c.dim : (warn ? c.mustard : c.leaf);
-      final bg = !on ? null : (warn ? c.mustardDim : c.leafDim);
+      final fg = !on ? c.dim : (warn ? c.jammyText : c.vine);
+      final bg = !on ? null : (warn ? c.jammyDim : c.vineDim);
       return GestureDetector(
         onTap: () => _setLevel(b, lvl),
         child: Container(
@@ -722,7 +722,7 @@ class TodayScreenState extends State<TodayScreen> {
         decoration: BoxDecoration(color: c.raise2, borderRadius: BorderRadius.circular(14), border: Border.all(color: c.line)),
         child: Row(children: [
           Expanded(child: Text(_undoMsg!, style: TextStyle(fontSize: 13, color: c.salt))),
-          GestureDetector(onTap: _undo, child: Text('Undo', style: TextStyle(fontSize: 13, color: c.tomato, fontWeight: FontWeight.w600))),
+          GestureDetector(onTap: _undo, child: Text('Undo', style: TextStyle(fontSize: 13, color: c.vine, fontWeight: FontWeight.w600))),
         ]),
       );
 }

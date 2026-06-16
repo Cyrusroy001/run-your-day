@@ -126,7 +126,7 @@ class _OfferTile extends StatelessWidget {
         color: c.raise,
         borderRadius: BorderRadius.circular(12),
         border: offer.isRecommended
-            ? Border.all(color: c.mustard.withValues(alpha: 0.6), width: 1.5)
+            ? Border.all(color: c.jammy.withValues(alpha: 0.6), width: 1.5)
             : null,
       ),
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
@@ -138,12 +138,12 @@ class _OfferTile extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                 decoration: BoxDecoration(
-                  color: c.mustardDim,
+                  color: c.jammyDim,
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text('Recommended', style: TextStyle(
                   fontSize: 10, fontWeight: FontWeight.w700,
-                  color: c.mustard, letterSpacing: 0.3)),
+                  color: c.jammyText, letterSpacing: 0.3)),
               ),
               const SizedBox(width: 8),
             ],
@@ -170,7 +170,7 @@ class _OfferTile extends StatelessWidget {
             child: FilledButton(
               onPressed: onConfirm,
               style: FilledButton.styleFrom(
-                backgroundColor: offer.isRecommended ? c.tomato : c.raise2,
+                backgroundColor: offer.isRecommended ? c.vine : c.raise2,
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8)),

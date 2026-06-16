@@ -80,12 +80,12 @@ class _WeekPlannerState extends State<WeekPlanner> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('PLAN YOUR WEEK',
-                  style: TextStyle(fontSize: 11, letterSpacing: 1.2, color: c.tomato, fontWeight: FontWeight.w600)),
+                  style: TextStyle(fontSize: 11, letterSpacing: 1.2, color: c.vine, fontWeight: FontWeight.w600)),
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 200),
                 child: Text('$_trainCount training days',
                     key: ValueKey(_trainCount),
-                    style: TextStyle(fontSize: 11, color: _trainCount == 4 ? c.leaf : c.mustard, fontWeight: FontWeight.w500)),
+                    style: TextStyle(fontSize: 11, color: _trainCount == 4 ? c.vine : c.jammyText, fontWeight: FontWeight.w500)),
               ),
             ],
           ),
@@ -100,7 +100,7 @@ class _WeekPlannerState extends State<WeekPlanner> {
           if (_caption != null)
             Padding(
               padding: const EdgeInsets.only(top: 10),
-              child: Text(_caption!, style: TextStyle(fontSize: 12, color: c.tomato)),
+              child: Text(_caption!, style: TextStyle(fontSize: 12, color: c.vine)),
             ),
           const SizedBox(height: 10),
           GestureDetector(
@@ -134,12 +134,12 @@ class _DayRow extends StatelessWidget {
     final c = context.c;
     final isWeekend = entry.templateId.startsWith('weekend');
     final schedLabel = isWeekend ? 'Weekend' : (entry.templateId == 'office' ? 'Office' : 'WFH');
-    final schedColor = isWeekend ? c.mustard : (entry.templateId == 'office' ? c.tomato : c.tomato);
+    final schedColor = isWeekend ? c.jammy : (entry.templateId == 'office' ? c.vine : c.vine);
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 3),
       decoration: BoxDecoration(
-        border: Border(left: BorderSide(color: isToday ? c.mustard : Colors.transparent, width: 3)),
+        border: Border(left: BorderSide(color: isToday ? c.jammy : Colors.transparent, width: 3)),
       ),
       child: Row(
         children: [
@@ -162,7 +162,7 @@ class _DayRow extends StatelessWidget {
           ),
           const Spacer(),
           Text(entry.training ? 'Training' : 'Rest',
-              style: TextStyle(fontSize: 11, color: entry.training ? c.leaf : c.dim, fontWeight: FontWeight.w600)),
+              style: TextStyle(fontSize: 11, color: entry.training ? c.vine : c.dim, fontWeight: FontWeight.w600)),
           const SizedBox(width: 8),
           GestureDetector(
             key: Key('train-$day'),
@@ -173,7 +173,7 @@ class _DayRow extends StatelessWidget {
               height: 28,
               padding: const EdgeInsets.all(3),
               decoration: BoxDecoration(
-                color: entry.training ? c.tomato : c.line,
+                color: entry.training ? c.vine : c.line,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: AnimatedAlign(

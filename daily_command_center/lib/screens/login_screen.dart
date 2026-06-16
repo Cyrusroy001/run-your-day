@@ -70,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(height: 32),
             Expanded(
               child: _loading
-                  ? Center(child: CircularProgressIndicator(color: c.tomato))
+                  ? Center(child: CircularProgressIndicator(color: c.vine))
                   : ListView(children: [
                       if (_profiles.isEmpty)
                         Padding(padding: const EdgeInsets.symmetric(vertical: 24),
@@ -108,7 +108,7 @@ class _ProfileTile extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(children: [
-              CircleAvatar(radius: 24, backgroundColor: c.tomato,
+              CircleAvatar(radius: 24, backgroundColor: c.vine,
                   child: Text(initial, style: TextStyle(color: c.char, fontWeight: FontWeight.w800, fontSize: 20))),
               const SizedBox(width: 16),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -138,7 +138,7 @@ class _NewProfileField extends StatelessWidget {
       decoration: BoxDecoration(border: Border.all(color: c.line), borderRadius: BorderRadius.circular(16)),
       child: Row(children: [
         const SizedBox(width: 8),
-        Icon(Icons.add, color: c.leaf),
+        Icon(Icons.add, color: c.vine),
         const SizedBox(width: 8),
         Expanded(child: TextField(
           controller: controller,
@@ -147,7 +147,7 @@ class _NewProfileField extends StatelessWidget {
               hintStyle: TextStyle(color: c.dim)),
           onSubmitted: (_) => onSubmit(),
         )),
-        TextButton(onPressed: onSubmit, child: Text('Continue', style: TextStyle(color: c.tomato))),
+        TextButton(onPressed: onSubmit, child: Text('Continue', style: TextStyle(color: c.vine))),
       ]),
     );
   }

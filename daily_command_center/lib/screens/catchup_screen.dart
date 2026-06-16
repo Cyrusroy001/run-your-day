@@ -64,7 +64,7 @@ class _CatchupScreenState extends State<CatchupScreen> {
           if (widget.promotionCandidates.isNotEmpty) ...[
             const SizedBox(height: 22),
             Text('YOU DID THESE OFTEN',
-                style: GoogleFonts.splineSansMono(fontSize: 11, letterSpacing: 1.2, color: c.mustard)),
+                style: GoogleFonts.splineSansMono(fontSize: 11, letterSpacing: 1.2, color: c.vine)),
             const SizedBox(height: 6),
             ...widget.promotionCandidates.map((cand) => _promotionRow(c, cand)),
           ],
@@ -84,7 +84,7 @@ class _CatchupScreenState extends State<CatchupScreen> {
                   Container(
                     height: d.pct == null ? 8 : 8 + d.pct! / 100 * 50,
                     decoration: BoxDecoration(
-                      color: d.pct == null ? c.line : (d.pct! >= 60 ? c.leaf : c.mustard),
+                      color: d.pct == null ? c.line : (d.pct! >= 60 ? c.vine : c.jammyText),
                       borderRadius: BorderRadius.circular(6),
                     ),
                   ),
@@ -98,9 +98,9 @@ class _CatchupScreenState extends State<CatchupScreen> {
     if (_gaveTime) {
       return Container(
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(color: c.leafDim, borderRadius: BorderRadius.circular(16), border: Border.all(color: c.leaf.withValues(alpha: .4))),
+        decoration: BoxDecoration(color: c.vineDim, borderRadius: BorderRadius.circular(16), border: Border.all(color: c.vine.withValues(alpha: .4))),
         child: Text('✓ Gave ${widget.insightLabel} ${widget.giveMinutes} more minutes next week.',
-            style: TextStyle(fontSize: 13.5, color: c.leaf)),
+            style: TextStyle(fontSize: 13.5, color: c.vine)),
       );
     }
     return Container(
@@ -108,7 +108,7 @@ class _CatchupScreenState extends State<CatchupScreen> {
       decoration: BoxDecoration(color: c.raise, borderRadius: BorderRadius.circular(18), border: Border.all(color: c.line)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text.rich(TextSpan(style: TextStyle(fontSize: 13.5, height: 1.4, color: c.dim), children: [
-          TextSpan(text: '~ ', style: TextStyle(color: c.mustard, fontFamily: GoogleFonts.splineSansMono().fontFamily)),
+          TextSpan(text: '~ ', style: TextStyle(color: c.jammyText, fontFamily: GoogleFonts.splineSansMono().fontFamily)),
           TextSpan(text: widget.insightLabel, style: TextStyle(color: c.salt)),
           const TextSpan(text: ' kept getting squeezed this week. Want '),
           TextSpan(text: '${widget.giveMinutes} more minutes', style: TextStyle(color: c.salt)),
@@ -122,7 +122,7 @@ class _CatchupScreenState extends State<CatchupScreen> {
                 widget.onGiveMoreTime!(widget.insightLabel!, widget.giveMinutes);
                 setState(() => _gaveTime = true);
               },
-              style: FilledButton.styleFrom(backgroundColor: c.tomato, foregroundColor: c.onAccent, shape: const StadiumBorder(), padding: const EdgeInsets.symmetric(vertical: 11)),
+              style: FilledButton.styleFrom(backgroundColor: c.vine, foregroundColor: c.onAccent, shape: const StadiumBorder(), padding: const EdgeInsets.symmetric(vertical: 11)),
               child: const Text('Give it more time', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
             ),
           ),
@@ -142,7 +142,7 @@ class _CatchupScreenState extends State<CatchupScreen> {
   Widget _promotionRow(AppPalette c, PromotionCandidate cand) => Container(
         margin: const EdgeInsets.only(top: 8),
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: c.mustardDim, borderRadius: BorderRadius.circular(14), border: Border.all(color: c.mustard.withValues(alpha: .5))),
+        decoration: BoxDecoration(color: c.jammyDim, borderRadius: BorderRadius.circular(14), border: Border.all(color: c.jammy.withValues(alpha: .5))),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(cand.label, style: GoogleFonts.bricolageGrotesque(fontSize: 14, fontWeight: FontWeight.w600, color: c.salt)),
           const SizedBox(height: 2),
@@ -154,7 +154,7 @@ class _CatchupScreenState extends State<CatchupScreen> {
               onTap: widget.onPromote == null ? null : () => widget.onPromote!(cand),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(color: c.mustard, borderRadius: BorderRadius.circular(99)),
+                decoration: BoxDecoration(color: c.jammy, borderRadius: BorderRadius.circular(99)),
                 child: Text('Add to plan →', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: c.char)),
               ),
             ),

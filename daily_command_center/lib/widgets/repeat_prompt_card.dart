@@ -27,13 +27,13 @@ class RepeatPromptCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(13),
       decoration: BoxDecoration(
-        color: c.mustardDim,
-        border: Border.all(color: c.mustard.withValues(alpha: .5)),
+        color: c.jammyDim,
+        border: Border.all(color: c.jammy.withValues(alpha: .5)),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          Text('~', style: GoogleFonts.splineSansMono(color: c.mustard, fontSize: 14)),
+          Text('~', style: GoogleFonts.splineSansMono(color: c.jammyText, fontSize: 14)),
           const SizedBox(width: 8),
           Expanded(child: Text('Repeat "${task.label}"?',
               style: GoogleFonts.bricolageGrotesque(fontSize: 14, fontWeight: FontWeight.w600, color: c.salt))),
@@ -48,8 +48,8 @@ class RepeatPromptCard extends StatelessWidget {
               onTap: () => onRepeat(date),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(border: Border.all(color: c.mustard), borderRadius: BorderRadius.circular(99)),
-                child: Text(label, style: GoogleFonts.splineSansMono(fontSize: 12, color: c.mustard)),
+                decoration: BoxDecoration(border: Border.all(color: c.jammy), borderRadius: BorderRadius.circular(99)),
+                child: Text(label, style: GoogleFonts.splineSansMono(fontSize: 12, color: c.jammyText)),
               ),
             ),
         ]),

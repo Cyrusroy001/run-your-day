@@ -107,7 +107,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
               Expanded(child: FilledButton(
                 style: FilledButton.styleFrom(
-                    backgroundColor: c.tomato,
+                    backgroundColor: c.vine,
                     padding: const EdgeInsets.symmetric(vertical: 16)),
                 onPressed: _busy ? null : _next,
                 child: _busy
@@ -137,7 +137,7 @@ class _ProgressDots extends StatelessWidget {
           width: i == index ? 22 : 8, height: 8,
           margin: const EdgeInsets.symmetric(horizontal: 3),
           decoration: BoxDecoration(
-              color: i == index ? c.tomato : c.line,
+              color: i == index ? c.vine : c.line,
               borderRadius: BorderRadius.circular(4)),
         ),
     ]);
@@ -237,13 +237,13 @@ class _TrainingStep extends StatelessWidget {
               style: GoogleFonts.bricolageGrotesque(
                   fontSize: 36,
                   fontWeight: FontWeight.w900,
-                  color: c.tomato)),
+                  color: c.vine)),
           Slider(
               value: days.toDouble(),
               min: 1,
               max: 6,
               divisions: 5,
-              activeColor: c.tomato,
+              activeColor: c.vine,
               onChanged: (v) => onChange(v.round())),
         ]));
   }

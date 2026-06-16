@@ -93,7 +93,7 @@ class ElasticRail extends StatelessWidget {
                   textAlign: TextAlign.right,
                   style: GoogleFonts.splineSansMono(
                       fontSize: 12,
-                      color: s.variant == RailVariant.squeeze ? c.mustard : c.dim)),
+                      color: s.variant == RailVariant.squeeze ? c.jammyText : c.dim)),
             ),
           ),
           SizedBox(
@@ -140,7 +140,7 @@ class ElasticRail extends StatelessWidget {
                   fontSize: 15.5,
                   fontWeight: FontWeight.w600,
                   letterSpacing: -0.2,
-                  color: s.variant == RailVariant.done ? c.leaf : c.salt,
+                  color: s.variant == RailVariant.done ? c.vine : c.salt,
                   decoration:
                       s.variant == RailVariant.skip ? TextDecoration.lineThrough : null,
                   decorationColor: c.dim,
@@ -153,7 +153,7 @@ class ElasticRail extends StatelessWidget {
             child: Text(s.sub,
                 style: GoogleFonts.splineSansMono(
                     fontSize: 11.5,
-                    color: s.variant == RailVariant.squeeze ? c.mustard : c.dim)),
+                    color: s.variant == RailVariant.squeeze ? c.jammyText : c.dim)),
           ),
       ]),
     );
@@ -166,13 +166,13 @@ class ElasticRail extends StatelessWidget {
     switch (v) {
       case RailVariant.squeeze:
         return BoxDecoration(
-            color: c.raise, borderRadius: radius, border: Border.all(color: c.mustard.withValues(alpha: .55)));
+            color: c.raise, borderRadius: radius, border: Border.all(color: c.jammy.withValues(alpha: .55)));
       case RailVariant.anchor:
         return BoxDecoration(
             color: Colors.transparent, borderRadius: radius, border: Border.all(color: c.salt));
       case RailVariant.done:
         return BoxDecoration(
-            color: c.leafDim, borderRadius: radius, border: Border.all(color: c.leaf.withValues(alpha: .4)));
+            color: c.vineDim, borderRadius: radius, border: Border.all(color: c.vine.withValues(alpha: .4)));
       case RailVariant.normal:
       case RailVariant.skip:
         return BoxDecoration(color: c.raise, borderRadius: radius, border: Border.all(color: c.line));
@@ -194,7 +194,7 @@ class _SpinePainter extends CustomPainter {
       ..strokeWidth = variant == RailVariant.anchor ? 4 : 2
       ..color = switch (variant) {
         RailVariant.anchor => c.salt,
-        RailVariant.squeeze => c.mustard,
+        RailVariant.squeeze => c.jammy,
         _ => c.line,
       };
     if (variant == RailVariant.squeeze) {
@@ -214,7 +214,7 @@ class _SpinePainter extends CustomPainter {
       ..style = PaintingStyle.fill
       ..color = switch (variant) {
         RailVariant.anchor => c.salt,
-        RailVariant.done => c.leaf,
+        RailVariant.done => c.vine,
         _ => c.raise2,
       };
     final border = Paint()
@@ -222,8 +222,8 @@ class _SpinePainter extends CustomPainter {
       ..strokeWidth = 2
       ..color = switch (variant) {
         RailVariant.anchor => c.salt,
-        RailVariant.squeeze => c.mustard,
-        RailVariant.done => c.leaf,
+        RailVariant.squeeze => c.jammy,
+        RailVariant.done => c.vine,
         _ => c.dim,
       };
     canvas.drawCircle(Offset(x, ny), 4, fill);

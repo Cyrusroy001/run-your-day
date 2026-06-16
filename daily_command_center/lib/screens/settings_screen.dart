@@ -52,7 +52,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           TextButton(onPressed: () => Navigator.pop(context, false),
               child: Text('Cancel', style: TextStyle(color: c.dim))),
           TextButton(onPressed: () => Navigator.pop(context, true),
-              child: Text(confirm, style: TextStyle(color: destructive ? c.tomato : c.tomato))),
+              child: Text(confirm, style: TextStyle(color: destructive ? c.vine : c.vine))),
         ],
       ),
     );
@@ -102,7 +102,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           TextButton(onPressed: () => Navigator.pop(context),
               child: Text('Cancel', style: TextStyle(color: c.dim))),
           TextButton(onPressed: () => Navigator.pop(context, ctrl.text),
-              child: Text('Import', style: TextStyle(color: c.tomato))),
+              child: Text('Import', style: TextStyle(color: c.vine))),
         ],
       ),
     );
@@ -172,7 +172,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
           value: prefs.headsUp,
-          activeThumbColor: c.leaf,
+          activeThumbColor: c.vine,
           title: Text('Heads-up before each block', style: TextStyle(color: c.salt, fontSize: 14)),
           subtitle: Text("“Gym in 10 — you're all caught up.” One per block, that's all ketchup sends.",
               style: TextStyle(color: c.dim, fontSize: 12)),
@@ -181,7 +181,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
           value: prefs.sundayNudge,
-          activeThumbColor: c.leaf,
+          activeThumbColor: c.vine,
           title: Text('Sunday catch-up nudge', style: TextStyle(color: c.salt, fontSize: 14)),
           subtitle: Text('One ping, Sunday 7 pm.', style: TextStyle(color: c.dim, fontSize: 12)),
           onChanged: (v) {
@@ -212,15 +212,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _section(AppPalette c, String label) => Padding(
         padding: const EdgeInsets.only(bottom: 10),
         child: Text(label,
-            style: TextStyle(fontSize: 11, letterSpacing: 1, color: c.tomato, fontWeight: FontWeight.w600)),
+            style: TextStyle(fontSize: 11, letterSpacing: 1, color: c.vine, fontWeight: FontWeight.w600)),
       );
 
   Widget _action(AppPalette c, IconData icon, String label, VoidCallback onTap,
           {bool danger = false}) =>
       ListTile(
         contentPadding: EdgeInsets.zero,
-        leading: Icon(icon, color: danger ? c.tomato : c.tomato),
-        title: Text(label, style: TextStyle(color: danger ? c.tomato : c.salt)),
+        leading: Icon(icon, color: danger ? c.vine : c.vine),
+        title: Text(label, style: TextStyle(color: danger ? c.vine : c.salt)),
         onTap: onTap,
       );
 }

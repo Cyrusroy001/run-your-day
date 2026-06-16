@@ -152,15 +152,15 @@ class _AddCustomTaskSheetState extends State<_AddCustomTaskSheet> {
                       selected: selected,
                       onSelected: (_) => setState(() => _durationMinutes = d),
                       backgroundColor: c.raise,
-                      selectedColor: c.mustardDim,
+                      selectedColor: c.vineDim,
                       labelStyle: TextStyle(
-                        color: selected ? c.mustard : c.dim,
+                        color: selected ? c.vine : c.dim,
                         fontWeight: selected
                             ? FontWeight.w600
                             : FontWeight.normal,
                       ),
                       side: BorderSide(
-                        color: selected ? c.mustard : Colors.transparent),
+                        color: selected ? c.vine : Colors.transparent),
                       showCheckmark: false,
                     );
                   }).toList(),
@@ -173,7 +173,7 @@ class _AddCustomTaskSheetState extends State<_AddCustomTaskSheet> {
                   child: FilledButton(
                     onPressed: labelEmpty ? null : _submit,
                     style: FilledButton.styleFrom(
-                      backgroundColor: c.tomato,
+                      backgroundColor: c.vine,
                       disabledBackgroundColor: c.raise,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(

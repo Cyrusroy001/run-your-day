@@ -14,7 +14,7 @@ Future<void> showAvatarMenu(BuildContext context, {
     builder: (_) => SafeArea(child: Padding(padding: const EdgeInsets.fromLTRB(16, 16, 16, 26),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          CircleAvatar(backgroundColor: c.tomato, child: Text(name.isNotEmpty ? name[0] : '?', style: TextStyle(color: c.onAccent))),
+          CircleAvatar(backgroundColor: c.vine, child: Text(name.isNotEmpty ? name[0] : '?', style: TextStyle(color: c.onAccent))),
           const SizedBox(width: 12),
           Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(name, style: GoogleFonts.bricolageGrotesque(fontSize: 18, color: c.salt)),
@@ -35,12 +35,12 @@ Future<void> showAvatarMenu(BuildContext context, {
 }
 
 Widget _item(AppPalette c, IconData icon, String label, VoidCallback onTap, {String? note}) =>
-    ListTile(contentPadding: EdgeInsets.zero, leading: Icon(icon, color: c.tomato),
+    ListTile(contentPadding: EdgeInsets.zero, leading: Icon(icon, color: c.vine),
         title: Text(label, style: TextStyle(color: c.salt, fontSize: 14)),
         trailing: note == null
             ? null
             : Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(color: c.tomatoDim, borderRadius: BorderRadius.circular(99)),
-                child: Text(note, style: TextStyle(color: c.tomato, fontSize: 11, fontWeight: FontWeight.w600))),
+                decoration: BoxDecoration(color: c.vineDim, borderRadius: BorderRadius.circular(99)),
+                child: Text(note, style: TextStyle(color: c.vine, fontSize: 11, fontWeight: FontWeight.w600))),
         onTap: onTap);

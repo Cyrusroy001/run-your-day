@@ -18,19 +18,19 @@ class TeachCaption extends StatelessWidget {
       margin: const EdgeInsets.only(top: 10, bottom: 2),
       padding: const EdgeInsets.fromLTRB(14, 11, 12, 11),
       decoration: BoxDecoration(
-        color: c.tomatoDim,
-        border: Border.all(color: c.tomato.withValues(alpha: .3)),
+        color: c.vineDim,
+        border: Border.all(color: c.vine.withValues(alpha: .3)),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('~', style: GoogleFonts.splineSansMono(color: c.tomato, fontSize: 14)),
+        Text('~', style: GoogleFonts.splineSansMono(color: c.vine, fontSize: 14)),
         const SizedBox(width: 10),
         Expanded(child: Text(text, style: TextStyle(fontSize: 12.5, height: 1.4, color: c.salt))),
         if (onWhy != null) ...[
           const SizedBox(width: 10),
           GestureDetector(
             onTap: onWhy,
-            child: Text('Why?', style: TextStyle(fontSize: 12, color: c.tomato, fontWeight: FontWeight.w600)),
+            child: Text('Why?', style: TextStyle(fontSize: 12, color: c.vine, fontWeight: FontWeight.w600)),
           ),
         ],
         const SizedBox(width: 12),
