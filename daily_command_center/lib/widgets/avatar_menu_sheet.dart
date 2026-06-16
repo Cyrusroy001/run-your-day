@@ -6,7 +6,7 @@ Future<void> showAvatarMenu(BuildContext context, {
   required String name, required String subtitle,
   required VoidCallback onSwitchProfile, required VoidCallback onOpenSettings,
   required VoidCallback onOpenGlossary, required VoidCallback onLogout,
-  VoidCallback? onPlanWeek, VoidCallback? onCatchup, bool catchupBadge = false,
+  VoidCallback? onCatchup, bool catchupBadge = false,
 }) {
   final c = context.c;
   return showModalBottomSheet(context: context, backgroundColor: c.raise2,
@@ -22,8 +22,6 @@ Future<void> showAvatarMenu(BuildContext context, {
           ]),
         ]),
         const Divider(height: 24),
-        if (onPlanWeek != null)
-          _item(c, Icons.calendar_today_outlined, 'Plan my week', () { Navigator.pop(context); onPlanWeek(); }),
         if (onCatchup != null)
           _item(c, Icons.bar_chart_rounded, 'Sunday catch-up', () { Navigator.pop(context); onCatchup(); },
               note: catchupBadge ? 'new' : null),

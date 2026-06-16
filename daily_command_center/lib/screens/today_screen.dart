@@ -32,7 +32,6 @@ import '../widgets/avatar_menu_sheet.dart';
 import '../widgets/repeat_prompt_card.dart';
 import 'settings_screen.dart';
 import 'how_it_works_screen.dart';
-import 'week_screen.dart';
 import 'catchup_screen.dart';
 
 /// The Today surface: hero + whisper + teach caption + repeat/promotion
@@ -363,12 +362,6 @@ class TodayScreenState extends State<TodayScreen> {
             onTap: () => showAvatarMenu(context,
                 name: _displayName.isEmpty ? 'Profile' : _displayName,
                 subtitle: _plan?.meta.lifestyleArchetype ?? '',
-                onPlanWeek: () => Navigator.of(context).push(fadeThroughRoute(Scaffold(
-                    appBar: AppBar(
-                      elevation: 0, backgroundColor: context.c.char, foregroundColor: context.c.salt,
-                      title: Text('Plan my week', style: GoogleFonts.bricolageGrotesque(fontWeight: FontWeight.w700, fontSize: 18)),
-                    ),
-                    body: const WeekScreen()))),
                 onCatchup: _summary == null ? null : () => Navigator.of(context).push(fadeThroughRoute(CatchupScreen(
                     summary: _summary!, last7: _last7, insightLabel: _topSqueezed,
                     promotionCandidates: _promotionCandidates,
