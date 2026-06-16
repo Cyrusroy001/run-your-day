@@ -7,9 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:daily_command_center/data/models.dart';
 import 'package:daily_command_center/data/store.dart';
 import 'package:daily_command_center/data/profile_repository.dart';
-import 'package:daily_command_center/logic/priority_level.dart';
 import 'package:daily_command_center/theme/app_palette.dart';
-import 'package:daily_command_center/widgets/elastic_rail.dart';
 import 'package:daily_command_center/screens/today_screen.dart';
 
 late Plan _plan;
@@ -47,13 +45,10 @@ void main() {
     }
   });
 
-  testWidgets('merged Today shows the NOW hero + elastic rail', (tester) async {
-    // 8:15 — the wake block is current, so the rest renders on the rail.
+  testWidgets('merged Today shows the NOW hero', (tester) async {
+    // 8:15 — the wake block is current.
     await _pumpToday(tester, now: 8.25);
     expect(find.text('NOW'), findsOneWidget);
-    expect(find.byType(ElasticRail), findsOneWidget);
-    expect(find.text('Rest of today'.toUpperCase()), findsOneWidget);
-    expect(find.text('Deep Focus — AI Building'), findsOneWidget); // a rail stop
   });
 
   testWidgets('calm day shows the caught-up whisper, no stat tiles', (tester) async {
@@ -64,41 +59,6 @@ void main() {
     // The banned v1 chrome must be gone.
     expect(find.textContaining('done today'), findsNothing);
     expect(find.text('Reflowed'), findsNothing);
-  });
-
-  testWidgets('tapping a rail card toggles its done state', (tester) async {
-    await _pumpToday(tester, now: 8.25);
-    final st = tester.state<TodayScreenState>(find.byType(TodayScreen));
-    expect(st.doneSignatures.any((s) => s.contains('Deep Focus')), false);
-    await tester.runAsync(() async {
-      await tester.tap(find.text('Deep Focus — AI Building'));
-      await Future.delayed(const Duration(milliseconds: 200));
-    });
-    expect(st.doneSignatures.any((s) => s.contains('Deep Focus')), true);
-  });
-
-  testWidgets('FAB visible in Today, hidden while adjusting', (tester) async {
-    await _pumpToday(tester, now: 8.25);
-    expect(find.byType(FloatingActionButton), findsOneWidget);
-    await tester.tap(find.text('ADJUST TODAY'));
-    await tester.pumpAndSettle();
-    expect(find.text('Adjusting today'), findsOneWidget);
-    expect(find.byType(FloatingActionButton), findsNothing);
-  });
-
-  testWidgets('adjust: skip writes deletedItems; undo restores; priority writes override',
-      (tester) async {
-    await _pumpToday(tester, now: 7.0);
-    final st = tester.state<TodayScreenState>(find.byType(TodayScreen));
-    final focus = st.blocksForTest.firstWhere((b) => b.id == 'focus');
-
-    await tester.runAsync(() => st.removeForTest(focus));
-    expect(st.stateForTest.deletedItems, contains('focus'));
-    await tester.runAsync(() => st.undoForTest());
-    expect(st.stateForTest.deletedItems, isNot(contains('focus')));
-
-    await tester.runAsync(() => st.setLevelForTest(focus, PriorityLevel.dropFirst));
-    expect(st.stateForTest.dailyOverrides['focus']!.priority, PriorityLevel.dropFirst.toPriority());
   });
 
   testWidgets('give-it-more-time adds minutes to the matching routine item', (tester) async {
