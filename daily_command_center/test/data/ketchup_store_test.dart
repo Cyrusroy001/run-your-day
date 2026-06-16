@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:daily_command_center/data/adherence_store.dart';
+import 'package:daily_command_center/data/day_actions.dart';
 import 'package:daily_command_center/data/ketchup_store.dart';
 import 'package:daily_command_center/data/models.dart';
 import 'package:daily_command_center/data/store.dart';
@@ -43,5 +44,19 @@ void main() {
     expect(jars[5]!.picked, 2);            // derived (yesterday)
     expect(jars[5]!.latePicks, 0);
     expect(jars.first, isNull);            // no data
+  });
+
+  test('DayActions.togglePick captures a late pick and reverses it on untoggle', () async {
+    const block = Block(
+        time: '8:00', cls: 'train', label: 'Lift', estStart: 8.0, durationMinutes: 30);
+    var done = await DayActions.togglePick(
+        block: block, done: const {}, assembled: const [block],
+        driftLog: const [], now: 10.0);
+    expect((await KetchupStore.last7(DateTime.now())).last!.latePicks, 1);
+
+    done = await DayActions.togglePick(
+        block: block, done: done, assembled: const [block],
+        driftLog: const [], now: 10.0);
+    expect((await KetchupStore.last7(DateTime.now())).last!.latePicks, 0);
   });
 }

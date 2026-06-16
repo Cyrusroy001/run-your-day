@@ -7,6 +7,7 @@ import '../data/models.dart';
 import '../data/store.dart';
 import '../data/state_store.dart';
 import '../data/adherence_store.dart';
+import '../data/day_actions.dart';
 import '../data/recurring_store.dart';
 import '../data/teaching_flags.dart';
 import '../data/ui_prefs.dart';
@@ -161,17 +162,14 @@ class TodayScreenState extends State<TodayScreen> {
       DriftEngine.computeDay(_assemble(plan), now: _now(), done: _done, dateIso: _state.date);
 
   Future<void> _toggle(Block b) async {
-    final next = {..._done};
-    next.contains(b.signature) ? next.remove(b.signature) : next.add(b.signature);
-    HapticFeedback.lightImpact();
-    setState(() => _done = next);
-    await AdherenceStore.saveDone(DateTime.now(), next);
     final plan = _plan;
     if (plan == null) return;
-    final t = _assemble(plan).where((x) => x.isTrackable).toList();
-    await AdherenceStore.writeAdherence(
-        DateTime.now(), t.where((x) => next.contains(x.signature)).length, t.length);
-    if (widget.debugPlan == null) AppStore.writeWidgetData(plan, _todayKey).ignore();
+    HapticFeedback.lightImpact();
+    final next = await DayActions.togglePick(
+        block: b, done: _done, assembled: _assemble(plan),
+        driftLog: _state.driftLog, now: _now(),
+        plan: widget.debugPlan == null ? plan : null, todayKey: _todayKey);
+    if (mounted) setState(() => _done = next);
   }
 
   // ── time + label formatting ────────────────────────────────────────────────
