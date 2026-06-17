@@ -39,7 +39,7 @@ class _HarnessState extends State<_Harness> {
 void main() {
   testWidgets('vine: basket counts, hero sizing, climb order, unfurl + late pick', (tester) async {
     var pickedLate = 0;
-    final future = const [
+    const future = [
       VineStop(time: '2:00', label: 'later', ripeness: Ripeness.unripe),
       VineStop(time: '1:00', label: 'next', ripeness: Ripeness.nearly),
     ];

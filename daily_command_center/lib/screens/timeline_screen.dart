@@ -11,8 +11,10 @@ import '../logic/assembler.dart';
 import '../logic/timeline.dart';
 import '../logic/drift_engine.dart';
 import '../logic/priority_level.dart';
+import '../logic/ripeness.dart';
+import '../logic/home_now_state.dart';
 import '../theme/app_palette.dart';
-import '../widgets/elastic_rail.dart';
+import '../widgets/vine_timeline.dart';
 import '../widgets/add_task_fab.dart';
 
 /// The timeline rail + Adjust mode, split out of Today (G4.2). Pure move — the
@@ -33,6 +35,7 @@ class TimelineScreenState extends State<TimelineScreen> {
   DailyState _state = const DailyState(date: '');
   Set<String> _done = {};
   bool _adjusting = false;
+  bool _unfurled = false; // basket folded (false) / morning revealed (true)
   DailyState? _checkpoint;
   String? _undoMsg;
   Timer? _ticker;
@@ -156,14 +159,6 @@ class TimelineScreenState extends State<TimelineScreen> {
     return _durLabel(b.durationMinutes);
   }
 
-  RailVariant _variant(Block b) {
-    if (_done.contains(b.signature)) return RailVariant.done;
-    if (b.isDropped) return RailVariant.skip;
-    if (b.isAnchor) return RailVariant.anchor;
-    if (b.isCompacted) return RailVariant.squeeze;
-    return RailVariant.normal;
-  }
-
   // ── adjust mode (writes DailyState only) ───────────────────────────────────
   PriorityLevel _levelOf(Block b) =>
       PriorityLevel.fromPriority(_state.dailyOverrides[b.id]?.priority ?? b.priority);
@@ -224,11 +219,12 @@ class TimelineScreenState extends State<TimelineScreen> {
     final plan = _plan;
     if (plan == null) return Scaffold(body: Center(child: CircularProgressIndicator(color: c.vine)));
     final day = _resolve(plan);
+    final now = HomeNowState.from(day, now: _now(), done: _done);
 
     return Scaffold(
       body: SafeArea(
         bottom: false,
-        child: _adjusting ? _adjustBody(c, day) : _railBody(c, day),
+        child: _adjusting ? _adjustBody(c, day) : _vineBody(c, day, now),
       ),
       floatingActionButton: _adjusting
           ? null
@@ -240,8 +236,8 @@ class TimelineScreenState extends State<TimelineScreen> {
     );
   }
 
-  // ── TIMELINE (read-only rail over the full day) ─────────────────────────────
-  Widget _railBody(AppPalette c, ResolvedDay day) {
+  // ── TIMELINE (the living vine over the full day) ────────────────────────────
+  Widget _vineBody(AppPalette c, ResolvedDay day, HomeNowState now) {
     return ListView(
       padding: const EdgeInsets.fromLTRB(18, 8, 18, 40),
       children: [
@@ -261,16 +257,62 @@ class TimelineScreenState extends State<TimelineScreen> {
             ),
           ]),
         ),
-        ElasticRail(stops: [
-          for (final b in day.blocks)
-            RailStop(
-              time: _ishTime(b), label: b.label, sub: _sub(b),
-              variant: _variant(b),
-              durationMinutes: b.durationMinutes <= 0 ? b.idealMinutes : b.durationMinutes,
-              locked: b.isAnchor,
-              onTap: b.isAnchor ? null : () => _toggle(b)),
-        ]),
+        _vine(c, day, now),
       ],
+    );
+  }
+
+  /// Build the vine from the resolved day: future climbs above NOW, the walked
+  /// morning folds into the basket; jammy/dropped past fruit offer a late pick.
+  Widget _vine(AppPalette c, ResolvedDay day, HomeNowState now) {
+    final ripeness = RipenessRules.assign(day.blocks,
+        now: _now(), done: _done, currentSignature: now.currentSignature);
+    VineStop stop(int i) {
+      final b = day.blocks[i];
+      final squeezed = b.isCompacted;
+      return VineStop(
+        time: _ishTime(b),
+        label: b.label,
+        sub: b.isDropped
+            ? 'skipped today'
+            : squeezed
+                ? 'went over → squeezed −${b.idealMinutes - b.durationMinutes} min'
+                : _sub(b),
+        ripeness: ripeness[i],
+        anchor: b.isAnchor,
+        squeezed: squeezed,
+        onPick: b.isAnchor ? null : () => _toggle(b),
+      );
+    }
+
+    final future = <VineStop>[];
+    VineStop? nowStop;
+    final past = <VineStop>[];
+    var picked = 0, jammy = 0;
+    for (var i = 0; i < day.blocks.length; i++) {
+      final r = ripeness[i];
+      final b = day.blocks[i];
+      if (r == Ripeness.ripe) {
+        nowStop = stop(i);
+      } else if (r == Ripeness.picked || r == Ripeness.overripe) {
+        past.add(stop(i));
+        if (!b.isAnchor) (r == Ripeness.picked) ? picked++ : jammy++;
+      } else {
+        future.add(stop(i));
+      }
+    }
+    final squeezedMin = day.blocks
+        .where((b) => b.isCompacted)
+        .fold<int>(0, (a, b) => a + (b.idealMinutes - b.durationMinutes));
+    return VineTimeline(
+      future: future.reversed.toList(), // latest at top — the vine climbs upward
+      now: nowStop,
+      past: past,
+      pickedCount: picked,
+      jammyCount: jammy,
+      tension: (squeezedMin / 45).clamp(0.0, 1.0),
+      unfurled: _unfurled,
+      onToggleUnfurl: () => setState(() => _unfurled = !_unfurled),
     );
   }
 

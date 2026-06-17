@@ -9,7 +9,7 @@ import 'package:daily_command_center/data/store.dart';
 import 'package:daily_command_center/data/profile_repository.dart';
 import 'package:daily_command_center/logic/priority_level.dart';
 import 'package:daily_command_center/theme/app_palette.dart';
-import 'package:daily_command_center/widgets/elastic_rail.dart';
+import 'package:daily_command_center/widgets/vine_timeline.dart';
 import 'package:daily_command_center/screens/timeline_screen.dart';
 
 late Plan _plan;
@@ -47,14 +47,14 @@ void main() {
     }
   });
 
-  testWidgets('Timeline shows the elastic rail over the full day', (tester) async {
+  testWidgets('Timeline shows the vine over the full day', (tester) async {
     await _pumpTimeline(tester, now: 8.25);
-    expect(find.byType(ElasticRail), findsOneWidget);
+    expect(find.byType(VineTimeline), findsOneWidget);
     expect(find.text('Timeline'), findsOneWidget);
-    expect(find.text('Deep Focus — AI Building'), findsOneWidget); // a rail stop
+    expect(find.text('Deep Focus — AI Building'), findsOneWidget); // a future vine stop
   });
 
-  testWidgets('tapping a rail card toggles its done state', (tester) async {
+  testWidgets('tapping a vine card toggles its done state', (tester) async {
     await _pumpTimeline(tester, now: 8.25);
     final st = tester.state<TimelineScreenState>(find.byType(TimelineScreen));
     expect(st.doneSignatures.any((s) => s.contains('Deep Focus')), false);
@@ -63,6 +63,31 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 200));
     });
     expect(st.doneSignatures.any((s) => s.contains('Deep Focus')), true);
+  });
+
+  testWidgets('vine basket folds the morning: jammy count + squeezed copy', (tester) async {
+    // 12:00 behind: Wake is the squeezed NOW; earlier blocks are jammy/dropped.
+    await _pumpTimeline(tester, now: 12.0);
+    expect(find.byKey(const Key('vine-basket')), findsOneWidget);
+    expect(find.textContaining('jammy'), findsOneWidget);
+    // A squeezed block carries the garden squeeze copy (the NOW hero is visible).
+    expect(find.textContaining('squeezed −'), findsWidgets);
+  });
+
+  testWidgets('unfurling the basket reveals a late pick that marks the block done',
+      (tester) async {
+    await _pumpTimeline(tester, now: 12.0);
+    final st = tester.state<TimelineScreenState>(find.byType(TimelineScreen));
+    expect(st.doneSignatures, isEmpty);
+    await tester.tap(find.byKey(const Key('vine-basket')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('pick late?'), findsWidgets);
+    await tester.runAsync(() async {
+      await tester.tap(find.text('pick late?').first);
+      await Future.delayed(const Duration(milliseconds: 200));
+    });
+    expect(st.doneSignatures, isNotEmpty);
   });
 
   testWidgets('FAB visible in Timeline, hidden while adjusting', (tester) async {
