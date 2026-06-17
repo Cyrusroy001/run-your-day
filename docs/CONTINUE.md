@@ -74,6 +74,7 @@ deferred. Delivery target = a **signed release APK** on the S21 FE.
 | [`specs/2026-06-12-ketchup-v1.1-garden-redesign-design.md`](superpowers/specs/2026-06-12-ketchup-v1.1-garden-redesign-design.md) | **Ketchup v1.1 "the garden"**: ripeness palette, 3 tabs, vine+basket Timeline, sun-arc Today, allotment Week, pantry jars, painted widget, generality invariant | **Spec approved**; implementation plan next. See **ADR-022** |
 | [`DECISIONS.md`](DECISIONS.md) | Architectural decision records (ADR-001…021) | Living |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | File map, data flow, storage key map | Living |
+| [`KNOWN-ISSUES.md`](KNOWN-ISSUES.md) | Deferred logical debt (DL-1…4) to fix with Cyrus after the drift fix + v1.1 ship | Backlog |
 
 ### Roadmap (from the v3 spec)
 
