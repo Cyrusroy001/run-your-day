@@ -85,6 +85,27 @@ void main() {
     });
   });
 
+  group('cycleTemplate', () {
+    Plan editable() {
+      final b = _minPlan();
+      return Plan(
+        schemaVersion: b.schemaVersion, meta: b.meta, dayTemplates: b.dayTemplates,
+        week: b.week, training: b.training, workouts: b.workouts,
+        nutrition: b.nutrition, goals: b.goals,
+        weekEditor: const WeekEditorConfig(
+            toggleTemplates: ['office', 'wfh'], lockedDays: ['sat', 'sun']),
+      );
+    }
+
+    test('walks weekEditor.toggleTemplates and honors lockedDays', () {
+      final p = editable();
+      final p2 = PlannerLogic.cycleTemplate(p, 'mon'); // office → wfh
+      expect(p2.week['mon']!.templateId, 'wfh');
+      expect(PlannerLogic.cycleTemplate(p2, 'mon').week['mon']!.templateId, 'office');
+      expect(PlannerLogic.cycleTemplate(p, 'sat').week['sat']!.templateId, 'weekend'); // locked
+    });
+  });
+
   group('toggleSchedule', () {
     test('flips office to wfh', () {
       final plan = PlannerLogic.applyBestSpacing(_minPlan());

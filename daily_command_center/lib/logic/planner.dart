@@ -88,6 +88,20 @@ class PlannerLogic {
     );
   }
 
+  /// Cycle a day's template through `weekEditor.toggleTemplates` (all templates
+  /// when the list is empty); `lockedDays` don't cycle. Generality: the template
+  /// ids + lock list come from the Life JSON, never from code.
+  static Plan cycleTemplate(Plan plan, String day) {
+    if (plan.weekEditor.lockedDays.contains(day)) return plan;
+    final ids = plan.weekEditor.toggleTemplates.isNotEmpty
+        ? plan.weekEditor.toggleTemplates
+        : plan.dayTemplates.keys.toList();
+    if (ids.isEmpty) return plan;
+    final entry = plan.week[day]!;
+    final next = ids[(ids.indexOf(entry.templateId) + 1) % ids.length];
+    return plan.copyWith(week: {...plan.week, day: entry.copyWith(templateId: next)});
+  }
+
   static Plan toggleSchedule(Plan plan, String day) {
     final entry = plan.week[day]!;
     if (_isWeekend(entry.templateId)) return plan; // weekend days locked
