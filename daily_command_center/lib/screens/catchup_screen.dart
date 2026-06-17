@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../data/adherence_store.dart';
-import '../data/models.dart' show displayTime;
+import '../data/models.dart' show displayTime, DayKetchup;
 import '../logic/weekly_review.dart';
 import '../theme/app_palette.dart';
+import '../widgets/jar_shelf.dart';
 
 /// Sunday catch-up (spec S6) — no grades, no streaks, no red days. A count, a
 /// shape, and one optional action: "Give it more time" writes +minutes back into
 /// the Plan (the only review→Plan write path — the loop that tunes the engine).
 class CatchupScreen extends StatefulWidget {
   final WeeklySummary summary;
-  final List<DayAdherence> last7;
+  final List<DayKetchup?> jars; // the pantry: 7 bottled days, oldest→newest
   final String? insightLabel; // most-squeezed item this week
   final int giveMinutes;
   final List<PromotionCandidate> promotionCandidates;
@@ -21,7 +21,7 @@ class CatchupScreen extends StatefulWidget {
   const CatchupScreen({
     super.key,
     required this.summary,
-    this.last7 = const [],
+    this.jars = const [],
     this.insightLabel,
     this.giveMinutes = 15,
     this.promotionCandidates = const [],
@@ -54,8 +54,13 @@ class _CatchupScreenState extends State<CatchupScreen> {
           Text('Your week,\ncaught up.',
               style: GoogleFonts.bricolageGrotesque(fontSize: 30, fontWeight: FontWeight.w800, height: 1.05, letterSpacing: -0.5, color: c.salt)),
           const SizedBox(height: 18),
-          if (widget.last7.isNotEmpty) _bars(c),
-          const SizedBox(height: 16),
+          if (widget.jars.isNotEmpty) ...[
+            Text('THE PANTRY',
+                style: GoogleFonts.splineSansMono(fontSize: 11, letterSpacing: 1.3, color: c.dim)),
+            const SizedBox(height: 8),
+            JarShelf(jars: widget.jars),
+            const SizedBox(height: 16),
+          ],
           Text(widget.summary.sentence, style: TextStyle(fontSize: 14, height: 1.45, color: c.dim)),
           if (showInsight) ...[
             const SizedBox(height: 18),
@@ -72,27 +77,6 @@ class _CatchupScreenState extends State<CatchupScreen> {
       ),
     );
   }
-
-  Widget _bars(AppPalette c) => SizedBox(
-        height: 74,
-        child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-          for (final d in widget.last7)
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Column(mainAxisAlignment: MainAxisAlignment.end, children: [
-                  Container(
-                    height: d.pct == null ? 8 : 8 + d.pct! / 100 * 50,
-                    decoration: BoxDecoration(
-                      color: d.pct == null ? c.line : (d.pct! >= 60 ? c.vine : c.jammyText),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ),
-                ]),
-              ),
-            ),
-        ]),
-      );
 
   Widget _insightCard(AppPalette c) {
     if (_gaveTime) {

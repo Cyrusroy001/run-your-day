@@ -1,11 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:daily_command_center/data/models.dart';
 import 'package:daily_command_center/logic/weekly_review.dart';
 import 'package:daily_command_center/theme/app_palette.dart';
 import 'package:daily_command_center/screens/catchup_screen.dart';
 import 'package:daily_command_center/screens/how_it_works_screen.dart';
+import 'package:daily_command_center/widgets/jar_shelf.dart';
 
 void main() {
+  testWidgets('catch-up shows the pantry jars + the week sentence', (tester) async {
+    await tester.pumpWidget(MaterialApp(theme: AppPalette.darkTheme, home: const CatchupScreen(
+      summary: WeeklySummary(killCount: 0, compactCount: 2, jettisonCount: 0,
+          sentence: 'This week — two squeezes, otherwise clean.'),
+      jars: [
+        null,
+        DayKetchup(date: '2026-06-12', picked: 4, trackable: 6, squeezes: 1, drops: 0, latePicks: 0),
+        DayKetchup(date: '2026-06-13', picked: 6, trackable: 6, squeezes: 0, drops: 0, latePicks: 0),
+        DayKetchup(date: '2026-06-14', picked: 2, trackable: 6, squeezes: 3, drops: 1, latePicks: 0),
+        null, null, null,
+      ],
+    )));
+    expect(find.byType(JarShelf), findsOneWidget);
+    expect(find.text('THE PANTRY'), findsOneWidget);
+    expect(find.text('This week — two squeezes, otherwise clean.'), findsOneWidget);
+  });
+
   testWidgets('catch-up shows headline + give-it-more-time writes back', (tester) async {
     String? gotLabel;
     int? gotMins;

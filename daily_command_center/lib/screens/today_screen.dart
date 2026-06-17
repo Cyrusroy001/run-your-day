@@ -63,8 +63,7 @@ class TodayScreenState extends State<TodayScreen> {
   WeeklySummary? _summary;
   String? _topSqueezed;
   String? _notifKey; // de-dupes heads-up rescheduling across rebuilds/ticks
-  List<DayAdherence> _last7 = const []; // for the Sunday catch-up screen
-  List<DayKetchup?> _jars = const []; // for the THIS WEEK glance shelf
+  List<DayKetchup?> _jars = const []; // the pantry: Sunday catch-up + THIS WEEK glance shelf
   List<CustomTask> _pendingRepeatTasks = const [];
   List<PromotionCandidate> _promotionCandidates = const [];
 
@@ -110,7 +109,6 @@ class TodayScreenState extends State<TodayScreen> {
     final state = await StateStore.loadState(now);
     final done = await AdherenceStore.loadDone(now);
     final events = await StateStore.recentDriftEvents(now, days: 7);
-    final last7 = await AdherenceStore.last7(now);
     final jars = await KetchupStore.last7(now);
 
     // Yesterday's completed one-off custom tasks → "repeat?" prompts.
@@ -142,7 +140,6 @@ class TodayScreenState extends State<TodayScreen> {
       _done = done;
       _summary = WeeklyReview.summarize(events);
       _topSqueezed = WeeklyReview.mostSqueezedLabel(events);
-      _last7 = last7;
       _jars = jars;
       _pendingRepeatTasks = pending;
       _promotionCandidates = promotions;
@@ -398,7 +395,7 @@ class TodayScreenState extends State<TodayScreen> {
                 name: _displayName.isEmpty ? 'Profile' : _displayName,
                 subtitle: _plan?.meta.lifestyleArchetype ?? '',
                 onCatchup: _summary == null ? null : () => Navigator.of(context).push(fadeThroughRoute(CatchupScreen(
-                    summary: _summary!, last7: _last7, insightLabel: _topSqueezed,
+                    summary: _summary!, jars: _jars, insightLabel: _topSqueezed,
                     promotionCandidates: _promotionCandidates,
                     onPromote: _openPromoteSheet, onDismiss: _dismissPromotion,
                     onGiveMoreTime: _giveMoreTime))),
@@ -533,7 +530,7 @@ class TodayScreenState extends State<TodayScreen> {
         padding: const EdgeInsets.only(top: 10),
         child: GestureDetector(
           onTap: () => Navigator.of(context).push(fadeThroughRoute(CatchupScreen(
-              summary: _summary!, last7: _last7, insightLabel: _topSqueezed,
+              summary: _summary!, jars: _jars, insightLabel: _topSqueezed,
               promotionCandidates: _promotionCandidates,
               onPromote: _openPromoteSheet, onDismiss: _dismissPromotion,
               onGiveMoreTime: _giveMoreTime))),
