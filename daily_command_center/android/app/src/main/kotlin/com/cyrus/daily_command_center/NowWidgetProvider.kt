@@ -31,7 +31,31 @@ class NowWidgetProvider : AppWidgetProvider() {
 
             val views = RemoteViews(context.packageName, R.layout.now_widget)
 
-            // Current block name (● NOW · ~ are static in the layout — no stat tiles)
+            // Painted arc (rendered by the app). Decode defensively: any failure
+            // falls back to the native-only ripe card (ADR-022 §7 risk control).
+            val hasArc = prefs.getBoolean("hasArcImage", false)
+            val arcPath = prefs.getString("arcImage", null)
+            val nightMode = prefs.getBoolean("nightMode", false)
+            var arcShown = false
+            if (hasArc && arcPath != null) {
+                try {
+                    val bmp = android.graphics.BitmapFactory.decodeFile(arcPath)
+                    if (bmp != null) {
+                        views.setImageViewBitmap(R.id.widget_arc, bmp)
+                        views.setViewVisibility(R.id.widget_arc, android.view.View.VISIBLE)
+                        arcShown = true
+                    }
+                } catch (_: Exception) { /* fall through to native card */ }
+            }
+            if (!arcShown) views.setViewVisibility(R.id.widget_arc, android.view.View.GONE)
+
+            // Night = stars + bud image only, no text rows (pure metaphor).
+            views.setViewVisibility(
+                R.id.widget_text_strip,
+                if (nightMode && arcShown) android.view.View.GONE else android.view.View.VISIBLE
+            )
+
+            // Current block name (● RIPE NOW is static in the layout — no stat tiles)
             views.setTextViewText(R.id.widget_title, currentAction)
 
             // Progress
