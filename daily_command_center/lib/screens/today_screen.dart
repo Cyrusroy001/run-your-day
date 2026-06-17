@@ -8,6 +8,7 @@ import '../data/store.dart';
 import '../data/state_store.dart';
 import '../data/adherence_store.dart';
 import '../data/day_actions.dart';
+import '../data/ketchup_store.dart';
 import '../data/recurring_store.dart';
 import '../data/teaching_flags.dart';
 import '../data/ui_prefs.dart';
@@ -21,9 +22,15 @@ import '../logic/drift_copy.dart';
 import '../logic/home_now_state.dart';
 import '../logic/weekly_review.dart';
 import '../logic/blueprint_promotion.dart';
+import '../logic/day_arc.dart';
+import '../logic/sun_clock.dart';
+import '../logic/ripeness.dart';
 import '../theme/app_palette.dart';
 import '../theme/transitions.dart';
 import '../widgets/add_task_fab.dart';
+import '../widgets/sun_arc_card.dart';
+import '../widgets/jar_shelf.dart';
+import '../widgets/night_card.dart';
 import '../widgets/promote_blueprint_sheet.dart';
 import '../widgets/teach_caption.dart';
 import '../widgets/avatar_menu_sheet.dart';
@@ -56,7 +63,8 @@ class TodayScreenState extends State<TodayScreen> {
   WeeklySummary? _summary;
   String? _topSqueezed;
   String? _notifKey; // de-dupes heads-up rescheduling across rebuilds/ticks
-  List<DayAdherence> _last7 = const [];
+  List<DayAdherence> _last7 = const []; // for the Sunday catch-up screen
+  List<DayKetchup?> _jars = const []; // for the THIS WEEK glance shelf
   List<CustomTask> _pendingRepeatTasks = const [];
   List<PromotionCandidate> _promotionCandidates = const [];
 
@@ -103,6 +111,7 @@ class TodayScreenState extends State<TodayScreen> {
     final done = await AdherenceStore.loadDone(now);
     final events = await StateStore.recentDriftEvents(now, days: 7);
     final last7 = await AdherenceStore.last7(now);
+    final jars = await KetchupStore.last7(now);
 
     // Yesterday's completed one-off custom tasks → "repeat?" prompts.
     final yesterday = now.subtract(const Duration(days: 1));
@@ -134,6 +143,7 @@ class TodayScreenState extends State<TodayScreen> {
       _summary = WeeklyReview.summarize(events);
       _topSqueezed = WeeklyReview.mostSqueezedLabel(events);
       _last7 = last7;
+      _jars = jars;
       _pendingRepeatTasks = pending;
       _promotionCandidates = promotions;
     });
@@ -171,6 +181,21 @@ class TodayScreenState extends State<TodayScreen> {
     final m = ((dec - h) * 60).round();
     final h12 = h == 0 ? 12 : (h > 12 ? h - 12 : h);
     return '$h12:${m.toString().padLeft(2, '0')}';
+  }
+
+  /// ish-time rule (spec): flexible & on-the-hour & not drifted → "{h}-ish";
+  /// engine-moved estimate → "~{time}"; anchors / custom / exact → exact.
+  String _ishTime(Block b) {
+    final exact = _fmt(b.estStart);
+    if (b.isAnchor || b.isCustom) return exact;
+    if ((b.estStart - b.seedStart).abs() >= 1 / 60) return '~$exact';
+    final m = ((b.estStart - b.estStart.floor()) * 60).round();
+    if (m == 0) {
+      final h = b.estStart.floor();
+      final h12 = h == 0 ? 12 : (h > 12 ? h - 12 : h);
+      return '$h12-ish';
+    }
+    return exact;
   }
 
   // ── custom tasks ───────────────────────────────────────────────────────────
@@ -289,10 +314,24 @@ class TodayScreenState extends State<TodayScreen> {
     final now = HomeNowState.from(day, now: _now(), done: _done);
     _maybeScheduleHeadsUps(context, day);
 
+    // The day as one arc; the sky follows the local clock (never drift). When
+    // every trackable is in (or the window has passed) the day reads as night.
+    final arc = DayArc.from(day.blocks,
+        now: _now(), done: _done, currentSignature: now.currentSignature);
+    final blend = SunClock.blendAt(_now());
+    final night = arc.dayDone;
+
     return Scaffold(
-      body: SafeArea(
-        bottom: false,
-        child: _todayBody(c, day, now),
+      backgroundColor: Colors.transparent,
+      body: AnimatedContainer(
+        duration: (MediaQuery.maybeOf(context)?.disableAnimations ?? false)
+            ? Duration.zero
+            : const Duration(milliseconds: 600),
+        color: c.ambient(blend, allowNight: night),
+        child: SafeArea(
+          bottom: false,
+          child: _todayBody(c, day, now, arc, blend, night),
+        ),
       ),
       floatingActionButton: AddTaskFab(
           dateIso: _state.date,
@@ -303,13 +342,24 @@ class TodayScreenState extends State<TodayScreen> {
   }
 
   // ── TODAY (read-only) ────────────────────────────────────────────────────────
-  Widget _todayBody(AppPalette c, ResolvedDay day, HomeNowState now) {
+  Widget _todayBody(AppPalette c, ResolvedDay day, HomeNowState now,
+      DayArc arc, SkyBlend blend, bool night) {
     WidgetsBinding.instance.addPostFrameCallback((_) => _maybeTeach(day));
+
+    // Night: the vine has fully climbed — stars + a bud, no tasks, no times.
+    if (night) {
+      return ListView(
+        padding: const EdgeInsets.fromLTRB(18, 8, 18, 40),
+        children: [_header(c, nightGround: true), const NightCard()],
+      );
+    }
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(18, 8, 18, 40),
       children: [
         _header(c),
+        SunArcCard(arc: arc, blend: blend),
+        const SizedBox(height: 14),
         _hero(c, day, now),
         _whisper(c, day),
         if (_undoMsg != null) _undoCaption(c),
@@ -324,17 +374,23 @@ class TodayScreenState extends State<TodayScreen> {
         for (final task in _pendingRepeatTasks)
           RepeatPromptCard(task: task,
               onRepeat: (date) => _createRecurringTask(task, date), onSkip: () => _skipRepeatTask(task)),
+        const SizedBox(height: 10),
+        _upNextCard(c, day, now),
+        const SizedBox(height: 10),
+        _weekJarsCard(c),
+        if (_todayKey == 'sun' && _summary != null) _sundayChip(c),
       ],
     );
   }
 
-  Widget _header(AppPalette c) => Padding(
+  Widget _header(AppPalette c, {bool nightGround = false}) => Padding(
         padding: const EdgeInsets.fromLTRB(2, 6, 0, 14),
         child: Row(children: [
           Expanded(
             child: Text(DateFormat('EEEE d MMMM').format(DateTime.now()),
                 style: GoogleFonts.bricolageGrotesque(
-                    fontSize: 17, fontWeight: FontWeight.w600, letterSpacing: -0.2, color: c.salt)),
+                    fontSize: 17, fontWeight: FontWeight.w600, letterSpacing: -0.2,
+                    color: nightGround ? c.star : c.salt)),
           ),
           GestureDetector(
             key: const Key('avatar-menu-button'),
@@ -361,13 +417,13 @@ class TodayScreenState extends State<TodayScreen> {
 
   Widget _hero(AppPalette c, ResolvedDay day, HomeNowState now) {
     final caughtUp = DriftCopy.isCaughtUp(day);
+    // Day-done is owned by the night card; this branch only catches the rare
+    // resting gap (before the day starts, or between picked blocks).
     if (now.isResting || now.isDayDone) {
-      final title = now.isDayDone ? 'Nothing left today.' : (now.nextLabel.isEmpty ? 'Still resting' : 'Up next');
+      final title = now.nextLabel.isEmpty ? 'All caught up' : 'Up next';
       return _heroShell(c, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(title, style: GoogleFonts.bricolageGrotesque(fontSize: 30, fontWeight: FontWeight.w800, height: 1.05, color: c.salt)),
-        if (now.isDayDone) Padding(padding: const EdgeInsets.only(top: 4),
-            child: Text('Go be a person.', style: TextStyle(color: c.dim, fontSize: 14))),
-        if (!now.isDayDone && now.nextLabel.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 8),
+        if (now.nextLabel.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 8),
             child: Text('${now.nextTime} · ${now.nextLabel}',
                 style: GoogleFonts.splineSansMono(fontSize: 13, color: c.dim))),
       ]));
@@ -399,7 +455,7 @@ class TodayScreenState extends State<TodayScreen> {
           },
           style: FilledButton.styleFrom(backgroundColor: c.vine, foregroundColor: c.onAccent,
               shape: const StadiumBorder(), padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10)),
-          child: const Text('Done', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5)),
+          child: const Text('Pick ✓', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5)),
         ),
       ]),
     ]));
@@ -413,13 +469,82 @@ class TodayScreenState extends State<TodayScreen> {
   Widget _nowPill(AppPalette c) => Row(mainAxisSize: MainAxisSize.min, children: [
         Container(width: 7, height: 7, decoration: BoxDecoration(color: c.ripe, shape: BoxShape.circle)),
         const SizedBox(width: 7),
-        Text('NOW', style: GoogleFonts.splineSansMono(fontSize: 11, letterSpacing: 1.4, color: c.ripe)),
+        Text('RIPE NOW', style: GoogleFonts.splineSansMono(fontSize: 11, letterSpacing: 1.4, color: c.ripe)),
       ]);
 
   Widget _chip(AppPalette c, String text, Color fg, Color bg) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(99)),
         child: Text(text, style: GoogleFonts.splineSansMono(fontSize: 11.5, color: fg)),
+      );
+
+  /// Shared chrome for the glance cards under the hero.
+  Widget _glanceCard(AppPalette c, {required Widget child}) => Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+            color: c.raise, borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: c.line)),
+        child: child,
+      );
+
+  Widget _glanceLabel(AppPalette c, String text) => Text(text,
+      style: GoogleFonts.splineSansMono(fontSize: 10.5, letterSpacing: 1.3, color: c.dim));
+
+  /// The next two upcoming stops after NOW — fruit dots + ish-times.
+  Widget _upNextCard(AppPalette c, ResolvedDay day, HomeNowState now) {
+    final upcoming = day.blocks
+        .where((b) => !b.isAnchor && !b.isDropped &&
+            !_done.contains(b.signature) && b.signature != now.currentSignature &&
+            b.estStart > _now())
+        .take(2)
+        .toList();
+    if (upcoming.isEmpty) return const SizedBox.shrink();
+    return _glanceCard(c, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _glanceLabel(c, 'UP NEXT'),
+      const SizedBox(height: 6),
+      for (final b in upcoming)
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 3),
+          child: Row(children: [
+            Container(width: 8, height: 8, decoration: BoxDecoration(
+                color: c.fruit(b == upcoming.first ? Ripeness.nearly : Ripeness.ripening),
+                shape: BoxShape.circle)),
+            const SizedBox(width: 10),
+            Expanded(child: Text(b.label, maxLines: 1, overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 13.5, color: c.salt))),
+            Text(_ishTime(b), style: GoogleFonts.splineSansMono(fontSize: 12, color: c.dim)),
+          ]),
+        ),
+    ]));
+  }
+
+  /// The pantry at a glance — 7 mini jars. Hidden until there's any data.
+  Widget _weekJarsCard(AppPalette c) {
+    if (_jars.isEmpty || _jars.every((j) => j == null)) return const SizedBox.shrink();
+    return _glanceCard(c, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _glanceLabel(c, 'THIS WEEK'),
+      const SizedBox(height: 8),
+      JarShelf(jars: _jars, mini: true),
+    ]));
+  }
+
+  /// Sunday-only: a tap into the catch-up (the same route as the avatar menu).
+  Widget _sundayChip(AppPalette c) => Padding(
+        padding: const EdgeInsets.only(top: 10),
+        child: GestureDetector(
+          onTap: () => Navigator.of(context).push(fadeThroughRoute(CatchupScreen(
+              summary: _summary!, last7: _last7, insightLabel: _topSqueezed,
+              promotionCandidates: _promotionCandidates,
+              onPromote: _openPromoteSheet, onDismiss: _dismissPromotion,
+              onGiveMoreTime: _giveMoreTime))),
+          child: _glanceCard(c, child: Row(children: [
+            const Text('🫙', style: TextStyle(fontSize: 18)),
+            const SizedBox(width: 12),
+            Expanded(child: Text('Sunday catch-up — bottle your week',
+                style: TextStyle(fontSize: 13.5, color: c.salt))),
+            Icon(Icons.chevron_right, size: 18, color: c.dim),
+          ])),
+        ),
       );
 
   Widget _whisper(AppPalette c, ResolvedDay day) {
