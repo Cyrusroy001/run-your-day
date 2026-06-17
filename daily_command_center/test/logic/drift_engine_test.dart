@@ -135,4 +135,40 @@ void main() {
     expect(day.events.single.event, 'killed');
     expect(day.events.single.driftMinutes, 90);
   });
+
+  // Missed-task handling: the live card is present-time, never a stale straggler.
+  group('missed tasks', () {
+    test('a block whose window passed is missed (kept in the past), not pulled to now', () {
+      // Nothing done at 20:15. wake/focus are long behind; dinner is the present block.
+      final blocks = [
+        _item('wake', 8.0, ideal: 30),
+        _item('focus', 8.5, ideal: 60),
+        _item('dinner', 20.0, ideal: 45),
+      ];
+      final day = DriftEngine.computeDay(blocks, now: 20.25, done: {});
+      // wake is NOT yanked to now — it stays in the morning (overripe).
+      expect(day.blocks.firstWhere((b) => b.id == 'wake').estStart, closeTo(8.0, 0.01));
+      // dinner is the current block → pulled to now.
+      expect(day.blocks.firstWhere((b) => b.id == 'dinner').estStart, closeTo(20.25, 0.01));
+    });
+
+    test('a moderately-late block is still current (drift tolerated), not missed', () {
+      // 10:00, a single 8:00 item not done, nothing later opened → still active.
+      final blocks = [_item('a', 8.0, ideal: 60), _item('b', 9.5, ideal: 30)];
+      final day = DriftEngine.computeDay(blocks, now: 10.0, done: {});
+      expect(day.blocks[0].estStart, closeTo(10.0, 0.001)); // pulled to now (unchanged B3)
+    });
+
+    test('missed blocks before a passed hard anchor are dropped', () {
+      final blocks = [
+        _item('wake', 8.0, ideal: 30),
+        _anchor('work', 14.0, hard: true),
+        _item('dinner', 20.0, ideal: 45),
+      ];
+      final day = DriftEngine.computeDay(blocks, now: 20.25, done: {});
+      expect(day.blocks.firstWhere((b) => b.id == 'wake').status, BlockStatus.dropped);
+      expect(day.events.any((e) => e.itemId == 'wake' && e.event == 'jettisoned'), true);
+      expect(day.blocks.firstWhere((b) => b.id == 'dinner').estStart, closeTo(20.25, 0.01));
+    });
+  });
 }

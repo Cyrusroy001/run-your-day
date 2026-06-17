@@ -65,13 +65,14 @@ void main() {
     expect(st.doneSignatures.any((s) => s.contains('Deep Focus')), true);
   });
 
-  testWidgets('vine basket folds the morning: jammy count + squeezed copy', (tester) async {
-    // 12:00 behind: Wake is the squeezed NOW; earlier blocks are jammy/dropped.
+  testWidgets('vine basket folds the missed morning; NOW is present-time, not a stale block', (tester) async {
+    // 12:00, nothing done: the morning is missed → folded into the basket as
+    // jammy fruit. The live NOW must be the present block, never the long-passed
+    // "Wake" (the drift "missed-task" fix, guarded at the screen level).
     await _pumpTimeline(tester, now: 12.0);
     expect(find.byKey(const Key('vine-basket')), findsOneWidget);
     expect(find.textContaining('jammy'), findsOneWidget);
-    // A squeezed block carries the garden squeeze copy (the NOW hero is visible).
-    expect(find.textContaining('squeezed −'), findsWidgets);
+    expect(find.text('Wake · water · sunlight'), findsNothing);
   });
 
   testWidgets('unfurling the basket reveals a late pick that marks the block done',

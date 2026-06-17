@@ -23,6 +23,28 @@ class DriftEngine {
 
     var day = _cascade(blocks, dur, now: now, done: done, dropped: allDropped);
 
+    // Missed cleanup: once a hard anchor's start has arrived, the still-un-done
+    // blocks before it are missed for good — drop them so the day stays honest
+    // and nothing lingers into tomorrow. (The live card already shows present
+    // time via _findCurrent; this is the "we simply didn't do those" narrative.)
+    for (int ai = 0; ai < blocks.length; ai++) {
+      final anchor = blocks[ai];
+      if (!anchor.isAnchor || !anchor.hardAnchor || now < anchor.estStart) continue;
+      for (int i = 0; i < ai; i++) {
+        if (blocks[i].isAnchor || allDropped.contains(i)) continue;
+        if (done.contains(blocks[i].signature)) continue;
+        allDropped.add(i);
+        dur[i] = 0;
+        events.add(DriftEvent(
+          date: dateIso, itemId: blocks[i].id ?? '', label: blocks[i].label,
+          event: 'jettisoned', note: 'missed — ${anchor.label} reached',
+        ));
+      }
+    }
+    if (allDropped.isNotEmpty) {
+      day = _cascade(blocks, dur, now: now, done: done, dropped: allDropped);
+    }
+
     // Compaction: for each hard anchor, shrink overflowing items before it.
     for (int ai = 0; ai < blocks.length; ai++) {
       final anchor = blocks[ai];
@@ -125,7 +147,7 @@ class DriftEngine {
   }) {
     final out = <Block>[];
     const buffer = transitionBufferMinutes / 60.0;
-    final activeIdx = _findActive(blocks, done, dropped);
+    final activeIdx = _findCurrent(blocks, done, dropped, now);
     double cursor = 0;
     bool started = false;
 
@@ -154,11 +176,30 @@ class DriftEngine {
     return ResolvedDay(out, const []);
   }
 
-  static int _findActive(List<Block> blocks, Set<String> done, Set<int> dropped) {
+  /// The block the user should be on *now*: the first un-done, non-dropped,
+  /// non-anchor block that hasn't been "missed". A block is missed once `now`
+  /// has moved into the window of a strictly-later task — the day has
+  /// structurally passed it, so it stays put (overripe) instead of being
+  /// yanked to now. Replaces "first un-done block" so the live card is always
+  /// present-time. A merely-late block (nothing later has opened yet) is still
+  /// current, so normal drift is tolerated.
+  static int _findCurrent(List<Block> blocks, Set<String> done, Set<int> dropped, double now) {
+    bool missed(int i) {
+      for (int j = i + 1; j < blocks.length; j++) {
+        final bj = blocks[j];
+        if (bj.isAnchor || dropped.contains(j)) continue;
+        if (bj.estStart <= blocks[i].estStart) continue; // strictly later only
+        final d = bj.idealMinutes > 0 ? bj.idealMinutes : bj.durationMinutes;
+        if (now >= bj.estStart && now < bj.estStart + d / 60.0) return true;
+      }
+      return false;
+    }
+
     for (int i = 0; i < blocks.length; i++) {
-      if (blocks[i].isAnchor) continue;
-      if (dropped.contains(i)) continue;
-      if (!done.contains(blocks[i].signature)) return i;
+      final b = blocks[i];
+      if (b.isAnchor || dropped.contains(i) || done.contains(b.signature)) continue;
+      if (missed(i)) continue;
+      return i;
     }
     return -1;
   }

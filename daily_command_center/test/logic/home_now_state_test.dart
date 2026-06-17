@@ -27,4 +27,17 @@ void main() {
     final s = HomeNowState.from(day, now: 23.5);
     expect(s.isDayDone, true);
   });
+
+  test('live card is present-time, not a stale un-done morning block', () {
+    // Nothing done by 20:15. The engine must not surface "Wake" as current.
+    const blocks = [
+      Block(time: 'wake', cls: 'meal', label: 'Wake', id: 'wake', estStart: 8.0, durationMinutes: 30, idealMinutes: 30),
+      Block(time: 'focus', cls: 'focus', label: 'Focus', id: 'focus', estStart: 8.5, durationMinutes: 60, idealMinutes: 60),
+      Block(time: 'dinner', cls: 'meal', label: 'Dinner', id: 'dinner', estStart: 20.0, durationMinutes: 45, idealMinutes: 45),
+    ];
+    final resolved = DriftEngine.computeDay(blocks, now: 20.25, done: {});
+    final s = HomeNowState.from(resolved, now: 20.25);
+    expect(s.currentLabel, 'Dinner');
+    expect(s.currentLabel, isNot('Wake'));
+  });
 }
