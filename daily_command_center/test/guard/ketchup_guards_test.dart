@@ -47,4 +47,30 @@ void main() {
     expect(violations, isEmpty,
         reason: 'Ban-list jargon must not reach the screen:\n${violations.join('\n')}');
   });
+
+  test('no lifestyle constants in UI string literals (ADR-022 §8 generality)', () {
+    // Template names, schedule words, and goal vocabulary are Life-JSON data.
+    // The garden skin may only use universal words (pick, jammy, cage, vine).
+    // Onboarding/login are the deferred interview/AI-stub surfaces (pre-garden):
+    // they hardcode the seed archetype during the 3-step stub and are replaced
+    // when the real interview lands — out of scope for the moat clause for now.
+    const exempt = ['onboarding_screen.dart', 'login_screen.dart'];
+    final banned = RegExp(r"'[^']*\b(Office|WFH|Weekend|Training|Workout)\b[^']*'");
+    final violations = <String>[];
+    for (final dir in ['lib/screens', 'lib/widgets']) {
+      for (final e in Directory(dir).listSync(recursive: true)) {
+        if (e is! File || !e.path.endsWith('.dart')) continue;
+        if (exempt.any((f) => e.path.replaceAll(r'\', '/').endsWith(f))) continue;
+        final lines = e.readAsLinesSync();
+        for (var i = 0; i < lines.length; i++) {
+          final t = lines[i].trimLeft();
+          if (t.startsWith('//') || t.startsWith('*') || t.startsWith('/*')) continue;
+          final code = lines[i].split('//').first;
+          if (banned.hasMatch(code)) violations.add('${e.path}:${i + 1}  ${code.trim()}');
+        }
+      }
+    }
+    expect(violations, isEmpty,
+        reason: 'Lifestyle words must come from the Life JSON, not code:\n${violations.join('\n')}');
+  });
 }

@@ -69,3 +69,14 @@ tests stay green (they use focus blocks for `endH`, the work anchor only for
 `dayDone`).
 **Priority:** medium. **Sequence:** post-v1.1 (Cyrus asked to defer; was a candidate
 to bundle with the drift fix but held back to keep that change focused).
+
+## DL-5 — Onboarding hardcodes lifestyle constants (moat-clause gap)  ⬜
+**Symptom:** the generality guard (ADR-022 §8) trips on
+[lib/screens/onboarding_screen.dart](daily_command_center/lib/screens/onboarding_screen.dart) —
+literal `'Office'`/`'WFH'`/`'Weekend'`/`'Training days'` chips. The guard currently
+**exempts** `onboarding_screen.dart` + `login_screen.dart` (the deferred interview/
+AI-stub surfaces) so the moat clause governs the garden surfaces.
+**Recommended fix:** when the real interview/AI onboarding lands (roadmap #3/#5),
+source these labels from the seed/plan `dayTemplates` + `training` rules instead of
+literals, then drop the guard exemption.
+**Priority:** low. **Sequence:** with the interview/AI onboarding rebuild, not before.
