@@ -1,8 +1,13 @@
+import 'package:flutter/widgets.dart';
 import 'package:home_widget/home_widget.dart';
 import 'models.dart';
 import 'profile_repository.dart';
 import '../logic/assembler.dart';
 import '../logic/timeline.dart';
+import '../logic/day_arc.dart';
+import '../logic/sun_clock.dart';
+import '../theme/app_palette.dart';
+import '../widgets/widget_arc_card.dart';
 
 /// Plan + logs access for the active profile. Thin facade over
 /// [ProfileRepository] (file-per-profile). Swap [repo] in tests.
@@ -79,6 +84,28 @@ class AppStore {
         totalCount = adh['total'] ?? 0;
       }
     } catch (_) {}
+
+    // Painted arc (ADR-022 §7). Rendered to an image the widget shows on top;
+    // any failure → hasArcImage=false → native ripe-card fallback. Done-set
+    // isn't loaded here, so the arc is time-pure (picked-fruit detail is an
+    // acceptable loss on the widget). Own try-catch — the outer contract stays.
+    try {
+      final est = [
+        for (var i = 0; i < blocks.length; i++) blocks[i].copyWith(estStart: times[i])
+      ];
+      final arc = DayArc.from(est, now: now, done: const {});
+      await HomeWidget.renderFlutterWidget(
+        WidgetArcCard(arc: arc, blend: SunClock.blendAt(now), palette: AppPalette.dark),
+        key: 'arcImage',
+        logicalSize: const Size(400, 180),
+      );
+      await HomeWidget.saveWidgetData<bool>('hasArcImage', true);
+      await HomeWidget.saveWidgetData<bool>('nightMode', arc.dayDone);
+    } catch (_) {
+      try {
+        await HomeWidget.saveWidgetData<bool>('hasArcImage', false);
+      } catch (_) {}
+    }
 
     try {
       await HomeWidget.saveWidgetData<String>('currentAction', currentAction);
