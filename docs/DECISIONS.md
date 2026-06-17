@@ -289,3 +289,27 @@ surface honest against the schema moat before onboarding/AI lands.
 **Do not** hardcode lifestyle labels in widgets, use ripe red for anything but NOW, recolor the sky
 for drift, or show tomorrow's plan in the night state. ADR-021's guards stay (hex ban, jargon ban);
 its tomato-token *semantics* are superseded by the ripeness ramp.
+
+## ADR-023 — The live card is present-time: un-done past tasks are "missed", not stale
+
+**Decision (session 11, 2026-06-17):** The drift engine no longer treats the *first* un-done block as
+the active block forever. `DriftEngine._findCurrent` selects the **current** block by containment — the
+first un-done, non-dropped, non-anchor block that hasn't been **missed**, where a block is missed once
+`now` has moved into the window of a *strictly-later* task. Missed blocks keep their past position
+(they read **overripe** and stay late-pickable in the vine basket) instead of being yanked to `now`. A
+merely-late block (nothing later has opened yet) is still current, so normal drift is tolerated
+(engine tests B1–B6 unchanged). A **hard-anchor cleanup** then drops the still-un-done blocks before
+any hard anchor whose start `now` has passed — "we simply didn't do those" — so nothing lingers.
+`HomeNowState` reports the present-time block with no change of its own.
+
+**Why:** the old "first un-done = active, pulled to now" meant a forgotten 8 AM task showed as the live
+card at 8 PM — the whole drift system rode on a block that should have been long gone. Present-time +
+missed-handling is what makes the engine "handle us not doing tasks" gracefully; it dovetails with the
+garden's overripe/jammy fruit + basket (ADR-022).
+
+**Trade-off / known gap:** in a *long gap* before the next block (and before any passed hard anchor),
+the most-recent un-done block can still read as current — narrow, and superseded once a hard anchor
+passes. The deeper "cascaded-containment" model was deferred to keep B1–B6 intact. Four related logical
+issues were logged in [`KNOWN-ISSUES.md`](KNOWN-ISSUES.md) (DL-1…4) to revisit with Cyrus after v1.1
+ships. **Do not** reintroduce default cutoffs/`maxDrift` to force expiry (that's a lifestyle constant —
+against the ADR-022 generality invariant); missed-handling is structural.

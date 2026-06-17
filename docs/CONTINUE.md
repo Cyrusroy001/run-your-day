@@ -1,5 +1,5 @@
 # Continuation Document
-**Last updated:** 2026-06-12 (session 10 — v1 shipped to device; v1.1 garden redesign specced)
+**Last updated:** 2026-06-17 (session 11 — v1.1 garden in flight: G0–G7.1 done; drift "missed-task" fix landed)
 
 If you're an AI agent starting fresh on this project, read this first. It tells you exactly where things stand and what to do next without requiring you to re-derive it from the codebase.
 
@@ -13,20 +13,29 @@ The **product direction** is bigger than Cyrus: a reusable, configurable life-ex
 
 ---
 
-## ⭐ Current focus (session 10 — ketchup v1.1 "the garden", branch `feat/ketchup-v1`)
+## ⭐ Current focus (session 11 — executing ketchup v1.1 "the garden", branch `feat/ketchup-v1`)
 
 **v1 SHIPPED 2026-06-12:** signed release APK (keystore `C:/Users/Cyrus/ketchup-release.jks` +
 `android/key.properties`) installed on the S21 FE and QA'd by Cyrus. **The widget renders on
 One UI / Android 16 — ADR-010's blocker is gone.** K-notify + K-ship are done.
 
-**Now: v1.1 — the garden redesign**, from first real-device feedback. Spec (approved):
-[`specs/2026-06-12-ketchup-v1.1-garden-redesign-design.md`](superpowers/specs/2026-06-12-ketchup-v1.1-garden-redesign-design.md);
-decision: **ADR-022**. In one line: ripeness = time (garden palette, vine timeline climbing upward
-with a basket, sun-arc Home, allotment Week, pantry jars instead of percentages, painted-arc widget,
-ambient sun-clock, night = bud metaphor) + the **generality invariant** (no lifestyle constants;
-goals are 0..N tracks). Engine/storage/golden untouched.
+**Now: executing the v1.1 garden plan**
+([`plans/2026-06-13-ketchup-v1.1-garden-redesign.md`](superpowers/plans/2026-06-13-ketchup-v1.1-garden-redesign.md);
+spec + **ADR-022**). One line: ripeness = time (garden palette, vine timeline with a basket, sun-arc
+Today, allotment Week, pantry jars, painted-arc widget, ambient sun-clock, night = bud) + the
+**generality invariant** (no lifestyle constants; goals are 0..N tracks).
 
-**Next step: write the implementation plan** (writing-plans skill) from the spec, then execute.
+**Phase status:** G0 (palette/tokens) · G1 (ripeness) · G2 (sun-clock + day-arc) · G3 (DayKetchup +
+KetchupStore + shared Pick) · G4 (3-tab shell) · G5 (sun-arc Today + jars + night) · G6 (vine timeline;
+ElasticRail retired) · **G7.1 (week modifiers + cycleTemplate) — all DONE & green (~225 tests).**
+**Next: G7.2** (allotment UI) → G8 (pantry jars in catch-up) → G9 (painted-arc widget, needs device)
+→ G10 (copy/guards/docs + device QA & ship).
+
+**Mid-stream drift fix (ADR-023):** the live card is now **present-time** — un-done past tasks become
+*missed* (overripe, late-pickable; dropped at the next hard anchor) instead of a stale block riding
+`now`. This *did* touch `drift_engine.dart` + `home_now_state.dart` (the garden plan itself leaves
+engine/storage/golden untouched). Four related logical issues are parked in
+[`KNOWN-ISSUES.md`](KNOWN-ISSUES.md) (DL-1…4) to fix with Cyrus after v1.1 ships.
 
 ### Done before this (session 9, v1)
 
@@ -71,7 +80,9 @@ deferred. Delivery target = a **signed release APK** on the S21 FE.
 | [`specs/2026-06-08-reminders-2-ux-design.md`](superpowers/specs/2026-06-08-reminders-2-ux-design.md) + [`plans/2026-06-08-reminders-2-ux-layer.md`](superpowers/plans/2026-06-08-reminders-2-ux-layer.md) | **UX-layer plan** (U0–U7): calm Home, rich Live timeline, Adjust mode, teaching, weekly review, avatar menu, light/dark theme. Mockup: [`specs/2026-06-08-reminders-2-ux-mockup.html`](superpowers/specs/2026-06-08-reminders-2-ux-mockup.html) | **Complete** (U0–U7 done; `feat/reminders-2-redesign`) |
 | [`specs/2026-06-07-local-profiles-login-app-shell-design.md`](superpowers/specs/2026-06-07-local-profiles-login-app-shell-design.md) + [`plans/2026-06-07-local-profiles-login-app-shell.md`](superpowers/plans/2026-06-07-local-profiles-login-app-shell.md) | Login (local profile picker), per-profile storage, onboarding, settings/logout | **Complete** on `feat/local-profiles` (see Current state). Plan Phase 0 obsolete, Phase 4 drawer superseded by avatar menu — see **ADR-019** |
 | [`specs/2026-06-11-ketchup-full-visual-spec-v2.html`](superpowers/specs/2026-06-11-ketchup-full-visual-spec-v2.html) + [`plans/2026-06-12-ketchup-v1-rebrand.md`](superpowers/plans/2026-06-12-ketchup-v1-rebrand.md) | **Ketchup v1 rebrand** (K0–K8 + K-notify/K-ship): brand, merged Today, elastic rail, catch-up | **Shipped** (signed APK on device 2026-06-12). See **ADR-021** |
-| [`specs/2026-06-12-ketchup-v1.1-garden-redesign-design.md`](superpowers/specs/2026-06-12-ketchup-v1.1-garden-redesign-design.md) | **Ketchup v1.1 "the garden"**: ripeness palette, 3 tabs, vine+basket Timeline, sun-arc Today, allotment Week, pantry jars, painted widget, generality invariant | **Spec approved**; implementation plan next. See **ADR-022** |
+| [`specs/2026-06-12-ketchup-v1.1-garden-redesign-design.md`](superpowers/specs/2026-06-12-ketchup-v1.1-garden-redesign-design.md) + [`plans/2026-06-13-ketchup-v1.1-garden-redesign.md`](superpowers/plans/2026-06-13-ketchup-v1.1-garden-redesign.md) | **Ketchup v1.1 "the garden"**: ripeness palette, 3 tabs, vine+basket Timeline, sun-arc Today, allotment Week, pantry jars, painted widget, generality invariant | **Executing** (G0–G7.1 done; G7.2→G10 left). See **ADR-022** |
+| [`KNOWN-ISSUES.md`](KNOWN-ISSUES.md) | Deferred logical debt DL-1…4 (post-v1.1) | Backlog |
+| — drift live-card fix — | Present-time current block; missed tasks overripe→dropped at hard anchor | **Done** (session 11). See **ADR-023** |
 | [`DECISIONS.md`](DECISIONS.md) | Architectural decision records (ADR-001…021) | Living |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | File map, data flow, storage key map | Living |
 | [`KNOWN-ISSUES.md`](KNOWN-ISSUES.md) | Deferred logical debt (DL-1…4) to fix with Cyrus after the drift fix + v1.1 ship | Backlog |
