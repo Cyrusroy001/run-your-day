@@ -84,7 +84,7 @@ class PlannerLogic {
     final finalWeek = bestWeek ?? updated;
     return (
       plan: plan.copyWith(week: finalWeek),
-      message: removed != null ? 'Moved training from ${_capitalize(removed)} for better spacing' : null,
+      message: removed != null ? 'Moved ${_capitalize(removed)} — heavy days stay spaced out' : null,
     );
   }
 
