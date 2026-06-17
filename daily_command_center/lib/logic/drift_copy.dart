@@ -59,13 +59,13 @@ class DriftCopy {
   }
 
   static String teachCompaction({required String itemLabel, required int minutes, required String anchorLabel}) =>
-      'I trimmed $itemLabel by ${minutes}m so your $anchorLabel still starts on time. Budgets flex; anchors don’t.';
+      'I squeezed $itemLabel by ${minutes}m so $anchorLabel still starts on time. Flexible blocks flex; anchors hold.';
 
   static String teachDrop({required String itemLabel}) =>
-      '$itemLabel got cancelled today — it would’ve run too late. Protecting your evening.';
+      '$itemLabel went jammy today — it would’ve run too late. Protecting your evening.';
 
   static String teachAdjust({required String anchorLabel}) =>
-      'Drag to reorder, swipe to remove. $anchorLabel stays put. This only changes today.';
+      'Drag to reorder, swipe to remove. $anchorLabel holds its ring. This only changes today.';
 
   static String notification({required String itemLabel, required String cutoff}) =>
       '$itemLabel cancelled today — it drifted past $cutoff. Protecting your evening.';

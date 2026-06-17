@@ -8,14 +8,14 @@ import '../theme/app_palette.dart';
 class HowItWorksScreen extends StatelessWidget {
   const HowItWorksScreen({super.key});
 
-  // (glyph, bold lead, rest)
-  static const _entries = <(String, String, String)>[
-    ('~', 'Falling behind.', 'When a block runs long, the rest of your day slides. ketchup notices and catches you up.'),
-    ('~', 'The squeeze.', 'Flexible blocks give up minutes first — never below their minimum.'),
-    ('◉', 'Locked.', 'Anchors never move. ketchup plans around them, not through them.'),
-    ('~', 'Protect / Drop first.', 'Your way of telling ketchup what matters when time runs out.'),
-    ('~', 'Skip today.', 'Removes a block from today only. The weekly plan never changes from here.'),
-    ('~', 'No alarms.', 'Mustard means "ketchup adjusted something," never "you failed." There is nothing to fail.'),
+  // (glyph, caption) — the garden manual, universal vocabulary only.
+  static const _entries = <(String, String)>[
+    ('🍒', "Every block is a fruit on today's vine. Green means later, apricot means soon — red means now."),
+    ('🥫', 'Fall behind and ketchup squeezes the flexible blocks. Overripe fruit is what the sauce is made from.'),
+    ('◉', 'Anchors wear a dashed ring. They hold their time no matter what.'),
+    ('🧺', 'Pick ✓ drops a block into the basket. Missed one? It hangs jammy below — pick it late, it still counts.'),
+    ('☀', 'The sky follows the clock, never your drift. Light always means time.'),
+    ('🫙', 'Sunday bottles the week into jars — how much you picked, and how smooth the batch was.'),
   ];
 
   @override
@@ -27,7 +27,7 @@ class HowItWorksScreen extends StatelessWidget {
         title: Text('How ketchup works', style: GoogleFonts.bricolageGrotesque(fontWeight: FontWeight.w700, fontSize: 18)),
       ),
       body: ListView(padding: const EdgeInsets.fromLTRB(18, 8, 18, 30), children: [
-        for (final (glyph, lead, rest) in _entries)
+        for (final (glyph, caption) in _entries)
           Container(
             margin: const EdgeInsets.only(bottom: 10),
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
@@ -37,16 +37,11 @@ class HowItWorksScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(14),
             ),
             child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(glyph, style: GoogleFonts.splineSansMono(color: c.vine, fontSize: 14)),
+              Text(glyph, style: const TextStyle(fontSize: 15)),
               const SizedBox(width: 10),
               Expanded(
-                child: Text.rich(TextSpan(
-                  style: TextStyle(fontSize: 12.8, height: 1.45, color: c.dim),
-                  children: [
-                    TextSpan(text: '$lead ', style: TextStyle(color: c.salt, fontWeight: FontWeight.w600)),
-                    TextSpan(text: rest),
-                  ],
-                )),
+                child: Text(caption,
+                    style: TextStyle(fontSize: 12.8, height: 1.45, color: c.salt)),
               ),
             ]),
           ),

@@ -49,8 +49,8 @@ void main() {
 
   testWidgets('how-it-works lists the manual on one screen', (tester) async {
     await tester.pumpWidget(MaterialApp(theme: AppPalette.darkTheme, home: const HowItWorksScreen()));
-    expect(find.textContaining('The squeeze.'), findsOneWidget);
-    expect(find.textContaining('Locked.'), findsOneWidget);
+    expect(find.textContaining("fruit on today's vine"), findsOneWidget);
+    expect(find.textContaining('dashed ring'), findsOneWidget);
     expect(find.textContaining('whole manual'), findsOneWidget);
   });
 }

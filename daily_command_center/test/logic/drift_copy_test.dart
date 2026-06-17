@@ -27,7 +27,7 @@ void main() {
 
   test('compaction teaching copy uses the item + anchor labels', () {
     final c = DriftCopy.teachCompaction(itemLabel: 'Shower + brunch', minutes: 15, anchorLabel: 'Work');
-    expect(c, 'I trimmed Shower + brunch by 15m so your Work still starts on time. Budgets flex; anchors don’t.');
+    expect(c, 'I squeezed Shower + brunch by 15m so Work still starts on time. Flexible blocks flex; anchors hold.');
   });
 
   test('peek line shows planned vs now + budget', () {
