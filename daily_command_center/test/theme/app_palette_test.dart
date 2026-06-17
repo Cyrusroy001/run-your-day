@@ -33,7 +33,7 @@ void main() {
 
   test('ambient clamps night to dusk unless allowed', () {
     const p = AppPalette.light;
-    final night = const SkyBlend(SkyPhase.night, SkyPhase.night, 0);
+    const night = SkyBlend(SkyPhase.night, SkyPhase.night, 0);
     expect(p.ambient(night), p.skyDusk);
     expect(p.ambient(night, allowNight: true), p.skyNight);
   });

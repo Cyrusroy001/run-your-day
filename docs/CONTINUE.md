@@ -27,9 +27,12 @@ Today, allotment Week, pantry jars, painted-arc widget, ambient sun-clock, night
 
 **Phase status:** G0 (palette/tokens) · G1 (ripeness) · G2 (sun-clock + day-arc) · G3 (DayKetchup +
 KetchupStore + shared Pick) · G4 (3-tab shell) · G5 (sun-arc Today + jars + night) · G6 (vine timeline;
-ElasticRail retired) · **G7.1 (week modifiers + cycleTemplate) — all DONE & green (~225 tests).**
-**Next: G7.2** (allotment UI) → G8 (pantry jars in catch-up) → G9 (painted-arc widget, needs device)
-→ G10 (copy/guards/docs + device QA & ship).
+ElasticRail retired) · G7 (allotment week) · G8 (pantry jars in catch-up) · G9 (painted-arc widget;
+debug APK builds) · **G10.1–G10.3 (garden voice, generality guard, verify+docs) — ALL DONE & green
+(229 tests; analyze = 2 pre-existing infos).**
+**Only G10.4 left: device QA + signed release ship — needs Cyrus + the S21 FE.** Signing already
+configured (`android/key.properties` + the keystore); QA checklist is G10.4 in the plan. Worth a device
+check of the drift fix (live card = present time) + the garden surfaces + the painted-arc widget.
 
 **Mid-stream drift fix (ADR-023):** the live card is now **present-time** — un-done past tasks become
 *missed* (overripe, late-pickable; dropped at the next hard anchor) instead of a stale block riding
@@ -59,13 +62,8 @@ Samsung One UI / Android 16, unconfirmed root cause — ADR-010; ketchup spec ga
 "phase 2"). The **interview / AI-gen / full onboarding / in-app editor / refinement** stack is all
 deferred. Delivery target = a **signed release APK** on the S21 FE.
 
-**Remaining for v1:**
-1. **K-notify** — wire the one opt-in heads-up per block + the Sunday nudge onto the existing
-   `NotificationService` (channel plumbing from ADR-014 already exists; just needs scheduling + the
-   two Settings toggles wired).
-2. **K-ship** — create a release keystore (`key.properties`, replace the debug-signing TODO in
-   `android/app/build.gradle.kts`), `flutter build apk --release`, install + real-device QA (drift
-   across a real day, profile switch, light/dark/auto, 1.3× text, reduced-motion).
+(K-notify + K-ship shipped 2026-06-12; v1 signed APK QA'd on device. v1.1 garden is now in flight —
+see the focus block above.)
 
 ---
 

@@ -14,10 +14,10 @@ void main() {
   test('DailyState carries overrides and drift events', () {
     const ds = DailyState(
       date: '2026-06-08',
-      deletedItems: const ['snack'],
-      dailySequence: const ['wake', 'focus', 'train'],
-      dailyOverrides: const {'focus': ItemOverride(priority: 1)},
-      driftLog: const [DriftEvent(date: '2026-06-08', itemId: 'train', label: 'Train', event: 'killed', driftMinutes: 105)],
+      deletedItems: ['snack'],
+      dailySequence: ['wake', 'focus', 'train'],
+      dailyOverrides: {'focus': ItemOverride(priority: 1)},
+      driftLog: [DriftEvent(date: '2026-06-08', itemId: 'train', label: 'Train', event: 'killed', driftMinutes: 105)],
     );
     final round = DailyState.fromJson(ds.toJson());
     expect(round.deletedItems, ['snack']);

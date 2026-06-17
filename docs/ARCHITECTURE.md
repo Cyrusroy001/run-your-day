@@ -81,6 +81,7 @@ Current as of session 11 (v1.1 "the garden" in flight — G0–G7.1 done). The a
 | `widgets/jar_shelf.dart` | `JarShelf` — 7 pantry jars (fill = picked/trackable, tint = batch grade); `mini` for Today, full for the catch-up (G5.2) |
 | `widgets/night_card.dart` | `NightCard` — textless stars + a green bud (day-done metaphor; G5.2) |
 | `widgets/add_task_fab.dart` | `AddTaskFab` — shared add→fit→sacrifice flow for Today + Timeline (G4.4) |
+| `widgets/widget_arc_card.dart` | `WidgetArcCard` — offscreen render (explicit palette) of the sun-arc / night bud, rasterised for the home-screen widget (G9.1) |
 | `screens/week_screen.dart` | **Week tab** — the allotment (plots + detail card; G7.2 in progress). Self-loading (G4.1). *Still hosts `WeekPlanner` until G7.2 lands* |
 | `screens/catchup_screen.dart` | Sunday catch-up (S6): bars + summary + "Give it more time" (only review→Plan write) + promotions |
 | `screens/how_it_works_screen.dart` | "How ketchup works" — the six static captions (replaced the old glossary) |
@@ -115,8 +116,10 @@ ProfileDoc { id, displayName, plan: Plan,
 ```
 
 Only two things live in **SharedPreferences**: the active-profile pointer (`activeProfileId`) and
-the four **widget** keys, which `home_widget` writes as **raw** keys (no `flutter.` prefix) into its
-own `HomeWidgetPreferences` file, read by `NowWidgetProvider.kt` via `HomeWidgetPlugin.getData`.
+the **widget** keys, which `home_widget` writes as **raw** keys (no `flutter.` prefix) into its own
+`HomeWidgetPreferences` file, read by `NowWidgetProvider.kt` via `HomeWidgetPlugin.getData`. v1.1 adds
+the painted-arc keys: `arcImage` (rendered image path), `hasArcImage` + `nightMode` (bools) — the
+native widget shows the arc image on top and falls back to the text-only ripe card when absent.
 The seed `assets/seed_plan.json` is the source of truth for the default `cyrus` profile (golden test
 fails if the timeline changes).
 
@@ -144,7 +147,8 @@ write is the catch-up's "Give it more time".
 
 ## Test coverage
 
-`flutter test` (run from `daily_command_center/`). ~225 tests, green.
+`flutter test` (run from `daily_command_center/`). 229 tests, green. `flutter analyze` =
+2 pre-existing infos (main.dart `createState` idiom; `timeline_screen` `onReorder` SDK deprecation).
 
 | Area | Examples |
 |---|---|
